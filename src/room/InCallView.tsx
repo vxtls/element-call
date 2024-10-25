@@ -87,6 +87,7 @@ import { makeSpotlightLandscapeLayout } from "../grid/SpotlightLandscapeLayout";
 import { makeSpotlightPortraitLayout } from "../grid/SpotlightPortraitLayout";
 import { useMatrixRTCSessionMemberships } from "../useMatrixRTCSessionMemberships";
 import { useReactions } from "../useReactions";
+import handSound from "../res/sounds/raise-hand.ogg?url";
 
 const canScreenshare = "getDisplayMedia" in (navigator.mediaDevices ?? {});
 
@@ -314,6 +315,8 @@ export const InCallView: FC<InCallViewProps> = ({
   const [reactionId, setReactionId] = useState<string | null>(null);
   const userId = client.getUserId()!;
 
+  const handRaisePlayer = useRef<HTMLAudioElement>(null);
+
   const isHandRaised = !!raisedHands[userId];
 
   useEffect(() => {
@@ -369,6 +372,9 @@ export const InCallView: FC<InCallViewProps> = ({
         const content = event.getContent() as ReactionEventContent;
         if (content?.["m.relates_to"].key === "🖐️") {
           addRaisedHand(sender, new Date(event.localTimestamp));
+          handRaisePlayer.current?.play().catch((ex) => {
+            logger.warn("Failed to play hand raise sound", ex);
+          });
         }
       }
       if (event.getType() === EventType.RoomRedaction && event.getSender()) {
@@ -737,6 +743,7 @@ export const InCallView: FC<InCallViewProps> = ({
         ))}
       <RoomAudioRenderer />
       {renderContent()}
+      <audio ref={handRaisePlayer} src={handSound} hidden />
       {footer}
       {!noControls && <RageshakeRequestModal {...rageshakeRequestModalProps} />}
       <SettingsModal
