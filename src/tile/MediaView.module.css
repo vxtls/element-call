@@ -90,6 +90,21 @@ unconditionally select the container so we can use cqmin units */
   place-items: start;
 }
 
+.raisedHandWidget {
+  display: flex;
+  background-color: var(--cpd-color-bg-subtle-primary);
+  border-radius: var(--cpd-radius-pill-effect);
+  color: var(--cpd-color-icon-secondary);
+  border: 1px solid var(--cpd-color-yellow-1200);
+}
+
+.raisedHandWidget > p {
+  padding: var(--cpd-space-2x);
+  margin-top: auto;
+  margin-bottom: auto;
+  width: 4em;
+}
+
 .raisedHand {
   margin: var(--cpd-space-2x);
   padding: var(--cpd-space-2x);
@@ -104,6 +119,7 @@ unconditionally select the container so we can use cqmin units */
   box-shadow: var(--small-drop-shadow);
   box-sizing: border-box;
   max-inline-size: 100%;
+  max-width: fit-content;
 }
 
 .raisedHand > span {
@@ -112,6 +128,10 @@ unconditionally select the container so we can use cqmin units */
   display: inline-block;
   text-align: center;
   font-size: 22px;
+}
+
+.raisedHandBorder {
+  border: var(--cpd-space-1x) solid var(--cpd-color-yellow-1200);
 }
 
 .nameTag {

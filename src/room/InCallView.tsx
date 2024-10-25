@@ -310,10 +310,11 @@ export const InCallView: FC<InCallViewProps> = ({
   );
 
   const memberships = useMatrixRTCSessionMemberships(rtcSession);
-  const { raisedHands, setRaisedHands } = useReactions();
+  const { raisedHands, addRaisedHand, removeRaisedHand } = useReactions();
   const [reactionId, setReactionId] = useState<string | null>(null);
   const userId = client.getUserId()!;
-  const isHandRaised = raisedHands.includes(userId);
+
+  const isHandRaised = !!raisedHands[userId];
 
   useEffect(() => {
     const getLastReactionEvent = async (
@@ -335,17 +336,21 @@ export const InCallView: FC<InCallViewProps> = ({
     };
 
     const fetchReactions = async (): Promise<void> => {
-      const newRaisedHands = [...raisedHands];
       for (const m of memberships) {
+        if (!m.sender) {
+          continue;
+        }
         const reaction = await getLastReactionEvent(m.eventId!);
         if (reaction && reaction.getType() === EventType.Reaction) {
           const content = reaction.getContent() as ReactionEventContent;
           if (content?.["m.relates_to"].key === "🖐️") {
-            newRaisedHands.push(m.sender!);
+            addRaisedHand(m.sender, new Date(m.createdTs()));
+            if (m.sender === userId) {
+              setReactionId(m.eventId!);
+            }
           }
         }
       }
-      setRaisedHands(newRaisedHands);
     };
 
     void fetchReactions();
@@ -354,16 +359,21 @@ export const InCallView: FC<InCallViewProps> = ({
 
   useEffect(() => {
     const handleReactionEvent = (event: MatrixEvent): void => {
+      const sender = event.getSender();
+      if (!sender) {
+        // Weird, skip.
+        return;
+      }
       if (event.getType() === EventType.Reaction) {
         // TODO: check if target of reaction is a call membership event
         const content = event.getContent() as ReactionEventContent;
         if (content?.["m.relates_to"].key === "🖐️") {
-          setRaisedHands([...raisedHands, event.getSender()!]);
+          addRaisedHand(sender, new Date(event.localTimestamp));
         }
       }
-      if (event.getType() === EventType.RoomRedaction) {
+      if (event.getType() === EventType.RoomRedaction && event.getSender()) {
         // TODO: check target of redaction event
-        setRaisedHands(raisedHands.filter((id) => id !== event.getSender()));
+        removeRaisedHand(sender);
       }
     };
 
@@ -374,7 +384,7 @@ export const InCallView: FC<InCallViewProps> = ({
       client.on(MatrixRoomEvent.Timeline, handleReactionEvent);
       client.off(MatrixRoomEvent.Redaction, handleReactionEvent);
     };
-  }, [client, raisedHands, setRaisedHands]);
+  }, [client, raisedHands, addRaisedHand, removeRaisedHand]);
 
   useEffect(() => {
     widget?.api.transport
@@ -564,7 +574,7 @@ export const InCallView: FC<InCallViewProps> = ({
           .redactEvent(rtcSession.room.roomId, reactionId)
           .then(() => {
             setReactionId(null);
-            setRaisedHands(raisedHands.filter((id) => id !== userId));
+            removeRaisedHand(userId);
             logger.debug("Redacted reaction event");
           })
           .catch((e) => {
@@ -584,7 +594,7 @@ export const InCallView: FC<InCallViewProps> = ({
         })
         .then((reaction) => {
           setReactionId(reaction.event_id);
-          setRaisedHands([...raisedHands, userId]);
+          addRaisedHand(userId, new Date());
           logger.debug("Sent reaction event", reaction.event_id);
         })
         .catch((e) => {
@@ -595,10 +605,10 @@ export const InCallView: FC<InCallViewProps> = ({
     client,
     isHandRaised,
     memberships,
-    raisedHands,
     reactionId,
     rtcSession.room.roomId,
-    setRaisedHands,
+    addRaisedHand,
+    removeRaisedHand,
     setReactionId,
     userId,
   ]);

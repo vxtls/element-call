@@ -8,7 +8,13 @@ Please see LICENSE in the repository root for full details.
 import { TrackReferenceOrPlaceholder } from "@livekit/components-core";
 import { animated } from "@react-spring/web";
 import { RoomMember } from "matrix-js-sdk/src/matrix";
-import { ComponentProps, ReactNode, forwardRef } from "react";
+import {
+  ComponentProps,
+  ReactNode,
+  forwardRef,
+  useEffect,
+  useState,
+} from "react";
 import { useTranslation } from "react-i18next";
 import classNames from "classnames";
 import { VideoTrack } from "@livekit/components-react";
@@ -32,7 +38,7 @@ interface Props extends ComponentProps<typeof animated.div> {
   nameTagLeadingIcon?: ReactNode;
   displayName: string;
   primaryButton?: ReactNode;
-  raisedHand: boolean;
+  raisedHandTime?: Date;
 }
 
 export const MediaView = forwardRef<HTMLDivElement, Props>(
@@ -51,18 +57,39 @@ export const MediaView = forwardRef<HTMLDivElement, Props>(
       nameTagLeadingIcon,
       displayName,
       primaryButton,
-      raisedHand,
+      raisedHandTime,
       ...props
     },
     ref,
   ) => {
     const { t } = useTranslation();
 
+    const [raisedHandDuration, setRaisedHandDuration] = useState("");
+
+    useEffect(() => {
+      if (!raisedHandTime) {
+        return;
+      }
+      setRaisedHandDuration("00:00");
+      const to = setInterval(() => {
+        const totalSeconds = Math.ceil(
+          (new Date().getTime() - raisedHandTime.getTime()) / 1000,
+        );
+        const seconds = totalSeconds % 60;
+        const minutes = Math.floor(totalSeconds / 60);
+        setRaisedHandDuration(
+          `${minutes < 10 ? "0" : ""}${minutes}:${seconds < 10 ? "0" : ""}${seconds}`,
+        );
+      }, 1000);
+      return (): void => clearInterval(to);
+    }, [setRaisedHandDuration, raisedHandTime]);
+
     return (
       <animated.div
         className={classNames(styles.media, className, {
           [styles.mirror]: mirror,
           [styles.videoMuted]: !videoEnabled,
+          [styles.raisedHandBorder]: !!raisedHandTime,
         })}
         style={style}
         ref={ref}
@@ -88,11 +115,14 @@ export const MediaView = forwardRef<HTMLDivElement, Props>(
           )}
         </div>
         <div className={styles.fg}>
-          {raisedHand && (
-            <div className={styles.raisedHand}>
-              <span role="img" aria-label="raised hand">
-                ✋
-              </span>
+          {raisedHandTime && (
+            <div className={styles.raisedHandWidget}>
+              <div className={styles.raisedHand}>
+                <span role="img" aria-label="raised hand">
+                  ✋
+                </span>
+              </div>
+              <p>{raisedHandDuration}</p>
             </div>
           )}
           <div className={styles.nameTag}>
