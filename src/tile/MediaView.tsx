@@ -90,18 +90,9 @@ export const MediaView = forwardRef<HTMLDivElement, Props>(
         <div className={styles.fg}>
           {raisedHand && (
             <div className={styles.raisedHand}>
-              <p
-                role="img"
-                aria-label="raised hand"
-                style={{
-                  width: "22px",
-                  height: "0px",
-                  display: "inline-block",
-                  fontSize: "22px",
-                }}
-              >
+              <span role="img" aria-label="raised hand">
                 ✋
-              </p>
+              </span>
             </div>
           )}
           <div className={styles.nameTag}>

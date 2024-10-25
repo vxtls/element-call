@@ -106,6 +106,14 @@ unconditionally select the container so we can use cqmin units */
   max-inline-size: 100%;
 }
 
+.raisedHand > span {
+  width: var(--cpd-space-8x);
+  height: var(--cpd-space-8x);
+  display: inline-block;
+  text-align: center;
+  font-size: 22px;
+}
+
 .nameTag {
   grid-area: nameTag;
   padding: var(--cpd-space-1x);
