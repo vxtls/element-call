@@ -23,6 +23,7 @@ import { ErrorIcon } from "@vector-im/compound-design-tokens/assets/web/icons";
 
 import styles from "./MediaView.module.css";
 import { Avatar } from "../Avatar";
+import { RaisedHandIndicator } from "../reactions/RaisedHandIndicator";
 
 interface Props extends ComponentProps<typeof animated.div> {
   className?: string;
@@ -64,26 +65,6 @@ export const MediaView = forwardRef<HTMLDivElement, Props>(
   ) => {
     const { t } = useTranslation();
 
-    const [raisedHandDuration, setRaisedHandDuration] = useState("");
-
-    useEffect(() => {
-      if (!raisedHandTime) {
-        return;
-      }
-      setRaisedHandDuration("00:00");
-      const to = setInterval(() => {
-        const totalSeconds = Math.ceil(
-          (new Date().getTime() - raisedHandTime.getTime()) / 1000,
-        );
-        const seconds = totalSeconds % 60;
-        const minutes = Math.floor(totalSeconds / 60);
-        setRaisedHandDuration(
-          `${minutes < 10 ? "0" : ""}${minutes}:${seconds < 10 ? "0" : ""}${seconds}`,
-        );
-      }, 1000);
-      return (): void => clearInterval(to);
-    }, [setRaisedHandDuration, raisedHandTime]);
-
     return (
       <animated.div
         className={classNames(styles.media, className, {
@@ -115,16 +96,7 @@ export const MediaView = forwardRef<HTMLDivElement, Props>(
           )}
         </div>
         <div className={styles.fg}>
-          {raisedHandTime && (
-            <div className={styles.raisedHandWidget}>
-              <div className={styles.raisedHand}>
-                <span role="img" aria-label="raised hand">
-                  ✋
-                </span>
-              </div>
-              <p>{raisedHandDuration}</p>
-            </div>
-          )}
+          <RaisedHandIndicator raisedHandTime={raisedHandTime} />
           <div className={styles.nameTag}>
             {nameTagLeadingIcon}
             <Text as="span" size="sm" weight="medium" className={styles.name}>
