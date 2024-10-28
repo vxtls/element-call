@@ -97,16 +97,20 @@ export const ReactionsProvider = ({
 
     const fetchReactions = (): void => {
       for (const m of memberships) {
-        if (!m.sender) {
+        if (!m.sender || !m.eventId) {
           continue;
         }
-        const reaction = getLastReactionEvent(m.eventId!);
+        const reaction = getLastReactionEvent(m.eventId);
+        const eventId = reaction?.getId();
+        if (!eventId) {
+          continue;
+        }
         if (reaction && reaction.getType() === EventType.Reaction) {
           const content = reaction.getContent() as ReactionEventContent;
-          if (content?.["m.relates_to"].key === "🖐️") {
+          if (content?.["m.relates_to"]?.key === "🖐️") {
             addRaisedHand(m.sender, new Date(m.createdTs()));
             if (m.sender === room.client.getUserId()) {
-              setMyReactionId(m.eventId!);
+              setMyReactionId(eventId);
             }
           }
         }
