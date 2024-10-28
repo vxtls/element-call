@@ -131,8 +131,7 @@ export const ReactionsProvider = ({
         if (content?.["m.relates_to"].key === "🖐️") {
           addRaisedHand(sender, new Date(event.localTimestamp));
         }
-      }
-      if (event.getType() === EventType.RoomRedaction && event.getSender()) {
+      } else if (event.getType() === EventType.RoomRedaction) {
         // TODO: check target of redaction event
         removeRaisedHand(sender);
       }
@@ -145,7 +144,7 @@ export const ReactionsProvider = ({
       room.off(MatrixRoomEvent.Timeline, handleReactionEvent);
       room.off(MatrixRoomEvent.Redaction, handleReactionEvent);
     };
-  }, [room, raisedHands, addRaisedHand, removeRaisedHand]);
+  }, [room, addRaisedHand, removeRaisedHand]);
 
   return (
     <ReactionsContext.Provider
