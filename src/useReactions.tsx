@@ -107,7 +107,7 @@ export const ReactionsProvider = ({
       if (reaction && reaction.getType() === EventType.Reaction) {
         const content = reaction.getContent() as ReactionEventContent;
         if (content?.["m.relates_to"]?.key === "🖐️") {
-          addRaisedHand(m.sender, new Date(m.createdTs()));
+          addRaisedHand(m.sender, new Date(reaction.localTimestamp));
           if (m.sender === room.client.getUserId()) {
             setMyReactionId(eventId);
           }
