@@ -9,6 +9,7 @@ import { RemoteTrackPublication } from "livekit-client";
 import { test, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { axe } from "vitest-axe";
+import { MatrixRTCSession } from "matrix-js-sdk/src/matrixrtc/MatrixRTCSession";
 
 import { GridTile } from "./GridTile";
 import { withRemoteMedia } from "../utils/test";
@@ -26,8 +27,17 @@ test("GridTile is accessible", async () => {
         ({}) as Partial<RemoteTrackPublication> as RemoteTrackPublication,
     },
     async (vm) => {
+      const fakeRtcSession = {
+        on: () => {},
+        off: () => {},
+        room: {
+          on: () => {},
+          off: () => {},
+        },
+        memberships: [],
+      } as unknown as MatrixRTCSession;
       const { container } = render(
-        <ReactionsProvider>
+        <ReactionsProvider rtcSession={fakeRtcSession}>
           <GridTile
             vm={vm}
             onOpenProfile={() => {}}

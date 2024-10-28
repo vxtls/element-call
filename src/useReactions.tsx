@@ -5,20 +5,34 @@ SPDX-License-Identifier: AGPL-3.0-only
 Please see LICENSE in the repository root for full details.
 */
 
-import React, {
+import {
+  EventType,
+  MatrixEvent,
+  RelationType,
+  RoomEvent as MatrixRoomEvent,
+} from "matrix-js-sdk/src/matrix";
+import { ReactionEventContent } from "matrix-js-sdk/src/types";
+import {
   createContext,
   useContext,
   useState,
   ReactNode,
   useCallback,
+  useEffect,
 } from "react";
+import { MatrixRTCSession } from "matrix-js-sdk/src/matrixrtc/MatrixRTCSession";
+
+import { useMatrixRTCSessionMemberships } from "./useMatrixRTCSessionMemberships";
+import { useClientState } from "./ClientContext";
 
 interface ReactionsContextType {
   raisedHands: Record<string, Date>;
+  raisedHandCount: number;
   addRaisedHand: (userId: string, date: Date) => void;
   removeRaisedHand: (userId: string) => void;
   supportsReactions: boolean;
-  setSupportsReactions: React.Dispatch<React.SetStateAction<boolean>>;
+  myReactionId: string | null;
+  setMyReactionId: (id: string | null) => void;
 }
 
 const ReactionsContext = createContext<ReactionsContextType | undefined>(
@@ -35,11 +49,19 @@ export const useReactions = (): ReactionsContextType => {
 
 export const ReactionsProvider = ({
   children,
+  rtcSession,
 }: {
   children: ReactNode;
+  rtcSession: MatrixRTCSession;
 }): JSX.Element => {
   const [raisedHands, setRaisedHands] = useState<Record<string, Date>>({});
-  const [supportsReactions, setSupportsReactions] = useState<boolean>(true);
+  const [myReactionId, setMyReactionId] = useState<string | null>(null);
+  const [raisedHandCount, setRaisedHandCount] = useState(0);
+  const memberships = useMatrixRTCSessionMemberships(rtcSession);
+  const clientState = useClientState();
+  const supportsReactions =
+    clientState?.state === "valid" && clientState.supportedFeatures.reactions;
+  const room = rtcSession.room;
 
   const addRaisedHand = useCallback(
     (userId: string, time: Date) => {
@@ -47,6 +69,7 @@ export const ReactionsProvider = ({
         ...raisedHands,
         [userId]: time,
       });
+      setRaisedHandCount(Object.keys(raisedHands).length + 1);
     },
     [raisedHands],
   );
@@ -55,18 +78,83 @@ export const ReactionsProvider = ({
     (userId: string) => {
       delete raisedHands[userId];
       setRaisedHands(raisedHands);
+      setRaisedHandCount(Object.keys(raisedHands).length);
     },
     [raisedHands],
   );
+
+  // Load any existing reactions.
+  useEffect(() => {
+    const getLastReactionEvent = (eventId: string): MatrixEvent | undefined => {
+      const relations = room.relations.getChildEventsForEvent(
+        eventId,
+        RelationType.Annotation,
+        EventType.Reaction,
+      );
+      const allEvents = relations?.getRelations() ?? [];
+      return allEvents.length > 0 ? allEvents[0] : undefined;
+    };
+
+    const fetchReactions = (): void => {
+      for (const m of memberships) {
+        if (!m.sender) {
+          continue;
+        }
+        const reaction = getLastReactionEvent(m.eventId!);
+        if (reaction && reaction.getType() === EventType.Reaction) {
+          const content = reaction.getContent() as ReactionEventContent;
+          if (content?.["m.relates_to"].key === "🖐️") {
+            addRaisedHand(m.sender, new Date(m.createdTs()));
+            if (m.sender === room.client.getUserId()) {
+              setMyReactionId(m.eventId!);
+            }
+          }
+        }
+      }
+    };
+
+    void fetchReactions();
+  }, [room, addRaisedHand, memberships]);
+
+  useEffect(() => {
+    const handleReactionEvent = (event: MatrixEvent): void => {
+      const sender = event.getSender();
+      if (!sender) {
+        // Skip any event without a sender.
+        return;
+      }
+      if (event.getType() === EventType.Reaction) {
+        // TODO: check if target of reaction is a call membership event
+        const content = event.getContent() as ReactionEventContent;
+        if (content?.["m.relates_to"].key === "🖐️") {
+          addRaisedHand(sender, new Date(event.localTimestamp));
+        }
+      }
+      if (event.getType() === EventType.RoomRedaction && event.getSender()) {
+        // TODO: check target of redaction event
+        removeRaisedHand(sender);
+      }
+    };
+
+    room.on(MatrixRoomEvent.Timeline, handleReactionEvent);
+    room.on(MatrixRoomEvent.Redaction, handleReactionEvent);
+
+    return (): void => {
+      room.off(MatrixRoomEvent.Timeline, handleReactionEvent);
+      room.off(MatrixRoomEvent.Redaction, handleReactionEvent);
+    };
+  }, [room, raisedHands, addRaisedHand, removeRaisedHand]);
 
   return (
     <ReactionsContext.Provider
       value={{
         raisedHands,
+        raisedHandCount,
         addRaisedHand,
         removeRaisedHand,
         supportsReactions,
-        setSupportsReactions,
+        myReactionId,
+        setMyReactionId,
       }}
     >
       {children}

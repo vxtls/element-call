@@ -37,7 +37,6 @@ import {
 import { translatedError } from "./TranslatedError";
 import { useEventTarget } from "./useEvents";
 import { Config } from "./config/Config";
-import { useReactions } from "./useReactions";
 
 declare global {
   interface Window {
@@ -54,6 +53,9 @@ export type ValidClientState = {
   // 'Disconnected' rather than 'connected' because it tracks specifically
   // whether the client is supposed to be connected but is not
   disconnected: boolean;
+  supportedFeatures: {
+    reactions: boolean;
+  };
   setClient: (params?: SetClientParams) => void;
 };
 
@@ -146,7 +148,6 @@ interface Props {
 }
 
 export const ClientProvider: FC<Props> = ({ children }) => {
-  const { setSupportsReactions } = useReactions();
   const history = useHistory();
 
   // null = signed out, undefined = loading
@@ -258,6 +259,7 @@ export const ClientProvider: FC<Props> = ({ children }) => {
   );
 
   const [isDisconnected, setIsDisconnected] = useState(false);
+  const [supportsReactions, setSupportsReactions] = useState(false);
 
   const state: ClientState | undefined = useMemo(() => {
     if (alreadyOpenedErr) {
@@ -281,6 +283,9 @@ export const ClientProvider: FC<Props> = ({ children }) => {
       authenticated,
       setClient,
       disconnected: isDisconnected,
+      supportedFeatures: {
+        reactions: supportsReactions,
+      },
     };
   }, [
     alreadyOpenedErr,
@@ -289,6 +294,7 @@ export const ClientProvider: FC<Props> = ({ children }) => {
     logout,
     setClient,
     isDisconnected,
+    supportsReactions,
   ]);
 
   const onSync = useCallback(
@@ -314,8 +320,6 @@ export const ClientProvider: FC<Props> = ({ children }) => {
     }
 
     if (initClientState.widgetApi) {
-      let supportsReactions = true;
-
       const reactSend = initClientState.widgetApi.hasCapability(
         "org.matrix.msc2762.send.event:m.reaction",
       );
@@ -330,15 +334,13 @@ export const ClientProvider: FC<Props> = ({ children }) => {
       );
 
       if (!reactSend || !reactRcv || !redactSend || !redactRcv) {
-        supportsReactions = false;
-      }
-
-      setSupportsReactions(supportsReactions);
-      if (!supportsReactions) {
         logger.warn("Widget does not support reactions");
+        setSupportsReactions(false);
       } else {
-        logger.warn("Widget does support reactions");
+        setSupportsReactions(true);
       }
+    } else {
+      setSupportsReactions(true);
     }
 
     return (): void => {
@@ -346,7 +348,7 @@ export const ClientProvider: FC<Props> = ({ children }) => {
         initClientState.client.removeListener(ClientEvent.Sync, onSync);
       }
     };
-  }, [initClientState, onSync, setSupportsReactions]);
+  }, [initClientState, onSync]);
 
   if (alreadyOpenedErr) {
     return <ErrorView error={alreadyOpenedErr} />;

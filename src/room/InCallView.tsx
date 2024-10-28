@@ -11,10 +11,6 @@ import {
   useLocalParticipant,
 } from "@livekit/components-react";
 import { ConnectionState, Room } from "livekit-client";
-import {
-  MatrixEvent,
-  RoomEvent as MatrixRoomEvent,
-} from "matrix-js-sdk/src/matrix";
 import { MatrixClient } from "matrix-js-sdk/src/client";
 import {
   FC,
@@ -34,8 +30,6 @@ import classNames from "classnames";
 import { BehaviorSubject, of } from "rxjs";
 import { useObservableEagerState } from "observable-hooks";
 import { logger } from "matrix-js-sdk/src/logger";
-import { EventType, RelationType } from "matrix-js-sdk/src/matrix";
-import { ReactionEventContent } from "matrix-js-sdk/src/types";
 
 import LogoMark from "../icons/LogoMark.svg?react";
 import LogoType from "../icons/LogoType.svg?react";
@@ -45,8 +39,8 @@ import {
   MicButton,
   VideoButton,
   ShareScreenButton,
-  RaiseHandButton,
   SettingsButton,
+  RaiseHandToggleButton,
 } from "../button";
 import { Header, LeftNav, RightNav, RoomHeaderInfo } from "../Header";
 import { useUrlParams } from "../UrlParams";
@@ -85,8 +79,7 @@ import { makeOneOnOneLayout } from "../grid/OneOnOneLayout";
 import { makeSpotlightExpandedLayout } from "../grid/SpotlightExpandedLayout";
 import { makeSpotlightLandscapeLayout } from "../grid/SpotlightLandscapeLayout";
 import { makeSpotlightPortraitLayout } from "../grid/SpotlightPortraitLayout";
-import { useMatrixRTCSessionMemberships } from "../useMatrixRTCSessionMemberships";
-import { useReactions } from "../useReactions";
+import { ReactionsProvider, useReactions } from "../useReactions";
 import handSound from "../res/sounds/raise-hand.ogg?url";
 
 const canScreenshare = "getDisplayMedia" in (navigator.mediaDevices ?? {});
@@ -140,12 +133,14 @@ export const ActiveCall: FC<ActiveCallProps> = (props) => {
 
   return (
     <RoomContext.Provider value={livekitRoom}>
-      <InCallView
-        {...props}
-        vm={vm}
-        livekitRoom={livekitRoom}
-        connState={connState}
-      />
+      <ReactionsProvider rtcSession={props.rtcSession}>
+        <InCallView
+          {...props}
+          vm={vm}
+          livekitRoom={livekitRoom}
+          connState={connState}
+        />
+      </ReactionsProvider>
     </RoomContext.Provider>
   );
 };
@@ -178,7 +173,9 @@ export const InCallView: FC<InCallViewProps> = ({
   connState,
   onShareClick,
 }) => {
-  const { supportsReactions } = useReactions();
+  const { supportsReactions, raisedHandCount } = useReactions();
+  const [previousRaisedHandCount, setPreviousRaisedHandCount] =
+    useState(raisedHandCount);
 
   useWakeLock();
 
@@ -310,87 +307,19 @@ export const InCallView: FC<InCallViewProps> = ({
     [vm],
   );
 
-  const memberships = useMatrixRTCSessionMemberships(rtcSession);
-  const { raisedHands, addRaisedHand, removeRaisedHand } = useReactions();
-  const [reactionId, setReactionId] = useState<string | null>(null);
-  const userId = client.getUserId()!;
-
+  // Play a sound when the raised hand count increases.
   const handRaisePlayer = useRef<HTMLAudioElement>(null);
-
-  const isHandRaised = !!raisedHands[userId];
-
   useEffect(() => {
-    const getLastReactionEvent = async (
-      eventId: string,
-    ): Promise<MatrixEvent | undefined> => {
-      return client
-        .relations(
-          rtcSession.room.roomId,
-          eventId,
-          RelationType.Annotation,
-          EventType.Reaction,
-          {
-            limit: 1,
-          },
-        )
-        .then((rels) => {
-          return rels.events.length > 0 ? rels.events[0] : undefined;
-        });
-    };
-
-    const fetchReactions = async (): Promise<void> => {
-      for (const m of memberships) {
-        if (!m.sender) {
-          continue;
-        }
-        const reaction = await getLastReactionEvent(m.eventId!);
-        if (reaction && reaction.getType() === EventType.Reaction) {
-          const content = reaction.getContent() as ReactionEventContent;
-          if (content?.["m.relates_to"].key === "🖐️") {
-            addRaisedHand(m.sender, new Date(m.createdTs()));
-            if (m.sender === userId) {
-              setReactionId(m.eventId!);
-            }
-          }
-        }
-      }
-    };
-
-    void fetchReactions();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    const handleReactionEvent = (event: MatrixEvent): void => {
-      const sender = event.getSender();
-      if (!sender) {
-        // Weird, skip.
-        return;
-      }
-      if (event.getType() === EventType.Reaction) {
-        // TODO: check if target of reaction is a call membership event
-        const content = event.getContent() as ReactionEventContent;
-        if (content?.["m.relates_to"].key === "🖐️") {
-          addRaisedHand(sender, new Date(event.localTimestamp));
-          handRaisePlayer.current?.play().catch((ex) => {
-            logger.warn("Failed to play hand raise sound", ex);
-          });
-        }
-      }
-      if (event.getType() === EventType.RoomRedaction && event.getSender()) {
-        // TODO: check target of redaction event
-        removeRaisedHand(sender);
-      }
-    };
-
-    client.on(MatrixRoomEvent.Timeline, handleReactionEvent);
-    client.on(MatrixRoomEvent.Redaction, handleReactionEvent);
-
-    return (): void => {
-      client.on(MatrixRoomEvent.Timeline, handleReactionEvent);
-      client.off(MatrixRoomEvent.Redaction, handleReactionEvent);
-    };
-  }, [client, raisedHands, addRaisedHand, removeRaisedHand]);
+    if (!handRaisePlayer.current) {
+      return;
+    }
+    if (previousRaisedHandCount < raisedHandCount) {
+      handRaisePlayer.current.play().catch((ex) => {
+        logger.warn("Failed to play raise hand sound", ex);
+      });
+    }
+    setPreviousRaisedHandCount(raisedHandCount);
+  }, [raisedHandCount, handRaisePlayer, previousRaisedHandCount]);
 
   useEffect(() => {
     widget?.api.transport
@@ -573,52 +502,6 @@ export const InCallView: FC<InCallViewProps> = ({
       .catch(logger.error);
   }, [localParticipant, isScreenShareEnabled]);
 
-  const toggleRaisedHand = useCallback(() => {
-    if (isHandRaised) {
-      if (reactionId) {
-        client
-          .redactEvent(rtcSession.room.roomId, reactionId)
-          .then(() => {
-            setReactionId(null);
-            removeRaisedHand(userId);
-            logger.debug("Redacted reaction event");
-          })
-          .catch((e) => {
-            logger.error("Failed to redact reaction event", e);
-          });
-      }
-    } else {
-      const m = memberships.filter((m) => m.sender === userId);
-      const eventId = m[0].eventId!;
-      client
-        .sendEvent(rtcSession.room.roomId, EventType.Reaction, {
-          "m.relates_to": {
-            rel_type: RelationType.Annotation,
-            event_id: eventId,
-            key: "🖐️",
-          },
-        })
-        .then((reaction) => {
-          setReactionId(reaction.event_id);
-          addRaisedHand(userId, new Date());
-          logger.debug("Sent reaction event", reaction.event_id);
-        })
-        .catch((e) => {
-          logger.error("Failed to send reaction event", e);
-        });
-    }
-  }, [
-    client,
-    isHandRaised,
-    memberships,
-    reactionId,
-    rtcSession.room.roomId,
-    addRaisedHand,
-    removeRaisedHand,
-    setReactionId,
-    userId,
-  ]);
-
   let footer: JSX.Element | null;
 
   if (noControls) {
@@ -655,10 +538,10 @@ export const InCallView: FC<InCallViewProps> = ({
       }
       if (supportsReactions) {
         buttons.push(
-          <RaiseHandButton
+          <RaiseHandToggleButton
+            client={client}
+            rtcSession={rtcSession}
             key="4"
-            onClick={toggleRaisedHand}
-            raised={isHandRaised}
           />,
         );
       }
