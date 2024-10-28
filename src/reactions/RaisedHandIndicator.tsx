@@ -8,11 +8,14 @@ Please see LICENSE in the repository root for full details.
 import { ReactNode, useEffect, useState } from "react";
 
 import styles from "./RaisedHandIndicator.module.css";
+import classNames from "classnames";
 
 export function RaisedHandIndicator({
   raisedHandTime,
+  minature,
 }: {
   raisedHandTime?: Date;
+  minature?: boolean;
 }): ReactNode {
   const [raisedHandDuration, setRaisedHandDuration] = useState("");
 
@@ -37,8 +40,16 @@ export function RaisedHandIndicator({
 
   if (raisedHandTime) {
     return (
-      <div className={styles.raisedHandWidget}>
-        <div className={styles.raisedHand}>
+      <div
+        className={classNames(styles.raisedHandWidget, {
+          [styles.raisedHandWidgetLarge]: !minature,
+        })}
+      >
+        <div
+          className={classNames(styles.raisedHand, {
+            [styles.raisedHandLarge]: !minature,
+          })}
+        >
           <span role="img" aria-label="raised hand">
             ✋
           </span>

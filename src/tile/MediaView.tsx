@@ -59,6 +59,8 @@ export const MediaView = forwardRef<HTMLDivElement, Props>(
   ) => {
     const { t } = useTranslation();
 
+    const avatarSize = Math.round(Math.min(targetWidth, targetHeight) / 2);
+
     return (
       <animated.div
         className={classNames(styles.media, className, {
@@ -76,7 +78,7 @@ export const MediaView = forwardRef<HTMLDivElement, Props>(
           <Avatar
             id={member?.userId ?? displayName}
             name={displayName}
-            size={Math.round(Math.min(targetWidth, targetHeight) / 2)}
+            size={avatarSize}
             src={member?.getMxcAvatarUrl()}
             className={styles.avatar}
           />
@@ -90,7 +92,10 @@ export const MediaView = forwardRef<HTMLDivElement, Props>(
           )}
         </div>
         <div className={styles.fg}>
-          <RaisedHandIndicator raisedHandTime={raisedHandTime} />
+          <RaisedHandIndicator
+            raisedHandTime={raisedHandTime}
+            minature={avatarSize < 96}
+          />
           <div className={styles.nameTag}>
             {nameTagLeadingIcon}
             <Text as="span" size="sm" weight="medium" className={styles.name}>
