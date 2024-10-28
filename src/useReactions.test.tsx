@@ -32,16 +32,14 @@ const membership = [
 const TestComponent: FC = () => {
   const { raisedHands } = useReactions();
   return (
-    <div>
-      <ul>
-        {Object.entries(raisedHands).map(([userId, date]) => (
-          <li key={userId}>
-            <span>{userId}</span>
-            <time>{date.getTime()}</time>
-          </li>
-        ))}
-      </ul>
-    </div>
+    <ul>
+      {Object.entries(raisedHands).map(([userId, date]) => (
+        <li key={userId}>
+          <span>{userId}</span>
+          <time>{date.getTime()}</time>
+        </li>
+      ))}
+    </ul>
   );
 };
 
