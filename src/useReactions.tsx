@@ -95,30 +95,28 @@ export const ReactionsProvider = ({
       return allEvents.length > 0 ? allEvents[0] : undefined;
     };
 
-    const fetchReactions = (): void => {
-      for (const m of memberships) {
-        if (!m.sender || !m.eventId) {
-          continue;
-        }
-        const reaction = getLastReactionEvent(m.eventId);
-        const eventId = reaction?.getId();
-        if (!eventId) {
-          continue;
-        }
-        if (reaction && reaction.getType() === EventType.Reaction) {
-          const content = reaction.getContent() as ReactionEventContent;
-          if (content?.["m.relates_to"]?.key === "🖐️") {
-            addRaisedHand(m.sender, new Date(m.createdTs()));
-            if (m.sender === room.client.getUserId()) {
-              setMyReactionId(eventId);
-            }
+    for (const m of memberships) {
+      if (!m.sender || !m.eventId) {
+        continue;
+      }
+      const reaction = getLastReactionEvent(m.eventId);
+      const eventId = reaction?.getId();
+      if (!eventId) {
+        continue;
+      }
+      if (reaction && reaction.getType() === EventType.Reaction) {
+        const content = reaction.getContent() as ReactionEventContent;
+        if (content?.["m.relates_to"]?.key === "🖐️") {
+          addRaisedHand(m.sender, new Date(m.createdTs()));
+          if (m.sender === room.client.getUserId()) {
+            setMyReactionId(eventId);
           }
         }
       }
-    };
-
-    void fetchReactions();
-  }, [room, addRaisedHand, memberships]);
+    }
+    // Deliberately ignoring addRaisedHand which was causing looping.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [room, memberships]);
 
   useEffect(() => {
     const handleReactionEvent = (event: MatrixEvent): void => {
