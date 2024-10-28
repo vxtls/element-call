@@ -80,7 +80,8 @@ import { makeSpotlightExpandedLayout } from "../grid/SpotlightExpandedLayout";
 import { makeSpotlightLandscapeLayout } from "../grid/SpotlightLandscapeLayout";
 import { makeSpotlightPortraitLayout } from "../grid/SpotlightPortraitLayout";
 import { ReactionsProvider, useReactions } from "../useReactions";
-import handSound from "../res/sounds/raise-hand.ogg?url";
+import handSoundOgg from "../sound/raise_hand.ogg?url";
+import handSoundMp3 from "../sound/raise_hand.mp3?url";
 
 const canScreenshare = "getDisplayMedia" in (navigator.mediaDevices ?? {});
 
@@ -626,7 +627,10 @@ export const InCallView: FC<InCallViewProps> = ({
         ))}
       <RoomAudioRenderer />
       {renderContent()}
-      <audio ref={handRaisePlayer} src={handSound} hidden />
+      <audio ref={handRaisePlayer} hidden>
+        <source src={handSoundOgg} type="audio/ogg; codecs=vorbis" />
+        <source src={handSoundMp3} type="audio/mpeg" />
+      </audio>
       {footer}
       {!noControls && <RageshakeRequestModal {...rageshakeRequestModalProps} />}
       <SettingsModal
