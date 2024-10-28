@@ -15,18 +15,18 @@ configure({
 });
 
 describe("RaisedHandIndicator", () => {
-  test("renders nothing when no hand has been raised", async () => {
+  test("renders nothing when no hand has been raised", () => {
     const { container } = render(<RaisedHandIndicator />);
     expect(container.firstChild).toBeNull();
   });
-  test("renders an indicator when a hand has been raised", async () => {
+  test("renders an indicator when a hand has been raised", () => {
     const dateTime = new Date();
     const { container } = render(
       <RaisedHandIndicator raisedHandTime={dateTime} />,
     );
     expect(container.firstChild).toMatchSnapshot();
   });
-  test("renders an indicator when a hand has been raised with the expected time", async () => {
+  test("renders an indicator when a hand has been raised with the expected time", () => {
     const dateTime = new Date(new Date().getTime() - 60000);
     const { container } = render(
       <RaisedHandIndicator raisedHandTime={dateTime} />,

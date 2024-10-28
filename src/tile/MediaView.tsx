@@ -8,13 +8,7 @@ Please see LICENSE in the repository root for full details.
 import { TrackReferenceOrPlaceholder } from "@livekit/components-core";
 import { animated } from "@react-spring/web";
 import { RoomMember } from "matrix-js-sdk/src/matrix";
-import {
-  ComponentProps,
-  ReactNode,
-  forwardRef,
-  useEffect,
-  useState,
-} from "react";
+import { ComponentProps, ReactNode, forwardRef } from "react";
 import { useTranslation } from "react-i18next";
 import classNames from "classnames";
 import { VideoTrack } from "@livekit/components-react";

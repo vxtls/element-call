@@ -1,18 +1,26 @@
-import { useEffect, useState } from "react";
+/*
+Copyright 2024 New Vector Ltd.
+
+SPDX-License-Identifier: AGPL-3.0-only
+Please see LICENSE in the repository root for full details.
+*/
+
+import { ReactNode, useEffect, useState } from "react";
+
 import styles from "./RaisedHandIndicator.module.css";
 
 export function RaisedHandIndicator({
   raisedHandTime,
 }: {
   raisedHandTime?: Date;
-}) {
+}): ReactNode {
   const [raisedHandDuration, setRaisedHandDuration] = useState("");
 
   useEffect(() => {
     if (!raisedHandTime) {
       return;
     }
-    const calculateTime = () => {
+    const calculateTime = (): void => {
       const totalSeconds = Math.ceil(
         (new Date().getTime() - raisedHandTime.getTime()) / 1000,
       );
@@ -22,8 +30,8 @@ export function RaisedHandIndicator({
         `${minutes < 10 ? "0" : ""}${minutes}:${seconds < 10 ? "0" : ""}${seconds}`,
       );
     };
-    const to = setInterval(calculateTime, 1000);
     calculateTime();
+    const to = setInterval(calculateTime, 1000);
     return (): void => clearInterval(to);
   }, [setRaisedHandDuration, raisedHandTime]);
 
