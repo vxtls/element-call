@@ -13,14 +13,16 @@ import styles from "./RaisedHandIndicator.module.css";
 export function RaisedHandIndicator({
   raisedHandTime,
   minature,
+  showTimer,
 }: {
   raisedHandTime?: Date;
   minature?: boolean;
+  showTimer?: boolean;
 }): ReactNode {
   const [raisedHandDuration, setRaisedHandDuration] = useState("");
 
   useEffect(() => {
-    if (!raisedHandTime) {
+    if (!raisedHandTime || !showTimer) {
       return;
     }
     const calculateTime = (): void => {
@@ -36,7 +38,7 @@ export function RaisedHandIndicator({
     calculateTime();
     const to = setInterval(calculateTime, 1000);
     return (): void => clearInterval(to);
-  }, [setRaisedHandDuration, raisedHandTime]);
+  }, [setRaisedHandDuration, raisedHandTime, showTimer]);
 
   if (raisedHandTime) {
     return (
@@ -54,7 +56,7 @@ export function RaisedHandIndicator({
             ✋
           </span>
         </div>
-        <p>{raisedHandDuration}</p>
+        {showTimer && <p>{raisedHandDuration}</p>}
       </div>
     );
   }

@@ -22,21 +22,21 @@ describe("RaisedHandIndicator", () => {
   test("renders an indicator when a hand has been raised", () => {
     const dateTime = new Date();
     const { container } = render(
-      <RaisedHandIndicator raisedHandTime={dateTime} />,
+      <RaisedHandIndicator raisedHandTime={dateTime} showTimer />,
     );
     expect(container.firstChild).toMatchSnapshot();
   });
   test("renders an indicator when a hand has been raised with the expected time", () => {
     const dateTime = new Date(new Date().getTime() - 60000);
     const { container } = render(
-      <RaisedHandIndicator raisedHandTime={dateTime} />,
+      <RaisedHandIndicator raisedHandTime={dateTime} showTimer />,
     );
     expect(container.firstChild).toMatchSnapshot();
   });
   test("renders a smaller indicator when minature is specified", () => {
     const dateTime = new Date();
     const { container } = render(
-      <RaisedHandIndicator raisedHandTime={dateTime} minature />,
+      <RaisedHandIndicator raisedHandTime={dateTime} minature showTimer />,
     );
     expect(container.firstChild).toMatchSnapshot();
   });

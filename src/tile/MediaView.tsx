@@ -18,6 +18,7 @@ import { ErrorIcon } from "@vector-im/compound-design-tokens/assets/web/icons";
 import styles from "./MediaView.module.css";
 import { Avatar } from "../Avatar";
 import { RaisedHandIndicator } from "../reactions/RaisedHandIndicator";
+import { showHandRaisedTimer, useSetting } from "../settings/settings";
 
 interface Props extends ComponentProps<typeof animated.div> {
   className?: string;
@@ -58,6 +59,7 @@ export const MediaView = forwardRef<HTMLDivElement, Props>(
     ref,
   ) => {
     const { t } = useTranslation();
+    const [handRaiseTimerVisible] = useSetting(showHandRaisedTimer);
 
     const avatarSize = Math.round(Math.min(targetWidth, targetHeight) / 2);
 
@@ -95,6 +97,7 @@ export const MediaView = forwardRef<HTMLDivElement, Props>(
           <RaisedHandIndicator
             raisedHandTime={raisedHandTime}
             minature={avatarSize < 96}
+            showTimer={handRaiseTimerVisible}
           />
           <div className={styles.nameTag}>
             {nameTagLeadingIcon}
