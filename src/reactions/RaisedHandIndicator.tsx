@@ -21,6 +21,7 @@ export function RaisedHandIndicator({
 }): ReactNode {
   const [raisedHandDuration, setRaisedHandDuration] = useState("");
 
+  // This effect creates a simple timer effect.
   useEffect(() => {
     if (!raisedHandTime || !showTimer) {
       return;

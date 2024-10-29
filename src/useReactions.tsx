@@ -72,6 +72,7 @@ export const ReactionsProvider = ({
     clientState?.state === "valid" && clientState.supportedFeatures.reactions;
   const room = rtcSession.room;
 
+  // Calculate our own reaction event.
   const myReactionId = useMemo((): string | null => {
     const myUserId = room.client.getUserId();
     if (myUserId) {
@@ -79,6 +80,15 @@ export const ReactionsProvider = ({
     }
     return null;
   }, [raisedHands, room]);
+
+  // Reduce the data down for the consumers.
+  const resultRaisedHands = useMemo(
+    () =>
+      Object.fromEntries(
+        Object.entries(raisedHands).map(([uid, data]) => [uid, data.time]),
+      ),
+    [raisedHands],
+  );
 
   const addRaisedHand = useCallback(
     (userId: string, info: RaisedHandInfo) => {
@@ -98,7 +108,7 @@ export const ReactionsProvider = ({
     [raisedHands],
   );
 
-  // Load any existing reactions.
+  // This effect will check the state whenever the membership of the session changes.
   useEffect(() => {
     const getLastReactionEvent = (eventId: string): MatrixEvent | undefined => {
       const relations = room.relations.getChildEventsForEvent(
@@ -148,6 +158,7 @@ export const ReactionsProvider = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [room, memberships]);
 
+  // This effect handles any *live* reaction/redactions in the room.
   useEffect(() => {
     const handleReactionEvent = (event: MatrixEvent): void => {
       const sender = event.getSender();
@@ -200,15 +211,6 @@ export const ReactionsProvider = ({
       room.off(MatrixRoomEvent.Redaction, handleReactionEvent);
     };
   }, [room, addRaisedHand, removeRaisedHand, memberships, raisedHands]);
-
-  // Reduce the data down for the consumers.
-  const resultRaisedHands = useMemo(
-    () =>
-      Object.fromEntries(
-        Object.entries(raisedHands).map(([uid, data]) => [uid, data.time]),
-      ),
-    [raisedHands],
-  );
 
   return (
     <ReactionsContext.Provider
