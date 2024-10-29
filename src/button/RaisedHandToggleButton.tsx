@@ -61,13 +61,8 @@ export function RaiseHandToggleButton({
   client,
   rtcSession,
 }: RaisedHandToggleButton): ReactNode {
-  const {
-    raisedHands,
-    removeRaisedHand,
-    addRaisedHand,
-    myReactionId,
-    setMyReactionId,
-  } = useReactions();
+  const { raisedHands, removeRaisedHand, addRaisedHand, myReactionId } =
+    useReactions();
   const [busy, setBusy] = useState(false);
   const userId = client.getUserId()!;
   const isHandRaised = !!raisedHands[userId];
@@ -81,7 +76,6 @@ export function RaiseHandToggleButton({
           .redactEvent(rtcSession.room.roomId, myReactionId)
           .then(() => {
             logger.debug("Redacted raise hand event");
-            setMyReactionId(null);
             removeRaisedHand(userId);
           })
           .catch((e) => {
@@ -109,7 +103,6 @@ export function RaiseHandToggleButton({
         })
         .then((reaction) => {
           logger.debug("Sent raise hand event", reaction.event_id);
-          setMyReactionId(reaction.event_id);
           addRaisedHand(userId, {
             membershipEventId: parentEventId,
             reactionEventId: reaction.event_id,
@@ -131,7 +124,6 @@ export function RaiseHandToggleButton({
     rtcSession.room.roomId,
     addRaisedHand,
     removeRaisedHand,
-    setMyReactionId,
     userId,
   ]);
 

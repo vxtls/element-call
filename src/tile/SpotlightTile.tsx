@@ -53,7 +53,6 @@ interface SpotlightItemBaseProps {
   unencryptedWarning: boolean;
   displayName: string;
   "aria-hidden"?: boolean;
-  raisedHand: boolean;
 }
 
 interface SpotlightUserMediaItemBaseProps extends SpotlightItemBaseProps {
@@ -158,7 +157,6 @@ const SpotlightItem = forwardRef<HTMLDivElement, SpotlightItemProps>(
       unencryptedWarning,
       displayName,
       "aria-hidden": ariaHidden,
-      raisedHand: false,
     };
 
     return vm instanceof ScreenShareViewModel ? (

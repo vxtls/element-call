@@ -26,23 +26,31 @@ import { randomUUID } from "crypto";
 
 import { ReactionsProvider, useReactions } from "./useReactions";
 
-const membership = [
-  "@alice:example.org",
-  "@bob:example.org",
-  "@charlie:example.org",
-];
+const memberUserIdAlice = "@alice:example.org";
+const memberEventAlice = "$membership-alice:example.org";
+const memberUserIdBob = "@bob:example.org";
+const memberEventBob = "$membership-bob:example.org";
+
+const membership: Record<string, string> = {
+  [memberEventAlice]: memberUserIdAlice,
+  [memberEventBob]: memberUserIdBob,
+  "$membership-charlie:example.org": "@charlie:example.org",
+};
 
 const TestComponent: FC = () => {
-  const { raisedHands } = useReactions();
+  const { raisedHands, myReactionId } = useReactions();
   return (
-    <ul>
-      {Object.entries(raisedHands).map(([userId, date]) => (
-        <li key={userId}>
-          <span>{userId}</span>
-          <time>{date.getTime()}</time>
-        </li>
-      ))}
-    </ul>
+    <div>
+      <ul>
+        {Object.entries(raisedHands).map(([userId, date]) => (
+          <li key={userId}>
+            <span>{userId}</span>
+            <time>{date.getTime()}</time>
+          </li>
+        ))}
+      </ul>
+      <p>{myReactionId ? "Local reaction" : "No local reaction"}</p>
+    </div>
   );
 };
 
@@ -59,9 +67,9 @@ const TestComponentWrapper = ({
 };
 
 export class MockRTCSession extends EventEmitter {
-  public memberships = membership.map((sender) => ({
+  public memberships = Object.entries(membership).map(([eventId, sender]) => ({
     sender,
-    eventId: `!fake-${randomUUID()}:event`,
+    eventId,
     createdTs: (): Date => new Date(),
   }));
 
@@ -69,12 +77,12 @@ export class MockRTCSession extends EventEmitter {
     super();
   }
 
-  public testRemoveMember(userId: string) {
+  public testRemoveMember(userId: string): void {
     this.memberships = this.memberships.filter((u) => u.sender !== userId);
     this.emit(MatrixRTCSessionEvent.MembershipsChanged);
   }
 
-  public testAddMember(sender: string) {
+  public testAddMember(sender: string): void {
     this.memberships.push({
       sender,
       eventId: `!fake-${randomUUID()}:event`,
@@ -84,25 +92,27 @@ export class MockRTCSession extends EventEmitter {
   }
 }
 
-function createReaction(sender: string): MatrixEvent {
+function createReaction(parentMemberEvent: string): MatrixEvent {
   return new MatrixEvent({
-    sender,
+    sender: membership[parentMemberEvent],
     type: EventType.Reaction,
     origin_server_ts: new Date().getTime(),
     content: {
       "m.relates_to": {
         key: "🖐️",
+        event_id: parentMemberEvent,
       },
     },
     event_id: randomUUID(),
   });
 }
 
-function createRedaction(sender: string): MatrixEvent {
+function createRedaction(sender: string, reactionEventId: string): MatrixEvent {
   return new MatrixEvent({
     sender,
     type: EventType.RoomRedaction,
     origin_server_ts: new Date().getTime(),
+    redacts: reactionEventId,
     content: {},
     event_id: randomUUID(),
   });
@@ -115,29 +125,27 @@ export class MockRoom extends EventEmitter {
 
   public get client(): MatrixClient {
     return {
-      getUserId: (): string => "@alice:example.org",
+      getUserId: (): string => memberUserIdAlice,
     } as unknown as MatrixClient;
   }
 
   public get relations(): Room["relations"] {
     return {
-      getChildEventsForEvent: () => ({
-        getRelations: () => this.existingRelations,
+      getChildEventsForEvent: (membershipEventId: string) => ({
+        getRelations: (): MatrixEvent[] => {
+          const sender = membership[membershipEventId];
+          return this.existingRelations.filter((r) => r.getSender() === sender);
+        },
       }),
     } as unknown as Room["relations"];
   }
 
-  public testSendReaction(sender: string): void {
-    this.emit(
-      RoomEvent.Timeline,
-      createReaction(sender),
-      this,
-      undefined,
-      false,
-      {
-        timeline: new EventTimeline(new EventTimelineSet(undefined)),
-      },
-    );
+  public testSendReaction(parentMemberEvent: string): string {
+    const evt = createReaction(parentMemberEvent);
+    this.emit(RoomEvent.Timeline, evt, this, undefined, false, {
+      timeline: new EventTimeline(new EventTimelineSet(undefined)),
+    });
+    return evt.getId()!;
   }
 }
 
@@ -149,16 +157,26 @@ describe("useReactions", () => {
     );
     expect(queryByRole("list")?.children).to.have.lengthOf(0);
   });
+  test("handles own raised hand", () => {
+    const room = new MockRoom();
+    const rtcSession = new MockRTCSession(room);
+    const { queryByText, rerender } = render(
+      <TestComponentWrapper rtcSession={rtcSession} />,
+    );
+    room.testSendReaction(memberEventAlice);
+    rerender(<TestComponentWrapper rtcSession={rtcSession} />);
+    expect(queryByText("Local reaction")).toBeTruthy();
+  });
   test("handles incoming raised hand", () => {
     const room = new MockRoom();
     const rtcSession = new MockRTCSession(room);
     const { queryByRole, rerender } = render(
       <TestComponentWrapper rtcSession={rtcSession} />,
     );
-    room.testSendReaction("@foo:bar");
+    room.testSendReaction(memberEventAlice);
     rerender(<TestComponentWrapper rtcSession={rtcSession} />);
     expect(queryByRole("list")?.children).to.have.lengthOf(1);
-    room.testSendReaction("@baz:bar");
+    room.testSendReaction(memberEventBob);
     rerender(<TestComponentWrapper rtcSession={rtcSession} />);
     expect(queryByRole("list")?.children).to.have.lengthOf(2);
   });
@@ -168,12 +186,12 @@ describe("useReactions", () => {
     const { queryByRole, rerender } = render(
       <TestComponentWrapper rtcSession={rtcSession} />,
     );
-    room.testSendReaction("@foo:bar");
+    const reactionEventId = room.testSendReaction(memberEventAlice);
     rerender(<TestComponentWrapper rtcSession={rtcSession} />);
     expect(queryByRole("list")?.children).to.have.lengthOf(1);
     room.emit(
       RoomEvent.Redaction,
-      createRedaction("@foo:bar"),
+      createRedaction(memberUserIdAlice, reactionEventId),
       room,
       undefined,
     );
@@ -181,33 +199,33 @@ describe("useReactions", () => {
     expect(queryByRole("list")?.children).to.have.lengthOf(0);
   });
   test("handles loading events from cold", () => {
-    const room = new MockRoom([createReaction(membership[0])]);
+    const room = new MockRoom([createReaction(memberEventAlice)]);
     const rtcSession = new MockRTCSession(room);
     const { queryByRole } = render(
       <TestComponentWrapper rtcSession={rtcSession} />,
     );
     expect(queryByRole("list")?.children).to.have.lengthOf(1);
   });
-  test.only("will remove reaction when a member leaves the call", () => {
-    const room = new MockRoom([createReaction(membership[0])]);
+  test("will remove reaction when a member leaves the call", () => {
+    const room = new MockRoom([createReaction(memberEventAlice)]);
     const rtcSession = new MockRTCSession(room);
     const { queryByRole, rerender } = render(
       <TestComponentWrapper rtcSession={rtcSession} />,
     );
     expect(queryByRole("list")?.children).to.have.lengthOf(1);
-    rtcSession.testRemoveMember(membership[0]);
+    rtcSession.testRemoveMember(memberUserIdAlice);
     rerender(<TestComponentWrapper rtcSession={rtcSession} />);
     expect(queryByRole("list")?.children).to.have.lengthOf(0);
   });
   test("will remove reaction when a member joins via a new event", () => {
-    const room = new MockRoom([createReaction(membership[0])]);
+    const room = new MockRoom([createReaction(memberEventAlice)]);
     const rtcSession = new MockRTCSession(room);
     const { queryByRole, rerender } = render(
       <TestComponentWrapper rtcSession={rtcSession} />,
     );
     expect(queryByRole("list")?.children).to.have.lengthOf(1);
-    rtcSession.testRemoveMember(membership[0]);
-    rtcSession.testAddMember(membership[0]);
+    rtcSession.testRemoveMember(memberUserIdAlice);
+    rtcSession.testAddMember(memberUserIdAlice);
     rerender(<TestComponentWrapper rtcSession={rtcSession} />);
     expect(queryByRole("list")?.children).to.have.lengthOf(0);
   });

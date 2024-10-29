@@ -15,11 +15,7 @@ import {
   useSetting,
 } from "./settings";
 
-interface Props {
-  roomId?: string;
-}
-
-export const PreferencesSettingsTab: FC<Props> = ({}) => {
+export const PreferencesSettingsTab: FC = () => {
   const { t } = useTranslation();
   const [showHandRaisedTimer, setShowHandRaisedTimer] = useSetting(
     showHandRaisedTimerSetting,

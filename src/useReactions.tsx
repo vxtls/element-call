@@ -22,10 +22,10 @@ import {
   useMemo,
 } from "react";
 import { MatrixRTCSession } from "matrix-js-sdk/src/matrixrtc/MatrixRTCSession";
+import { logger } from "matrix-js-sdk/src/logger";
 
 import { useMatrixRTCSessionMemberships } from "./useMatrixRTCSessionMemberships";
 import { useClientState } from "./ClientContext";
-import { logger } from "matrix-js-sdk/src/logger";
 
 interface ReactionsContextType {
   raisedHands: Record<string, Date>;
@@ -33,7 +33,6 @@ interface ReactionsContextType {
   removeRaisedHand: (userId: string) => void;
   supportsReactions: boolean;
   myReactionId: string | null;
-  setMyReactionId: (id: string | null) => void;
 }
 
 const ReactionsContext = createContext<ReactionsContextType | undefined>(
@@ -54,6 +53,9 @@ export const useReactions = (): ReactionsContextType => {
   return context;
 };
 
+/**
+ * Provider that handles raised hand reactions for a given `rtcSession`.
+ */
 export const ReactionsProvider = ({
   children,
   rtcSession,
@@ -64,14 +66,19 @@ export const ReactionsProvider = ({
   const [raisedHands, setRaisedHands] = useState<
     Record<string, RaisedHandInfo>
   >({});
-  const [myReactionId, setMyReactionId] = useState<string | null>(null);
   const memberships = useMatrixRTCSessionMemberships(rtcSession);
   const clientState = useClientState();
   const supportsReactions =
     clientState?.state === "valid" && clientState.supportedFeatures.reactions;
   const room = rtcSession.room;
 
-  const myUserId = room.client.getUserId();
+  const myReactionId = useMemo((): string | null => {
+    const myUserId = room.client.getUserId();
+    if (myUserId) {
+      return raisedHands[myUserId]?.reactionEventId;
+    }
+    return null;
+  }, [raisedHands, room]);
 
   const addRaisedHand = useCallback(
     (userId: string, info: RaisedHandInfo) => {
@@ -86,9 +93,6 @@ export const ReactionsProvider = ({
   const removeRaisedHand = useCallback(
     (userId: string) => {
       delete raisedHands[userId];
-      if (userId === myUserId) {
-        setMyReactionId(null);
-      }
       setRaisedHands({ ...raisedHands });
     },
     [raisedHands],
@@ -106,7 +110,6 @@ export const ReactionsProvider = ({
       return allEvents.length > 0 ? allEvents[0] : undefined;
     };
 
-    console.log(memberships, raisedHands);
     // Remove any raised hands for users no longer joined to the call.
     for (const userId of Object.keys(raisedHands).filter(
       (rhId) => !memberships.find((u) => u.sender == rhId),
@@ -133,19 +136,14 @@ export const ReactionsProvider = ({
       if (reaction && reaction.getType() === EventType.Reaction) {
         const content = reaction.getContent() as ReactionEventContent;
         if (content?.["m.relates_to"]?.key === "🖐️") {
-          console.log("found key, raising hand", m.sender);
           addRaisedHand(m.sender, {
             membershipEventId: m.eventId,
             reactionEventId: eventId,
             time: new Date(reaction.localTimestamp),
           });
-          if (m.sender === room.client.getUserId()) {
-            setMyReactionId(eventId);
-          }
         }
       }
     }
-    console.log("After", raisedHands);
     // Deliberately ignoring addRaisedHand, raisedHands which was causing looping.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [room, memberships]);
@@ -186,7 +184,6 @@ export const ReactionsProvider = ({
         const targetUser = Object.entries(raisedHands).find(
           ([u, r]) => r.reactionEventId === targetEvent,
         )?.[0];
-        console.log(targetEvent, raisedHands);
         if (!targetUser) {
           // Reaction target was not for us, ignoring
           return;
@@ -202,7 +199,7 @@ export const ReactionsProvider = ({
       room.off(MatrixRoomEvent.Timeline, handleReactionEvent);
       room.off(MatrixRoomEvent.Redaction, handleReactionEvent);
     };
-  }, [room, addRaisedHand, removeRaisedHand]);
+  }, [room, addRaisedHand, removeRaisedHand, memberships, raisedHands]);
 
   // Reduce the data down for the consumers.
   const resultRaisedHands = useMemo(
@@ -221,7 +218,6 @@ export const ReactionsProvider = ({
         removeRaisedHand,
         supportsReactions,
         myReactionId,
-        setMyReactionId,
       }}
     >
       {children}
