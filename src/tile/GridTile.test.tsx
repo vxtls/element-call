@@ -33,6 +33,9 @@ test("GridTile is accessible", async () => {
         room: {
           on: () => {},
           off: () => {},
+          client: {
+            getUserId: () => null,
+          },
         },
         memberships: [],
       } as unknown as MatrixRTCSession;

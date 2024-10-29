@@ -110,7 +110,11 @@ export function RaiseHandToggleButton({
         .then((reaction) => {
           logger.debug("Sent raise hand event", reaction.event_id);
           setMyReactionId(reaction.event_id);
-          addRaisedHand(userId, parentEventId, new Date());
+          addRaisedHand(userId, {
+            membershipEventId: parentEventId,
+            reactionEventId: reaction.event_id,
+            time: new Date(),
+          });
         })
         .catch((e) => {
           logger.error("Failed to send reaction event", e);

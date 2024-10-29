@@ -8,7 +8,10 @@ Please see LICENSE in the repository root for full details.
 import { render } from "@testing-library/react";
 import { FC, ReactNode } from "react";
 import { describe, expect, test } from "vitest";
-import { MatrixRTCSession } from "matrix-js-sdk/src/matrixrtc/MatrixRTCSession";
+import {
+  MatrixRTCSession,
+  MatrixRTCSessionEvent,
+} from "matrix-js-sdk/src/matrixrtc/MatrixRTCSession";
 import {
   EventTimeline,
   EventTimelineSet,
@@ -43,24 +46,43 @@ const TestComponent: FC = () => {
   );
 };
 
-const TestComponentWrapper = ({ room }: { room: MockRoom }): ReactNode => {
-  const fakeRtcSession = {
-    on: () => {},
-    off: () => {},
-    room,
-    memberships: membership.map((sender) => ({
-      sender,
-      eventId: "!fake:event",
-      createdTs: (): Date => new Date(),
-    })),
-  } as unknown as MatrixRTCSession;
-
+const TestComponentWrapper = ({
+  rtcSession,
+}: {
+  rtcSession: MockRTCSession;
+}): ReactNode => {
   return (
-    <ReactionsProvider rtcSession={fakeRtcSession}>
+    <ReactionsProvider rtcSession={rtcSession as unknown as MatrixRTCSession}>
       <TestComponent />
     </ReactionsProvider>
   );
 };
+
+export class MockRTCSession extends EventEmitter {
+  public memberships = membership.map((sender) => ({
+    sender,
+    eventId: `!fake-${randomUUID()}:event`,
+    createdTs: (): Date => new Date(),
+  }));
+
+  public constructor(public readonly room: MockRoom) {
+    super();
+  }
+
+  public testRemoveMember(userId: string) {
+    this.memberships = this.memberships.filter((u) => u.sender !== userId);
+    this.emit(MatrixRTCSessionEvent.MembershipsChanged);
+  }
+
+  public testAddMember(sender: string) {
+    this.memberships.push({
+      sender,
+      eventId: `!fake-${randomUUID()}:event`,
+      createdTs: (): Date => new Date(),
+    });
+    this.emit(MatrixRTCSessionEvent.MembershipsChanged);
+  }
+}
 
 function createReaction(sender: string): MatrixEvent {
   return new MatrixEvent({
@@ -121,29 +143,33 @@ export class MockRoom extends EventEmitter {
 
 describe("useReactions", () => {
   test("starts with an empty list", () => {
-    const room = new MockRoom();
-    const { queryByRole } = render(<TestComponentWrapper room={room} />);
+    const rtcSession = new MockRTCSession(new MockRoom());
+    const { queryByRole } = render(
+      <TestComponentWrapper rtcSession={rtcSession} />,
+    );
     expect(queryByRole("list")?.children).to.have.lengthOf(0);
   });
   test("handles incoming raised hand", () => {
     const room = new MockRoom();
+    const rtcSession = new MockRTCSession(room);
     const { queryByRole, rerender } = render(
-      <TestComponentWrapper room={room} />,
+      <TestComponentWrapper rtcSession={rtcSession} />,
     );
     room.testSendReaction("@foo:bar");
-    rerender(<TestComponentWrapper room={room} />);
+    rerender(<TestComponentWrapper rtcSession={rtcSession} />);
     expect(queryByRole("list")?.children).to.have.lengthOf(1);
     room.testSendReaction("@baz:bar");
-    rerender(<TestComponentWrapper room={room} />);
+    rerender(<TestComponentWrapper rtcSession={rtcSession} />);
     expect(queryByRole("list")?.children).to.have.lengthOf(2);
   });
   test("handles incoming unraised hand", () => {
     const room = new MockRoom();
+    const rtcSession = new MockRTCSession(room);
     const { queryByRole, rerender } = render(
-      <TestComponentWrapper room={room} />,
+      <TestComponentWrapper rtcSession={rtcSession} />,
     );
     room.testSendReaction("@foo:bar");
-    rerender(<TestComponentWrapper room={room} />);
+    rerender(<TestComponentWrapper rtcSession={rtcSession} />);
     expect(queryByRole("list")?.children).to.have.lengthOf(1);
     room.emit(
       RoomEvent.Redaction,
@@ -151,12 +177,38 @@ describe("useReactions", () => {
       room,
       undefined,
     );
-    rerender(<TestComponentWrapper room={room} />);
+    rerender(<TestComponentWrapper rtcSession={rtcSession} />);
     expect(queryByRole("list")?.children).to.have.lengthOf(0);
   });
   test("handles loading events from cold", () => {
     const room = new MockRoom([createReaction(membership[0])]);
-    const { queryByRole } = render(<TestComponentWrapper room={room} />);
+    const rtcSession = new MockRTCSession(room);
+    const { queryByRole } = render(
+      <TestComponentWrapper rtcSession={rtcSession} />,
+    );
     expect(queryByRole("list")?.children).to.have.lengthOf(1);
+  });
+  test.only("will remove reaction when a member leaves the call", () => {
+    const room = new MockRoom([createReaction(membership[0])]);
+    const rtcSession = new MockRTCSession(room);
+    const { queryByRole, rerender } = render(
+      <TestComponentWrapper rtcSession={rtcSession} />,
+    );
+    expect(queryByRole("list")?.children).to.have.lengthOf(1);
+    rtcSession.testRemoveMember(membership[0]);
+    rerender(<TestComponentWrapper rtcSession={rtcSession} />);
+    expect(queryByRole("list")?.children).to.have.lengthOf(0);
+  });
+  test("will remove reaction when a member joins via a new event", () => {
+    const room = new MockRoom([createReaction(membership[0])]);
+    const rtcSession = new MockRTCSession(room);
+    const { queryByRole, rerender } = render(
+      <TestComponentWrapper rtcSession={rtcSession} />,
+    );
+    expect(queryByRole("list")?.children).to.have.lengthOf(1);
+    rtcSession.testRemoveMember(membership[0]);
+    rtcSession.testAddMember(membership[0]);
+    rerender(<TestComponentWrapper rtcSession={rtcSession} />);
+    expect(queryByRole("list")?.children).to.have.lengthOf(0);
   });
 });

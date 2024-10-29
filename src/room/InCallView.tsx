@@ -174,7 +174,8 @@ export const InCallView: FC<InCallViewProps> = ({
   connState,
   onShareClick,
 }) => {
-  const { supportsReactions, raisedHandCount } = useReactions();
+  const { supportsReactions, raisedHands } = useReactions();
+  const raisedHandCount = Object.keys(raisedHands).length;
   const [previousRaisedHandCount, setPreviousRaisedHandCount] =
     useState(raisedHandCount);
 

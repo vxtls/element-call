@@ -25,11 +25,11 @@ import { MatrixRTCSession } from "matrix-js-sdk/src/matrixrtc/MatrixRTCSession";
 
 import { useMatrixRTCSessionMemberships } from "./useMatrixRTCSessionMemberships";
 import { useClientState } from "./ClientContext";
+import { logger } from "matrix-js-sdk/src/logger";
 
 interface ReactionsContextType {
   raisedHands: Record<string, Date>;
-  raisedHandCount: number;
-  addRaisedHand: (userId: string, parentEventId: string, date: Date) => void;
+  addRaisedHand: (userId: string, info: RaisedHandInfo) => void;
   removeRaisedHand: (userId: string) => void;
   supportsReactions: boolean;
   myReactionId: string | null;
@@ -39,6 +39,12 @@ interface ReactionsContextType {
 const ReactionsContext = createContext<ReactionsContextType | undefined>(
   undefined,
 );
+
+interface RaisedHandInfo {
+  membershipEventId: string;
+  reactionEventId: string;
+  time: Date;
+}
 
 export const useReactions = (): ReactionsContextType => {
   const context = useContext(ReactionsContext);
@@ -56,32 +62,23 @@ export const ReactionsProvider = ({
   rtcSession: MatrixRTCSession;
 }): JSX.Element => {
   const [raisedHands, setRaisedHands] = useState<
-    Record<
-      string,
-      {
-        time: Date;
-        parentEventId: string;
-      }
-    >
+    Record<string, RaisedHandInfo>
   >({});
   const [myReactionId, setMyReactionId] = useState<string | null>(null);
-  const [raisedHandCount, setRaisedHandCount] = useState(0);
   const memberships = useMatrixRTCSessionMemberships(rtcSession);
   const clientState = useClientState();
   const supportsReactions =
     clientState?.state === "valid" && clientState.supportedFeatures.reactions;
   const room = rtcSession.room;
 
+  const myUserId = room.client.getUserId();
+
   const addRaisedHand = useCallback(
-    (userId: string, parentEventId: string, time: Date) => {
+    (userId: string, info: RaisedHandInfo) => {
       setRaisedHands({
         ...raisedHands,
-        [userId]: {
-          time,
-          parentEventId,
-        },
+        [userId]: info,
       });
-      setRaisedHandCount(Object.keys(raisedHands).length + 1);
     },
     [raisedHands],
   );
@@ -89,11 +86,10 @@ export const ReactionsProvider = ({
   const removeRaisedHand = useCallback(
     (userId: string) => {
       delete raisedHands[userId];
-      if (userId) {
+      if (userId === myUserId) {
         setMyReactionId(null);
       }
-      setRaisedHands(raisedHands);
-      setRaisedHandCount(Object.keys(raisedHands).length);
+      setRaisedHands({ ...raisedHands });
     },
     [raisedHands],
   );
@@ -110,13 +106,21 @@ export const ReactionsProvider = ({
       return allEvents.length > 0 ? allEvents[0] : undefined;
     };
 
+    console.log(memberships, raisedHands);
+    // Remove any raised hands for users no longer joined to the call.
+    for (const userId of Object.keys(raisedHands).filter(
+      (rhId) => !memberships.find((u) => u.sender == rhId),
+    )) {
+      removeRaisedHand(userId);
+    }
+
     for (const m of memberships) {
       if (!m.sender || !m.eventId) {
         continue;
       }
       if (
         raisedHands[m.sender] &&
-        raisedHands[m.sender].parentEventId !== m.eventId
+        raisedHands[m.sender].membershipEventId !== m.eventId
       ) {
         // Membership event for sender has changed.
         removeRaisedHand(m.sender);
@@ -129,13 +133,19 @@ export const ReactionsProvider = ({
       if (reaction && reaction.getType() === EventType.Reaction) {
         const content = reaction.getContent() as ReactionEventContent;
         if (content?.["m.relates_to"]?.key === "🖐️") {
-          addRaisedHand(m.sender, m.eventId, new Date(reaction.localTimestamp));
+          console.log("found key, raising hand", m.sender);
+          addRaisedHand(m.sender, {
+            membershipEventId: m.eventId,
+            reactionEventId: eventId,
+            time: new Date(reaction.localTimestamp),
+          });
           if (m.sender === room.client.getUserId()) {
             setMyReactionId(eventId);
           }
         }
       }
     }
+    console.log("After", raisedHands);
     // Deliberately ignoring addRaisedHand, raisedHands which was causing looping.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [room, memberships]);
@@ -143,23 +153,45 @@ export const ReactionsProvider = ({
   useEffect(() => {
     const handleReactionEvent = (event: MatrixEvent): void => {
       const sender = event.getSender();
-      if (!sender) {
-        // Skip any event without a sender.
+      const reactionEventId = event.getId();
+      if (!sender || !reactionEventId) {
+        // Skip any event without a sender or event ID.
         return;
       }
+
       if (event.getType() === EventType.Reaction) {
-        // TODO: check if target of reaction is a call membership event
         const content = event.getContent() as ReactionEventContent;
-        if (content?.["m.relates_to"].key === "🖐️") {
-          addRaisedHand(
-            sender,
-            content["m.relates_to"].event_id,
-            new Date(event.localTimestamp),
+        const membershipEventId = content["m.relates_to"].event_id;
+
+        if (
+          !memberships.some(
+            (e) => e.eventId === membershipEventId && e.sender === sender,
+          )
+        ) {
+          logger.warn(
+            `Reaction target was not a membership event for ${sender}, ignoring`,
           );
+          return;
+        }
+
+        if (content?.["m.relates_to"].key === "🖐️") {
+          addRaisedHand(sender, {
+            reactionEventId,
+            membershipEventId,
+            time: new Date(event.localTimestamp),
+          });
         }
       } else if (event.getType() === EventType.RoomRedaction) {
-        // TODO: check target of redaction event
-        removeRaisedHand(sender);
+        const targetEvent = event.event.redacts;
+        const targetUser = Object.entries(raisedHands).find(
+          ([u, r]) => r.reactionEventId === targetEvent,
+        )?.[0];
+        console.log(targetEvent, raisedHands);
+        if (!targetUser) {
+          // Reaction target was not for us, ignoring
+          return;
+        }
+        removeRaisedHand(targetUser);
       }
     };
 
@@ -172,19 +204,19 @@ export const ReactionsProvider = ({
     };
   }, [room, addRaisedHand, removeRaisedHand]);
 
+  // Reduce the data down for the consumers.
   const resultRaisedHands = useMemo(
     () =>
       Object.fromEntries(
         Object.entries(raisedHands).map(([uid, data]) => [uid, data.time]),
       ),
-    [raisedHands, raisedHandCount],
+    [raisedHands],
   );
 
   return (
     <ReactionsContext.Provider
       value={{
         raisedHands: resultRaisedHands,
-        raisedHandCount,
         addRaisedHand,
         removeRaisedHand,
         supportsReactions,
