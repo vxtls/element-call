@@ -19,6 +19,7 @@ import {
   ReactNode,
   useCallback,
   useEffect,
+  useMemo,
 } from "react";
 import { MatrixRTCSession } from "matrix-js-sdk/src/matrixrtc/MatrixRTCSession";
 
@@ -28,7 +29,7 @@ import { useClientState } from "./ClientContext";
 interface ReactionsContextType {
   raisedHands: Record<string, Date>;
   raisedHandCount: number;
-  addRaisedHand: (userId: string, date: Date) => void;
+  addRaisedHand: (userId: string, parentEventId: string, date: Date) => void;
   removeRaisedHand: (userId: string) => void;
   supportsReactions: boolean;
   myReactionId: string | null;
@@ -54,7 +55,15 @@ export const ReactionsProvider = ({
   children: ReactNode;
   rtcSession: MatrixRTCSession;
 }): JSX.Element => {
-  const [raisedHands, setRaisedHands] = useState<Record<string, Date>>({});
+  const [raisedHands, setRaisedHands] = useState<
+    Record<
+      string,
+      {
+        time: Date;
+        parentEventId: string;
+      }
+    >
+  >({});
   const [myReactionId, setMyReactionId] = useState<string | null>(null);
   const [raisedHandCount, setRaisedHandCount] = useState(0);
   const memberships = useMatrixRTCSessionMemberships(rtcSession);
@@ -64,10 +73,13 @@ export const ReactionsProvider = ({
   const room = rtcSession.room;
 
   const addRaisedHand = useCallback(
-    (userId: string, time: Date) => {
+    (userId: string, parentEventId: string, time: Date) => {
       setRaisedHands({
         ...raisedHands,
-        [userId]: time,
+        [userId]: {
+          time,
+          parentEventId,
+        },
       });
       setRaisedHandCount(Object.keys(raisedHands).length + 1);
     },
@@ -77,6 +89,9 @@ export const ReactionsProvider = ({
   const removeRaisedHand = useCallback(
     (userId: string) => {
       delete raisedHands[userId];
+      if (userId) {
+        setMyReactionId(null);
+      }
       setRaisedHands(raisedHands);
       setRaisedHandCount(Object.keys(raisedHands).length);
     },
@@ -99,6 +114,10 @@ export const ReactionsProvider = ({
       if (!m.sender || !m.eventId) {
         continue;
       }
+      if (raisedHands[m.sender].parentEventId !== m.eventId) {
+        // Membership event for sender has changed.
+        removeRaisedHand(m.sender);
+      }
       const reaction = getLastReactionEvent(m.eventId);
       const eventId = reaction?.getId();
       if (!eventId) {
@@ -107,7 +126,7 @@ export const ReactionsProvider = ({
       if (reaction && reaction.getType() === EventType.Reaction) {
         const content = reaction.getContent() as ReactionEventContent;
         if (content?.["m.relates_to"]?.key === "🖐️") {
-          addRaisedHand(m.sender, new Date(reaction.localTimestamp));
+          addRaisedHand(m.sender, m.eventId, new Date(reaction.localTimestamp));
           if (m.sender === room.client.getUserId()) {
             setMyReactionId(eventId);
           }
@@ -116,7 +135,7 @@ export const ReactionsProvider = ({
     }
     // Deliberately ignoring addRaisedHand which was causing looping.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [room, memberships]);
+  }, [raisedHands, room, memberships]);
 
   useEffect(() => {
     const handleReactionEvent = (event: MatrixEvent): void => {
@@ -129,7 +148,11 @@ export const ReactionsProvider = ({
         // TODO: check if target of reaction is a call membership event
         const content = event.getContent() as ReactionEventContent;
         if (content?.["m.relates_to"].key === "🖐️") {
-          addRaisedHand(sender, new Date(event.localTimestamp));
+          addRaisedHand(
+            sender,
+            content["m.relates_to"].event_id,
+            new Date(event.localTimestamp),
+          );
         }
       } else if (event.getType() === EventType.RoomRedaction) {
         // TODO: check target of redaction event
@@ -146,10 +169,18 @@ export const ReactionsProvider = ({
     };
   }, [room, addRaisedHand, removeRaisedHand]);
 
+  const resultRaisedHands = useMemo(
+    () =>
+      Object.fromEntries(
+        Object.entries(raisedHands).map(([uid, data]) => [uid, data.time]),
+      ),
+    [raisedHands],
+  );
+
   return (
     <ReactionsContext.Provider
       value={{
-        raisedHands,
+        raisedHands: resultRaisedHands,
         raisedHandCount,
         addRaisedHand,
         removeRaisedHand,

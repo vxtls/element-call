@@ -99,19 +99,20 @@ export function RaiseHandToggleButton({
         logger.error("Cannot find own membership event");
         return;
       }
+      const parentEventId = myMembership.eventId;
       setBusy(true);
       client
         .sendEvent(rtcSession.room.roomId, EventType.Reaction, {
           "m.relates_to": {
             rel_type: RelationType.Annotation,
-            event_id: myMembership.eventId,
+            event_id: parentEventId,
             key: "🖐️",
           },
         })
         .then((reaction) => {
           logger.debug("Sent raise hand event", reaction.event_id);
           setMyReactionId(reaction.event_id);
-          addRaisedHand(userId, new Date());
+          addRaisedHand(userId, parentEventId, new Date());
         })
         .catch((e) => {
           logger.error("Failed to send reaction event", e);
