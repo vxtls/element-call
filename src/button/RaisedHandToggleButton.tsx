@@ -53,13 +53,11 @@ const InnerButton: FC<InnerButtonButtonProps> = ({ raised, ...props }) => {
 };
 
 interface RaisedHandToggleButton {
-  key: string;
   rtcSession: MatrixRTCSession;
   client: MatrixClient;
 }
 
 export function RaiseHandToggleButton({
-  key,
   client,
   rtcSession,
 }: RaisedHandToggleButton): ReactNode {
@@ -135,7 +133,6 @@ export function RaiseHandToggleButton({
 
   return (
     <InnerButton
-      key={key}
       disabled={busy}
       onClick={toggleRaisedHand}
       raised={isHandRaised}

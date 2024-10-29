@@ -114,7 +114,10 @@ export const ReactionsProvider = ({
       if (!m.sender || !m.eventId) {
         continue;
       }
-      if (raisedHands[m.sender].parentEventId !== m.eventId) {
+      if (
+        raisedHands[m.sender] &&
+        raisedHands[m.sender].parentEventId !== m.eventId
+      ) {
         // Membership event for sender has changed.
         removeRaisedHand(m.sender);
       }
@@ -133,9 +136,9 @@ export const ReactionsProvider = ({
         }
       }
     }
-    // Deliberately ignoring addRaisedHand which was causing looping.
+    // Deliberately ignoring addRaisedHand, raisedHands which was causing looping.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [raisedHands, room, memberships]);
+  }, [room, memberships]);
 
   useEffect(() => {
     const handleReactionEvent = (event: MatrixEvent): void => {
@@ -174,7 +177,7 @@ export const ReactionsProvider = ({
       Object.fromEntries(
         Object.entries(raisedHands).map(([uid, data]) => [uid, data.time]),
       ),
-    [raisedHands],
+    [raisedHands, raisedHandCount],
   );
 
   return (
