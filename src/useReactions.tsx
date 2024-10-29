@@ -40,8 +40,17 @@ const ReactionsContext = createContext<ReactionsContextType | undefined>(
 );
 
 interface RaisedHandInfo {
+  /**
+   * Call membership event that was reacted to.
+   */
   membershipEventId: string;
+  /**
+   * Event ID of the reaction itself.
+   */
   reactionEventId: string;
+  /**
+   * The time when the reaction was raised.
+   */
   time: Date;
 }
 
@@ -110,6 +119,8 @@ export const ReactionsProvider = ({
 
   // This effect will check the state whenever the membership of the session changes.
   useEffect(() => {
+    // Fetches the first reaction for a given event. We assume no more than
+    // one reaction on an event here.
     const getLastReactionEvent = (eventId: string): MatrixEvent | undefined => {
       const relations = room.relations.getChildEventsForEvent(
         eventId,
@@ -127,6 +138,8 @@ export const ReactionsProvider = ({
       removeRaisedHand(userId);
     }
 
+    // For each member in the call, check to see if a reaction has
+    // been raised and adjust.
     for (const m of memberships) {
       if (!m.sender || !m.eventId) {
         continue;
@@ -135,7 +148,8 @@ export const ReactionsProvider = ({
         raisedHands[m.sender] &&
         raisedHands[m.sender].membershipEventId !== m.eventId
       ) {
-        // Membership event for sender has changed.
+        // Membership event for sender has changed since the hand
+        // was raised, reset.
         removeRaisedHand(m.sender);
       }
       const reaction = getLastReactionEvent(m.eventId);
@@ -172,6 +186,8 @@ export const ReactionsProvider = ({
         const content = event.getContent() as ReactionEventContent;
         const membershipEventId = content["m.relates_to"].event_id;
 
+        // Check to see if this reaction was made to a membership event (and the
+        // sender of the reaction matches the membership)
         if (
           !memberships.some(
             (e) => e.eventId === membershipEventId && e.sender === sender,
@@ -193,7 +209,7 @@ export const ReactionsProvider = ({
       } else if (event.getType() === EventType.RoomRedaction) {
         const targetEvent = event.event.redacts;
         const targetUser = Object.entries(raisedHands).find(
-          ([u, r]) => r.reactionEventId === targetEvent,
+          ([_u, r]) => r.reactionEventId === targetEvent,
         )?.[0];
         if (!targetUser) {
           // Reaction target was not for us, ignoring
