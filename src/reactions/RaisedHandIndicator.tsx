@@ -6,9 +6,9 @@ Please see LICENSE in the repository root for full details.
 */
 
 import { ReactNode, useEffect, useState } from "react";
+import classNames from "classnames";
 
 import styles from "./RaisedHandIndicator.module.css";
-import classNames from "classnames";
 
 export function RaisedHandIndicator({
   raisedHandTime,
