@@ -3,7 +3,6 @@
   background-color: var(--cpd-color-bg-subtle-primary);
   border-radius: var(--cpd-radius-pill-effect);
   color: var(--cpd-color-icon-secondary);
-  border: 1px solid var(--cpd-color-yellow-1200);
 }
 
 .raisedHandWidget > p {
