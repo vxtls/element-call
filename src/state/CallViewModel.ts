@@ -72,6 +72,7 @@ import { duplicateTiles } from "../settings/settings";
 import { isFirefox } from "../Platform";
 import { setPipEnabled } from "../controls";
 import { EncryptionSystem } from "../e2ee/sharedKeyManagement";
+import { Config } from "../config/Config";
 
 // How long we wait after a focus switch before showing the real participant
 // list again
@@ -442,7 +443,56 @@ export class CallViewModel extends ViewModel {
           }.bind(this)(),
         );
 
-        for (const [id, t] of prevItems) if (!newItems.has(id)) t.destroy();
+        // Generate non member items (items without a corresponding MatrixRTC member)
+        // Those items should not be rendered, they are participants in livekit that do not have a corresponding
+        // matrix rtc members. This cannot be any good:
+        //  - A malicious user impersonates someone
+        //  - Someone injects abusive content
+        //  - The user cannot have encryption keys so it makes no sense to participate
+        // We can only trust users that have a matrixRTC member event.
+        //
+        // This is still available as a debug option. This can be useful
+        //  - If one wants to test scalability using the livekit cli.
+        //  - If an experimental project does not yet do the matrixRTC bits.
+        //  - If someone wants to debug if the LK connection works but matrixRTC room state failed to arrive.
+        const debugShowNonMember = Config.get().show_non_member_participants;
+        const newNonMemberItems = debugShowNonMember
+          ? new Map(
+              function* (this: CallViewModel): Iterable<[string, MediaItem]> {
+                for (let p = 0; p < remoteParticipants.length; p++) {
+                  for (let i = 0; i < 1 + duplicateTiles; i++) {
+                    const participant = remoteParticipants[p];
+                    const maybeNoMemberParticipantId =
+                      participant.identity + ":" + i;
+                    if (!newItems.has(maybeNoMemberParticipantId)) {
+                      yield [
+                        maybeNoMemberParticipantId,
+                        // We create UserMedia with or without a participant.
+                        // This will be the initial value of a BehaviourSubject.
+                        // Once a participant appears we will update the BehaviourSubject. (see above)
+                        prevItems.get(maybeNoMemberParticipantId) ??
+                          new UserMedia(
+                            maybeNoMemberParticipantId,
+                            undefined,
+                            participant,
+                            this.encrypted,
+                          ),
+                      ];
+                    }
+                  }
+                }
+              }.bind(this)(),
+            )
+          : new Map();
+        if (newNonMemberItems.size > 0) {
+          logger.debug("Added NonMember items: ", newNonMemberItems);
+        }
+        const combinedNew = new Map([
+          ...newNonMemberItems.entries(),
+          ...newItems.entries(),
+        ]);
+
+        for (const [id, t] of prevItems) if (!combinedNew.has(id)) t.destroy();
         return newItems;
       },
       new Map<string, MediaItem>(),
