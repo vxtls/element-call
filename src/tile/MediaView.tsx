@@ -25,7 +25,7 @@ interface Props extends ComponentProps<typeof animated.div> {
   style?: ComponentProps<typeof animated.div>["style"];
   targetWidth: number;
   targetHeight: number;
-  video: TrackReferenceOrPlaceholder;
+  video: TrackReferenceOrPlaceholder | undefined;
   videoFit: "cover" | "contain";
   mirror: boolean;
   member: RoomMember | undefined;
@@ -83,7 +83,7 @@ export const MediaView = forwardRef<HTMLDivElement, Props>(
             src={member?.getMxcAvatarUrl()}
             className={styles.avatar}
           />
-          {video.publication !== undefined && (
+          {video?.publication !== undefined && (
             <VideoTrack
               trackRef={video}
               // There's no reason for this to be focusable

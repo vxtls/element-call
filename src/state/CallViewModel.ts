@@ -406,10 +406,7 @@ export class CallViewModel extends ViewModel {
                 const indexedMediaId = `${mediaId}:${i}`;
                 const prevMedia = prevItems.get(indexedMediaId);
                 if (prevMedia && prevMedia instanceof UserMedia) {
-                  if (
-                    prevMedia.participant.value === undefined &&
-                    participant !== undefined
-                  ) {
+                  if (prevMedia.participant.value !== participant) {
                     // Update the BahviourSubject in the UserMedia.
                     prevMedia.participant.next(participant);
                   }
@@ -421,7 +418,7 @@ export class CallViewModel extends ViewModel {
                   // Once a participant appears we will update the BehaviourSubject. (see above)
                   prevMedia ??
                     new UserMedia(
-                      mediaId,
+                      indexedMediaId,
                       member,
                       participant,
                       this.encryptionSystem,
