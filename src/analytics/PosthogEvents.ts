@@ -66,6 +66,7 @@ export class CallEndedTracker {
     e2eeType: E2eeType,
     rtcSession: MatrixRTCSession,
     sendInstantly: boolean,
+    rtcSession: MatrixRTCSession,
   ): void {
     PosthogAnalytics.instance.trackEvent<CallEnded>(
       {

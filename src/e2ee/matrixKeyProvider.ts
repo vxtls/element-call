@@ -16,7 +16,7 @@ export class MatrixKeyProvider extends BaseKeyProvider {
   private rtcSession?: MatrixRTCSession;
 
   public constructor() {
-    super({ ratchetWindowSize: 0 });
+    super({ ratchetWindowSize: 0, keyringSize: 256 });
   }
 
   public setRTCSession(rtcSession: MatrixRTCSession): void {
@@ -35,15 +35,8 @@ export class MatrixKeyProvider extends BaseKeyProvider {
     );
 
     // The new session could be aware of keys of which the old session wasn't,
-    // so emit a key changed event.
-    for (const [
-      participant,
-      encryptionKeys,
-    ] of this.rtcSession.getEncryptionKeys()) {
-      for (const [index, encryptionKey] of encryptionKeys.entries()) {
-        this.onEncryptionKeyChanged(encryptionKey, index, participant);
-      }
-    }
+    // so emit key changed events
+    this.rtcSession.reemitEncryptionKeys();
   }
 
   private onEncryptionKeyChanged = (

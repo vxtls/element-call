@@ -5,93 +5,62 @@ SPDX-License-Identifier: AGPL-3.0-only
 Please see LICENSE in the repository root for full details.
 */
 
-import { RoomMember } from "matrix-js-sdk/src/matrix";
 import { expect, test, vi } from "vitest";
-import { LocalParticipant, RemoteParticipant } from "livekit-client";
 
 import {
-  LocalUserMediaViewModel,
-  RemoteUserMediaViewModel,
-} from "./MediaViewModel";
-import { withTestScheduler } from "../utils/test";
+  withLocalMedia,
+  withRemoteMedia,
+  withTestScheduler,
+} from "../utils/test";
 
-function withLocal(continuation: (vm: LocalUserMediaViewModel) => void): void {
-  const member = {} as unknown as RoomMember;
-  const vm = new LocalUserMediaViewModel(
-    "a",
-    member,
-    {} as unknown as LocalParticipant,
-    true,
-  );
-  try {
-    continuation(vm);
-  } finally {
-    vm.destroy();
-  }
-}
-
-function withRemote(
-  participant: Partial<RemoteParticipant>,
-  continuation: (vm: RemoteUserMediaViewModel) => void,
-): void {
-  const member = {} as unknown as RoomMember;
-  const vm = new RemoteUserMediaViewModel(
-    "a",
-    member,
-    { setVolume() {}, ...participant } as RemoteParticipant,
-    true,
-  );
-  try {
-    continuation(vm);
-  } finally {
-    vm.destroy();
-  }
-}
-
-test("set a participant's volume", () => {
+test("control a participant's volume", async () => {
   const setVolumeSpy = vi.fn();
-  withRemote({ setVolume: setVolumeSpy }, (vm) =>
+  await withRemoteMedia({}, { setVolume: setVolumeSpy }, (vm) =>
     withTestScheduler(({ expectObservable, schedule }) => {
-      schedule("-a|", {
+      schedule("-ab---c---d|", {
         a() {
-          vm.setLocalVolume(0.8);
-          expect(setVolumeSpy).toHaveBeenLastCalledWith(0.8);
-        },
-      });
-      expectObservable(vm.localVolume).toBe("ab", { a: 1, b: 0.8 });
-    }),
-  );
-});
-
-test("mute and unmute a participant", () => {
-  const setVolumeSpy = vi.fn();
-  withRemote({ setVolume: setVolumeSpy }, (vm) =>
-    withTestScheduler(({ expectObservable, schedule }) => {
-      schedule("-abc|", {
-        a() {
+          // Try muting by toggling
           vm.toggleLocallyMuted();
           expect(setVolumeSpy).toHaveBeenLastCalledWith(0);
         },
         b() {
+          // Try unmuting by dragging the slider back up
+          vm.setLocalVolume(0.6);
           vm.setLocalVolume(0.8);
-          expect(setVolumeSpy).toHaveBeenLastCalledWith(0);
+          vm.commitLocalVolume();
+          expect(setVolumeSpy).toHaveBeenCalledWith(0.6);
+          expect(setVolumeSpy).toHaveBeenLastCalledWith(0.8);
         },
         c() {
+          // Try muting by dragging the slider back down
+          vm.setLocalVolume(0.2);
+          vm.setLocalVolume(0);
+          vm.commitLocalVolume();
+          expect(setVolumeSpy).toHaveBeenCalledWith(0.2);
+          expect(setVolumeSpy).toHaveBeenLastCalledWith(0);
+        },
+        d() {
+          // Try unmuting by toggling
           vm.toggleLocallyMuted();
+          // The volume should return to the last non-zero committed volume
           expect(setVolumeSpy).toHaveBeenLastCalledWith(0.8);
         },
       });
-      expectObservable(vm.locallyMuted).toBe("ab-c", {
-        a: false,
-        b: true,
-        c: false,
+      expectObservable(vm.localVolume).toBe("ab(cd)(ef)g", {
+        a: 1,
+        b: 0,
+        c: 0.6,
+        d: 0.8,
+        e: 0.2,
+        f: 0,
+        g: 0.8,
       });
     }),
   );
 });
 
-test("toggle fit/contain for a participant's video", () => {
-  withRemote({}, (vm) =>
+test("toggle fit/contain for a participant's video", async () => {
+  await withRemoteMedia({}, {}, (vm) =>
     withTestScheduler(({ expectObservable, schedule }) => {
       schedule("-ab|", {
         a: () => vm.toggleFitContain(),
@@ -106,15 +75,15 @@ test("toggle fit/contain for a participant's video", () => {
   );
 });
 
-test("local media remembers whether it should always be shown", () => {
-  withLocal((vm) =>
+test("local media remembers whether it should always be shown", async () => {
+  await withLocalMedia({}, (vm) =>
     withTestScheduler(({ expectObservable, schedule }) => {
       schedule("-a|", { a: () => vm.setAlwaysShow(false) });
       expectObservable(vm.alwaysShow).toBe("ab", { a: true, b: false });
     }),
   );
   // Next local media should start out *not* always shown
-  withLocal((vm) =>
+  await withLocalMedia({}, (vm) =>
     withTestScheduler(({ expectObservable, schedule }) => {
       schedule("-a|", { a: () => vm.setAlwaysShow(true) });
       expectObservable(vm.alwaysShow).toBe("ab", { a: false, b: true });

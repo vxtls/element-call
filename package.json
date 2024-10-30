@@ -41,6 +41,7 @@
     "@sentry/vite-plugin": "^2.0.0",
     "@testing-library/dom": "^10.1.0",
     "@testing-library/react": "^16.0.0",
+    "@testing-library/react-hooks": "^8.0.1",
     "@testing-library/user-event": "^14.5.1",
     "@types/content-type": "^1.1.5",
     "@types/grecaptcha": "^3.0.9",
@@ -70,9 +71,9 @@
     "eslint-plugin-jsx-a11y": "^6.5.1",
     "eslint-plugin-matrix-org": "^1.2.1",
     "eslint-plugin-react": "^7.29.4",
-    "eslint-plugin-react-hooks": "^4.5.0",
+    "eslint-plugin-react-hooks": "^5.0.0",
     "eslint-plugin-unicorn": "^55.0.0",
-    "global-jsdom": "^24.0.0",
+    "global-jsdom": "^25.0.0",
     "history": "^4.0.0",
     "i18next": "^23.0.0",
     "i18next-browser-languagedetector": "^8.0.0",
@@ -80,7 +81,7 @@
     "i18next-parser": "^9.0.0",
     "jsdom": "^25.0.0",
     "knip": "^5.27.2",
-    "livekit-client": "^2.0.2",
+    "livekit-client": "^2.5.7",
     "lodash": "^4.17.21",
     "loglevel": "^1.9.1",
     "matrix-js-sdk": "matrix-org/matrix-js-sdk#b0174eccdb0e33f5df5d7b590938daf8ff5c7f7a",
@@ -90,7 +91,7 @@
     "pako": "^2.0.4",
     "postcss": "^8.4.41",
     "postcss-preset-env": "^10.0.0",
-    "posthog-js": "^1.29.0",
+    "posthog-js": "1.160.3",
     "prettier": "^3.0.0",
     "qrcode": "^1.5.4",
     "react": "18",
@@ -108,6 +109,10 @@
     "vite": "^5.0.0",
     "vite-plugin-html-template": "^1.1.0",
     "vite-plugin-svgr": "^4.0.0",
-    "vitest": "^2.0.0"
+    "vitest": "^2.0.0",
+    "vitest-axe": "^1.0.0-pre.3"
+  },
+  "resolutions": {
+    "strip-ansi": "6.0.1"
   }
 }

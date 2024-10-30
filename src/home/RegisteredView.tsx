@@ -9,7 +9,7 @@ import { useState, useCallback, FormEvent, FormEventHandler, FC } from "react";
 import { useHistory } from "react-router-dom";
 import { MatrixClient } from "matrix-js-sdk/src/client";
 import { useTranslation } from "react-i18next";
-import { Dropdown, Heading } from "@vector-im/compound-web";
+import { Dropdown, Heading, Text } from "@vector-im/compound-web";
 import { logger } from "matrix-js-sdk/src/logger";
 import { Button } from "@vector-im/compound-web";
 
@@ -27,7 +27,6 @@ import { FieldRow, InputField, ErrorMessage } from "../input/Input";
 import { CallList } from "./CallList";
 import { UserMenuContainer } from "../UserMenuContainer";
 import { JoinExistingCallModal } from "./JoinExistingCallModal";
-import { Caption } from "../typography/Typography";
 import { Form } from "../form/Form";
 import { AnalyticsNotice } from "../analytics/AnalyticsNotice";
 import { E2eeType } from "../e2ee/e2eeType";
@@ -163,9 +162,9 @@ export const RegisteredView: FC<Props> = ({ client }) => {
               </Button>
             </FieldRow>
             {optInAnalytics === null && (
-              <Caption className={styles.notice}>
+              <Text size="sm" className={styles.notice}>
                 <AnalyticsNotice />
-              </Caption>
+              </Text>
             )}
             {error && (
               <FieldRow className={styles.fieldRow}>
