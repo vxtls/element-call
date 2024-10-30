@@ -18,12 +18,9 @@ import {
   RemoteParticipant,
   Track,
 } from "livekit-client";
+import { Room as MatrixRoom, RoomMember } from "matrix-js-sdk/src/matrix";
 import {
-  Room as MatrixRoom,
-  RoomMember,
-  RoomStateEvent,
-} from "matrix-js-sdk/src/matrix";
-import {
+  BehaviorSubject,
   EMPTY,
   Observable,
   Subject,
@@ -51,6 +48,10 @@ import {
   withLatestFrom,
 } from "rxjs";
 import { logger } from "matrix-js-sdk/src/logger";
+import {
+  MatrixRTCSession,
+  MatrixRTCSessionEvent,
+} from "matrix-js-sdk/src/matrixrtc";
 
 import { ViewModel } from "./ViewModel";
 import {
@@ -164,28 +165,37 @@ enum SortingBin {
 class UserMedia {
   private readonly scope = new ObservableScope();
   public readonly vm: UserMediaViewModel;
+  public participant: BehaviorSubject<
+    LocalParticipant | RemoteParticipant | undefined
+  >;
+
   public readonly speaker: Observable<boolean>;
   public readonly presenter: Observable<boolean>;
-
   public constructor(
     public readonly id: string,
     member: RoomMember | undefined,
-    participant: LocalParticipant | RemoteParticipant,
+    participant: LocalParticipant | RemoteParticipant | undefined,
     encryptionSystem: EncryptionSystem,
   ) {
-    this.vm = participant.isLocal
-      ? new LocalUserMediaViewModel(
-          id,
-          member,
-          participant as LocalParticipant,
-          encryptionSystem,
-        )
-      : new RemoteUserMediaViewModel(
-          id,
-          member,
-          participant as RemoteParticipant,
-          encryptionSystem,
-        );
+    this.participant = new BehaviorSubject(participant);
+
+    if (participant && participant.isLocal) {
+      this.vm = new LocalUserMediaViewModel(
+        this.id,
+        member,
+        this.participant.asObservable() as Observable<LocalParticipant>,
+        encryptionSystem,
+      );
+    } else {
+      this.vm = new RemoteUserMediaViewModel(
+        id,
+        member,
+        this.participant.asObservable() as Observable<
+          RemoteParticipant | undefined
+        >,
+        encryptionSystem,
+      );
+    }
 
     this.speaker = this.vm.speaking.pipe(
       // Require 1 s of continuous speaking to become a speaker, and 60 s of
@@ -195,7 +205,7 @@ class UserMedia {
           timer(s ? 1000 : 60000),
           // If the speaking flag resets to its original value during this time,
           // end the silencing window to stick with that original value
-          this.vm.speaking.pipe(filter((s1) => s1 !== s)),
+          this.vm!.speaking.pipe(filter((s1) => s1 !== s)),
         ),
       ),
       startWith(false),
@@ -205,13 +215,21 @@ class UserMedia {
       this.scope.state(),
     );
 
-    this.presenter = observeParticipantEvents(
-      participant,
-      ParticipantEvent.TrackPublished,
-      ParticipantEvent.TrackUnpublished,
-      ParticipantEvent.LocalTrackPublished,
-      ParticipantEvent.LocalTrackUnpublished,
-    ).pipe(map((p) => p.isScreenShareEnabled));
+    this.presenter = this.participant.pipe(
+      switchMap(
+        (p) =>
+          (p &&
+            observeParticipantEvents(
+              p,
+              ParticipantEvent.TrackPublished,
+              ParticipantEvent.TrackUnpublished,
+              ParticipantEvent.LocalTrackPublished,
+              ParticipantEvent.LocalTrackUnpublished,
+            ).pipe(map((p) => p.isScreenShareEnabled))) ??
+          of(false),
+      ),
+      this.scope.state(),
+    );
   }
 
   public destroy(): void {
@@ -222,6 +240,7 @@ class UserMedia {
 
 class ScreenShare {
   public readonly vm: ScreenShareViewModel;
+  private participant: BehaviorSubject<LocalParticipant | RemoteParticipant>;
 
   public constructor(
     id: string,
@@ -229,10 +248,12 @@ class ScreenShare {
     participant: LocalParticipant | RemoteParticipant,
     encryptionSystem: EncryptionSystem,
   ) {
+    this.participant = new BehaviorSubject(participant);
+
     this.vm = new ScreenShareViewModel(
       id,
       member,
-      participant,
+      this.participant.asObservable(),
       encryptionSystem,
     );
   }
@@ -244,7 +265,7 @@ class ScreenShare {
 
 type MediaItem = UserMedia | ScreenShare;
 
-function findMatrixMember(
+function findMatrixRoomMember(
   room: MatrixRoom,
   id: string,
 ): RoomMember | undefined {
@@ -344,8 +365,15 @@ export class CallViewModel extends ViewModel {
     this.remoteParticipants,
     observeParticipantMedia(this.livekitRoom.localParticipant),
     duplicateTiles.value,
-    // Also react to changes in the list of members
-    fromEvent(this.matrixRoom, RoomStateEvent.Update).pipe(startWith(null)),
+    // Also react to changes in the MatrixRTC session list:
+    fromEvent(
+      this.matrixRTCSession,
+      MatrixRTCSessionEvent.MembershipsChanged,
+    ).pipe(startWith(null)),
+    // fromEvent(
+    //   this.matrixRTCSession,
+    //   MatrixRTCSessionEvent.EncryptionKeyChanged,
+    // ).pipe(startWith(null)),
   ]).pipe(
     scan(
       (
@@ -354,42 +382,64 @@ export class CallViewModel extends ViewModel {
       ) => {
         const newItems = new Map(
           function* (this: CallViewModel): Iterable<[string, MediaItem]> {
-            for (const p of [localParticipant, ...remoteParticipants]) {
-              const id = p === localParticipant ? "local" : p.identity;
-              const member = findMatrixMember(this.matrixRoom, id);
-              if (member === undefined)
-                logger.warn(
-                  `Ruh, roh! No matrix member found for SFU participant '${p.identity}': creating g-g-g-ghost!`,
+            for (const rtcMember of this.matrixRTCSession.memberships) {
+              const room = this.matrixRTCSession.room;
+              // WARN! This is not exactly the sender but the user defined in the state key.
+              // This will be available once we change to the new "member as object" format in the MatrixRTC object.
+              let mediaId = rtcMember.sender + ":" + rtcMember.deviceId;
+              let participant = undefined;
+              if (
+                rtcMember.sender === room.client.getUserId()! &&
+                rtcMember.deviceId === room.client.getDeviceId()
+              ) {
+                mediaId = "local";
+                participant = localParticipant;
+              } else {
+                participant = remoteParticipants.find(
+                  (p) => p.identity === mediaId,
                 );
+              }
 
-              // Create as many tiles for this participant as called for by
-              // the duplicateTiles option
+              const member = findMatrixRoomMember(room, mediaId);
+
               for (let i = 0; i < 1 + duplicateTiles; i++) {
-                const userMediaId = `${id}:${i}`;
+                const indexedMediaId = `${mediaId}:${i}`;
+                const prevMedia = prevItems.get(indexedMediaId);
+                if (prevMedia && prevMedia instanceof UserMedia) {
+                  if (
+                    prevMedia.participant.value === undefined &&
+                    participant !== undefined
+                  ) {
+                    // Update the BahviourSubject in the UserMedia.
+                    prevMedia.participant.next(participant);
+                  }
+                }
                 yield [
-                  userMediaId,
-                  prevItems.get(userMediaId) ??
+                  indexedMediaId,
+                  // We create UserMedia with or without a participant.
+                  // This will be the initial value of a BehaviourSubject.
+                  // Once a participant appears we will update the BehaviourSubject. (see above)
+                  prevMedia ??
                     new UserMedia(
-                      userMediaId,
+                      mediaId,
                       member,
-                      p,
+                      participant,
                       this.encryptionSystem,
                     ),
                 ];
-
-                if (p.isScreenShareEnabled) {
-                  const screenShareId = `${userMediaId}:screen-share`;
-                  yield [
-                    screenShareId,
-                    prevItems.get(screenShareId) ??
-                      new ScreenShare(
-                        screenShareId,
-                        member,
-                        p,
-                        this.encryptionSystem,
-                      ),
-                  ];
-                }
+              }
+              if (participant && participant.isScreenShareEnabled) {
+                const screenShareId = `${mediaId}:screen-share`;
+                yield [
+                  screenShareId,
+                  prevItems.get(screenShareId) ??
+                    new ScreenShare(
+                      screenShareId,
+                      member,
+                      participant,
+                      this.encryptionSystem,
+                    ),
+                ];
               }
             }
           }.bind(this)(),
@@ -432,42 +482,43 @@ export class CallViewModel extends ViewModel {
       distinctUntilChanged(),
     );
 
-  private readonly spotlightSpeaker: Observable<UserMediaViewModel> =
-    this.userMedia.pipe(
-      switchMap((mediaItems) =>
-        mediaItems.length === 0
-          ? of([])
-          : combineLatest(
-              mediaItems.map((m) =>
-                m.vm.speaking.pipe(map((s) => [m, s] as const)),
-              ),
+  private readonly spotlightSpeaker: Observable<
+    UserMediaViewModel | undefined
+  > = this.userMedia.pipe(
+    switchMap((mediaItems) =>
+      mediaItems.length === 0
+        ? of([])
+        : combineLatest(
+            mediaItems.map((m) =>
+              m.vm.speaking.pipe(map((s) => [m, s] as const)),
             ),
-      ),
-      scan<(readonly [UserMedia, boolean])[], UserMedia, null>(
-        (prev, mediaItems) => {
-          // Only remote users that are still in the call should be sticky
-          const [stickyMedia, stickySpeaking] =
-            (!prev?.vm.local && mediaItems.find(([m]) => m === prev)) || [];
-          // Decide who to spotlight:
-          // If the previous speaker is still speaking, stick with them rather
-          // than switching eagerly to someone else
-          return stickySpeaking
-            ? stickyMedia!
-            : // Otherwise, select any remote user who is speaking
-              (mediaItems.find(([m, s]) => !m.vm.local && s)?.[0] ??
-                // Otherwise, stick with the person who was last speaking
-                stickyMedia ??
-                // Otherwise, spotlight an arbitrary remote user
-                mediaItems.find(([m]) => !m.vm.local)?.[0] ??
-                // Otherwise, spotlight the local user
-                mediaItems.find(([m]) => m.vm.local)![0]);
-        },
-        null,
-      ),
-      map((speaker) => speaker.vm),
-      this.scope.state(),
-      throttleTime(1600, undefined, { leading: true, trailing: true }),
-    );
+          ),
+    ),
+    scan<(readonly [UserMedia, boolean])[], UserMedia | undefined, null>(
+      (prev, mediaItems) => {
+        // Only remote users that are still in the call should be sticky
+        const [stickyMedia, stickySpeaking] =
+          (!prev?.vm.local && mediaItems.find(([m]) => m === prev)) || [];
+        // Decide who to spotlight:
+        // If the previous speaker is still speaking, stick with them rather
+        // than switching eagerly to someone else
+        return stickySpeaking
+          ? stickyMedia!
+          : // Otherwise, select any remote user who is speaking
+            (mediaItems.find(([m, s]) => !m.vm.local && s)?.[0] ??
+              // Otherwise, stick with the person who was last speaking
+              stickyMedia ??
+              // Otherwise, spotlight an arbitrary remote user
+              mediaItems.find(([m]) => !m.vm.local)?.[0] ??
+              // Otherwise, spotlight the local user
+              mediaItems.find(([m]) => m.vm.local)?.[0]);
+      },
+      null,
+    ),
+    map((speaker) => speaker?.vm),
+    this.scope.state(),
+    throttleTime(1600, undefined, { leading: true, trailing: true }),
+  );
 
   private readonly grid: Observable<UserMediaViewModel[]> = this.userMedia.pipe(
     switchMap((mediaItems) => {
@@ -510,20 +561,29 @@ export class CallViewModel extends ViewModel {
   > = this.screenShares.pipe(
     map((screenShares) =>
       screenShares.length > 0
-        ? ([of(screenShares.map((m) => m.vm)), this.spotlightSpeaker] as const)
+        ? ([
+            of(screenShares.map((m) => m.vm)),
+            this.spotlightSpeaker.pipe(
+              map((speaker) => (speaker && speaker) ?? null),
+            ),
+          ] as const)
         : ([
-            this.spotlightSpeaker.pipe(map((speaker) => [speaker!])),
+            this.spotlightSpeaker.pipe(
+              map((speaker) => (speaker && [speaker]) ?? []),
+            ),
             this.spotlightSpeaker.pipe(
               switchMap((speaker) =>
-                speaker.local
-                  ? of(null)
-                  : this.localUserMedia.pipe(
-                      switchMap((vm) =>
-                        vm.alwaysShow.pipe(
-                          map((alwaysShow) => (alwaysShow ? vm : null)),
+                speaker
+                  ? speaker.local
+                    ? of(null)
+                    : this.localUserMedia.pipe(
+                        switchMap((vm) =>
+                          vm.alwaysShow.pipe(
+                            map((alwaysShow) => (alwaysShow ? vm : null)),
+                          ),
                         ),
-                      ),
-                    ),
+                      )
+                  : of(null),
               ),
             ),
           ] as const),
@@ -843,7 +903,7 @@ export class CallViewModel extends ViewModel {
 
   public constructor(
     // A call is permanently tied to a single Matrix room and LiveKit room
-    private readonly matrixRoom: MatrixRoom,
+    private readonly matrixRTCSession: MatrixRTCSession,
     private readonly livekitRoom: LivekitRoom,
     private readonly encryptionSystem: EncryptionSystem,
     private readonly connectionState: Observable<ECConnectionState>,

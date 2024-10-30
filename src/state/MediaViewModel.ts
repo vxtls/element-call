@@ -68,32 +68,49 @@ export function useDisplayName(vm: MediaViewModel): string {
 }
 
 export function observeTrackReference(
-  participant: Participant,
+  participant: Observable<Participant | undefined>,
   source: Track.Source,
-): Observable<TrackReferenceOrPlaceholder> {
-  return observeParticipantMedia(participant).pipe(
-    map(() => ({
-      participant,
-      publication: participant.getTrackPublication(source),
-      source,
-    })),
-    distinctUntilKeyChanged("publication"),
+): Observable<TrackReferenceOrPlaceholder | undefined> {
+  const obs = participant.pipe(
+    switchMap((p) => {
+      if (p) {
+        return observeParticipantMedia(p).pipe(
+          map(() => ({
+            participant: p,
+            publication: p.getTrackPublication(source),
+            source,
+          })),
+          distinctUntilKeyChanged("publication"),
+        );
+      } else {
+        return of(undefined);
+      }
+    }),
   );
+  return obs;
 }
 
 abstract class BaseMediaViewModel extends ViewModel {
   /**
    * Whether the media belongs to the local user.
    */
-  public readonly local = this.participant.isLocal;
+  public readonly local = this.participant.pipe(
+    // We can assume, that the user is not local if the participant is undefined
+    // We assume the local LK participant will always be available.
+    map((p) => p?.isLocal ?? false),
+  );
   /**
    * The LiveKit video track for this media.
    */
-  public readonly video: Observable<TrackReferenceOrPlaceholder>;
+  public readonly video: Observable<TrackReferenceOrPlaceholder | undefined>;
   /**
    * Whether there should be a warning that this media is unencrypted.
    */
   public readonly unencryptedWarning: Observable<boolean>;
+
+  public readonly isRTCParticipantAvailable = this.participant.pipe(
+    map((p) => !!p),
+  );
 
   public constructor(
     /**
@@ -106,7 +123,12 @@ abstract class BaseMediaViewModel extends ViewModel {
     // TODO: Fully separate the data layer from the UI layer by keeping the
     // member object internal
     public readonly member: RoomMember | undefined,
-    protected readonly participant: LocalParticipant | RemoteParticipant,
+    // We dont necassarly have a participant if a user connects via MatrixRTC but not (not yet) through
+    // livekit.
+    protected readonly participant: Observable<
+      LocalParticipant | RemoteParticipant | undefined
+    >,
+
     encryptionSystem: EncryptionSystem,
     audioSource: AudioSource,
     videoSource: VideoSource,
@@ -122,8 +144,8 @@ abstract class BaseMediaViewModel extends ViewModel {
       [audio, this.video],
       (a, v) =>
         encryptionSystem.kind !== E2eeType.NONE &&
-        (a.publication?.isEncrypted === false ||
-          v.publication?.isEncrypted === false),
+        (a?.publication?.isEncrypted === false ||
+          v?.publication?.isEncrypted === false),
     ).pipe(this.scope.state());
   }
 }
@@ -143,12 +165,20 @@ abstract class BaseUserMediaViewModel extends BaseMediaViewModel {
   /**
    * Whether the participant is speaking.
    */
-  public readonly speaking = observeParticipantEvents(
-    this.participant,
-    ParticipantEvent.IsSpeakingChanged,
-  ).pipe(
-    map((p) => p.isSpeaking),
-    this.scope.state(),
+  public readonly speaking = this.participant.pipe(
+    switchMap((p) => {
+      if (p) {
+        return observeParticipantEvents(
+          p,
+          ParticipantEvent.IsSpeakingChanged,
+        ).pipe(
+          map((p) => p.isSpeaking),
+          this.scope.state(),
+        );
+      } else {
+        return of(false);
+      }
+    }),
   );
 
   /**
@@ -169,7 +199,7 @@ abstract class BaseUserMediaViewModel extends BaseMediaViewModel {
   public constructor(
     id: string,
     member: RoomMember | undefined,
-    participant: LocalParticipant | RemoteParticipant,
+    participant: Observable<LocalParticipant | RemoteParticipant | undefined>,
     encryptionSystem: EncryptionSystem,
   ) {
     super(
@@ -181,12 +211,17 @@ abstract class BaseUserMediaViewModel extends BaseMediaViewModel {
       Track.Source.Camera,
     );
 
-    const media = observeParticipantMedia(participant).pipe(this.scope.state());
+    // const media = observeParticipantMedia(participant).pipe(this.scope.state());
+
+    const media = participant.pipe(
+      switchMap((p) => (p && observeParticipantMedia(p)) ?? of(undefined)),
+      this.scope.state(),
+    );
     this.audioEnabled = media.pipe(
-      map((m) => m.microphoneTrack?.isMuted === false),
+      map((m) => m?.microphoneTrack?.isMuted === false),
     );
     this.videoEnabled = media.pipe(
-      map((m) => m.cameraTrack?.isMuted === false),
+      map((m) => m?.cameraTrack?.isMuted === false),
     );
   }
 
@@ -204,7 +239,7 @@ export class LocalUserMediaViewModel extends BaseUserMediaViewModel {
    */
   public readonly mirror = this.video.pipe(
     switchMap((v) => {
-      const track = v.publication?.track;
+      const track = v?.publication?.track;
       if (!(track instanceof LocalTrack)) return of(false);
       // Watch for track restarts, because they indicate a camera switch
       return fromEvent(track, TrackEvent.Restarted).pipe(
@@ -226,7 +261,7 @@ export class LocalUserMediaViewModel extends BaseUserMediaViewModel {
   public constructor(
     id: string,
     member: RoomMember | undefined,
-    participant: LocalParticipant,
+    participant: Observable<LocalParticipant | undefined>,
     encryptionSystem: EncryptionSystem,
   ) {
     super(id, member, participant, encryptionSystem);
@@ -286,17 +321,16 @@ export class RemoteUserMediaViewModel extends BaseUserMediaViewModel {
   public constructor(
     id: string,
     member: RoomMember | undefined,
-    participant: RemoteParticipant,
+    participant: Observable<RemoteParticipant | undefined>,
     encryptionSystem: EncryptionSystem,
   ) {
     super(id, member, participant, encryptionSystem);
 
     // Sync the local volume with LiveKit
-    this.localVolume
-      .pipe(this.scope.bind())
-      .subscribe((volume) =>
-        (this.participant as RemoteParticipant).setVolume(volume),
-      );
+    combineLatest([
+      participant,
+      this.localVolume.pipe(this.scope.bind()),
+    ]).subscribe(([p, volume]) => p && p.setVolume(volume));
   }
 
   public toggleLocallyMuted(): void {
@@ -319,7 +353,7 @@ export class ScreenShareViewModel extends BaseMediaViewModel {
   public constructor(
     id: string,
     member: RoomMember | undefined,
-    participant: LocalParticipant | RemoteParticipant,
+    participant: Observable<LocalParticipant | RemoteParticipant>,
     encryptionSystem: EncryptionSystem,
   ) {
     super(
