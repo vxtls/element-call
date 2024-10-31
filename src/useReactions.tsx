@@ -113,14 +113,17 @@ export const ReactionsProvider = ({
   useEffect(() => {
     // Fetches the first reaction for a given event. We assume no more than
     // one reaction on an event here.
-    const getLastReactionEvent = (eventId: string): MatrixEvent | undefined => {
+    const getLastReactionEvent = (
+      eventId: string,
+      expectedSender: string,
+    ): MatrixEvent | undefined => {
       const relations = room.relations.getChildEventsForEvent(
         eventId,
         RelationType.Annotation,
         EventType.Reaction,
       );
       const allEvents = relations?.getRelations() ?? [];
-      return allEvents.find((u) => u.sender === myUserId);
+      return allEvents.find((u) => u.event.sender === expectedSender);
     };
 
     // Remove any raised hands for users no longer joined to the call.
@@ -144,7 +147,7 @@ export const ReactionsProvider = ({
         // was raised, reset.
         removeRaisedHand(m.sender);
       }
-      const reaction = getLastReactionEvent(m.eventId);
+      const reaction = getLastReactionEvent(m.eventId, m.sender);
       const eventId = reaction?.getId();
       if (!eventId) {
         continue;
@@ -160,14 +163,10 @@ export const ReactionsProvider = ({
         }
       }
     }
-  }, [
-    room,
-    memberships,
-    myUserId,
-    raisedHands,
-    addRaisedHand,
-    removeRaisedHand,
-  ]);
+    // Ignoring raisedHands here because we don't want to trigger each time the raised
+    // hands set is updated.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [room, memberships, myUserId, addRaisedHand, removeRaisedHand]);
 
   // This effect handles any *live* reaction/redactions in the room.
   useEffect(() => {

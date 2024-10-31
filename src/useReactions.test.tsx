@@ -99,9 +99,12 @@ export class MockRTCSession extends EventEmitter {
   }
 }
 
-function createReaction(parentMemberEvent: string): MatrixEvent {
+function createReaction(
+  parentMemberEvent: string,
+  overridenSender?: string,
+): MatrixEvent {
   return new MatrixEvent({
-    sender: membership[parentMemberEvent],
+    sender: overridenSender ?? membership[parentMemberEvent],
     type: EventType.Reaction,
     origin_server_ts: new Date().getTime(),
     content: {
@@ -140,15 +143,20 @@ export class MockRoom extends EventEmitter {
     return {
       getChildEventsForEvent: (membershipEventId: string) => ({
         getRelations: (): MatrixEvent[] => {
-          const sender = membership[membershipEventId];
-          return this.existingRelations.filter((r) => r.getSender() === sender);
+          return this.existingRelations.filter(
+            (r) =>
+              r.getContent()["m.relates_to"]?.event_id === membershipEventId,
+          );
         },
       }),
     } as unknown as Room["relations"];
   }
 
-  public testSendReaction(parentMemberEvent: string): string {
-    const evt = createReaction(parentMemberEvent);
+  public testSendReaction(
+    parentMemberEvent: string,
+    overridenSender?: string,
+  ): string {
+    const evt = createReaction(parentMemberEvent, overridenSender);
     this.emit(RoomEvent.Timeline, evt, this, undefined, false, {
       timeline: new EventTimeline(new EventTimelineSet(undefined)),
     });
@@ -236,6 +244,25 @@ describe("useReactions", () => {
       rtcSession.testRemoveMember(memberUserIdAlice);
       rtcSession.testAddMember(memberUserIdAlice);
     });
+    expect(queryByRole("list")?.children).to.have.lengthOf(0);
+  });
+  test("ignores invalid sender for historic event", () => {
+    const room = new MockRoom([
+      createReaction(memberEventAlice, memberUserIdBob),
+    ]);
+    const rtcSession = new MockRTCSession(room);
+    const { queryByRole } = render(
+      <TestComponentWrapper rtcSession={rtcSession} />,
+    );
+    expect(queryByRole("list")?.children).to.have.lengthOf(0);
+  });
+  test("ignores invalid sender for new event", async () => {
+    const room = new MockRoom([]);
+    const rtcSession = new MockRTCSession(room);
+    const { queryByRole } = render(
+      <TestComponentWrapper rtcSession={rtcSession} />,
+    );
+    await act(() => room.testSendReaction(memberEventAlice, memberUserIdBob));
     expect(queryByRole("list")?.children).to.have.lengthOf(0);
   });
 });
