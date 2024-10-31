@@ -7,8 +7,17 @@ Please see LICENSE in the repository root for full details.
 
 import { ReactNode, useEffect, useState } from "react";
 import classNames from "classnames";
+import "@formatjs/intl-durationformat/polyfill";
+import { DurationFormat } from "@formatjs/intl-durationformat";
 
 import styles from "./RaisedHandIndicator.module.css";
+
+const durationFormatter = new DurationFormat(undefined, {
+  minutesDisplay: "always",
+  secondsDisplay: "always",
+  hoursDisplay: "auto",
+  style: "digital",
+});
 
 export function RaisedHandIndicator({
   raisedHandTime,
@@ -26,14 +35,16 @@ export function RaisedHandIndicator({
     if (!raisedHandTime || !showTimer) {
       return;
     }
+
     const calculateTime = (): void => {
       const totalSeconds = Math.ceil(
         (new Date().getTime() - raisedHandTime.getTime()) / 1000,
       );
-      const seconds = totalSeconds % 60;
-      const minutes = Math.floor(totalSeconds / 60);
       setRaisedHandDuration(
-        `${minutes < 10 ? "0" : ""}${minutes}:${seconds < 10 ? "0" : ""}${seconds}`,
+        durationFormatter.format({
+          seconds: totalSeconds % 60,
+          minutes: Math.floor(totalSeconds / 60),
+        }),
       );
     };
     calculateTime();
