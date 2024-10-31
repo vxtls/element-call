@@ -19,6 +19,7 @@ import {
   TouchEvent,
   forwardRef,
   useCallback,
+  useDeferredValue,
   useEffect,
   useMemo,
   useRef,
@@ -175,9 +176,11 @@ export const InCallView: FC<InCallViewProps> = ({
   onShareClick,
 }) => {
   const { supportsReactions, raisedHands } = useReactions();
-  const raisedHandCount = Object.keys(raisedHands).length;
-  const [previousRaisedHandCount, setPreviousRaisedHandCount] =
-    useState(raisedHandCount);
+  const raisedHandCount = useMemo(
+    () => Object.keys(raisedHands).length,
+    [raisedHands],
+  );
+  const previousRaisedHandCount = useDeferredValue(raisedHandCount);
 
   useWakeLock();
 
@@ -320,7 +323,6 @@ export const InCallView: FC<InCallViewProps> = ({
         logger.warn("Failed to play raise hand sound", ex);
       });
     }
-    setPreviousRaisedHandCount(raisedHandCount);
   }, [raisedHandCount, handRaisePlayer, previousRaisedHandCount]);
 
   useEffect(() => {
