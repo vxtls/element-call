@@ -230,6 +230,7 @@ const RemoteUserMediaTile = forwardRef<
     (v: number) => vm.setLocalVolume(v),
     [vm],
   );
+  const onCommitLocalVolume = useCallback(() => vm.commitLocalVolume(), [vm]);
 
   const VolumeIcon = locallyMuted ? VolumeOffIcon : VolumeOnIcon;
 
@@ -253,10 +254,10 @@ const RemoteUserMediaTile = forwardRef<
               label={t("video_tile.volume")}
               value={localVolume}
               onValueChange={onChangeLocalVolume}
-              min={0.1}
+              onValueCommit={onCommitLocalVolume}
+              min={0}
               max={1}
               step={0.01}
-              disabled={locallyMuted}
             />
           </MenuItem>
         </>
