@@ -78,15 +78,14 @@ export const ReactionsProvider = ({
   const supportsReactions =
     clientState?.state === "valid" && clientState.supportedFeatures.reactions;
   const room = rtcSession.room;
+  const myUserId = room.client.getUserId();
 
   // Calculate our own reaction event.
-  const myReactionId = useMemo((): string | null => {
-    const myUserId = room.client.getUserId();
-    if (myUserId) {
-      return raisedHands[myUserId]?.reactionEventId;
-    }
-    return null;
-  }, [raisedHands, room]);
+  const myReactionId = useMemo(
+    (): string | null =>
+      (myUserId && raisedHands[myUserId]?.reactionEventId) ?? null,
+    [raisedHands, room],
+  );
 
   // Reduce the data down for the consumers.
   const resultRaisedHands = useMemo(
@@ -105,11 +104,9 @@ export const ReactionsProvider = ({
   }, []);
 
   const removeRaisedHand = useCallback((userId: string) => {
-    delete raisedHands[userId];
-    setRaisedHands((prevRaisedHands) => {
-      delete prevRaisedHands[userId];
-      return { ...prevRaisedHands };
-    });
+    setRaisedHands(
+      ({ [userId]: _removed, ...remainingRaisedHands }) => remainingRaisedHands,
+    );
   }, []);
 
   // This effect will check the state whenever the membership of the session changes.
@@ -123,7 +120,7 @@ export const ReactionsProvider = ({
         EventType.Reaction,
       );
       const allEvents = relations?.getRelations() ?? [];
-      return allEvents.length > 0 ? allEvents[0] : undefined;
+      return allEvents.find((u) => u.sender === myUserId);
     };
 
     // Remove any raised hands for users no longer joined to the call.
