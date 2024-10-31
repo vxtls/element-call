@@ -214,17 +214,17 @@ describe("useReactions", () => {
   });
   // If the membership event changes for a user, we want to remove
   // the raised hand event.
-  test("will remove reaction when a member leaves the call", async () => {
+  test("will remove reaction when a member leaves the call", () => {
     const room = new MockRoom([createReaction(memberEventAlice)]);
     const rtcSession = new MockRTCSession(room);
     const { queryByRole } = render(
       <TestComponentWrapper rtcSession={rtcSession} />,
     );
     expect(queryByRole("list")?.children).to.have.lengthOf(1);
-    await act(() => rtcSession.testRemoveMember(memberUserIdAlice));
+    act(() => rtcSession.testRemoveMember(memberUserIdAlice));
     expect(queryByRole("list")?.children).to.have.lengthOf(0);
   });
-  test("will remove reaction when a member joins via a new event", async () => {
+  test("will remove reaction when a member joins via a new event", () => {
     const room = new MockRoom([createReaction(memberEventAlice)]);
     const rtcSession = new MockRTCSession(room);
     const { queryByRole } = render(
@@ -232,7 +232,7 @@ describe("useReactions", () => {
     );
     expect(queryByRole("list")?.children).to.have.lengthOf(1);
     // Simulate leaving and rejoining
-    await act(() => {
+    act(() => {
       rtcSession.testRemoveMember(memberUserIdAlice);
       rtcSession.testAddMember(memberUserIdAlice);
     });

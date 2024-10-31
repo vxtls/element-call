@@ -68,48 +68,52 @@ export function RaiseHandToggleButton({
   const isHandRaised = !!raisedHands[userId];
   const memberships = useMatrixRTCSessionMemberships(rtcSession);
 
-  const toggleRaisedHand = useCallback(async () => {
-    if (isHandRaised) {
-      if (!myReactionId) {
-        logger.warn(`Hand raised but no reaction event to redact!`);
-        return;
-      }
-      try {
-        setBusy(true);
-        await client.redactEvent(rtcSession.room.roomId, myReactionId);
-        logger.debug("Redacted raise hand event");
-      } catch (ex) {
-        logger.error("Failed to redact reaction event", myReactionId, ex);
-      } finally {
-        setBusy(false);
-      }
-    } else {
-      const myMembership = memberships.find((m) => m.sender === userId);
-      if (!myMembership?.eventId) {
-        logger.error("Cannot find own membership event");
-        return;
-      }
-      const parentEventId = myMembership.eventId;
-      try {
-        setBusy(true);
-        const reaction = await client.sendEvent(
-          rtcSession.room.roomId,
-          EventType.Reaction,
-          {
-            "m.relates_to": {
-              rel_type: RelationType.Annotation,
-              event_id: parentEventId,
-              key: "🖐️",
+  const toggleRaisedHand = useCallback(() => {
+    const raiseHand = async (): Promise<void> => {
+      if (isHandRaised) {
+        if (!myReactionId) {
+          logger.warn(`Hand raised but no reaction event to redact!`);
+          return;
+        }
+        try {
+          setBusy(true);
+          await client.redactEvent(rtcSession.room.roomId, myReactionId);
+          logger.debug("Redacted raise hand event");
+        } catch (ex) {
+          logger.error("Failed to redact reaction event", myReactionId, ex);
+        } finally {
+          setBusy(false);
+        }
+      } else {
+        const myMembership = memberships.find((m) => m.sender === userId);
+        if (!myMembership?.eventId) {
+          logger.error("Cannot find own membership event");
+          return;
+        }
+        const parentEventId = myMembership.eventId;
+        try {
+          setBusy(true);
+          const reaction = await client.sendEvent(
+            rtcSession.room.roomId,
+            EventType.Reaction,
+            {
+              "m.relates_to": {
+                rel_type: RelationType.Annotation,
+                event_id: parentEventId,
+                key: "🖐️",
+              },
             },
-          },
-        );
-        logger.debug("Sent raise hand event", reaction.event_id);
-      } catch (ex) {
-        logger.error("Failed to send reaction event", ex);
-      } finally {
-        setBusy(false);
+          );
+          logger.debug("Sent raise hand event", reaction.event_id);
+        } catch (ex) {
+          logger.error("Failed to send reaction event", ex);
+        } finally {
+          setBusy(false);
+        }
       }
-    }
+    };
+
+    void raiseHand();
   }, [
     client,
     isHandRaised,

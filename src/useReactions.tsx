@@ -84,7 +84,7 @@ export const ReactionsProvider = ({
   const myReactionId = useMemo(
     (): string | null =>
       (myUserId && raisedHands[myUserId]?.reactionEventId) ?? null,
-    [raisedHands, room],
+    [raisedHands, myUserId],
   );
 
   // Reduce the data down for the consumers.
@@ -160,7 +160,14 @@ export const ReactionsProvider = ({
         }
       }
     }
-  }, [room, memberships, addRaisedHand, removeRaisedHand]);
+  }, [
+    room,
+    memberships,
+    myUserId,
+    raisedHands,
+    addRaisedHand,
+    removeRaisedHand,
+  ]);
 
   // This effect handles any *live* reaction/redactions in the room.
   useEffect(() => {
