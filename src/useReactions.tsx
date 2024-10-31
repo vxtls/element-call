@@ -29,8 +29,6 @@ import { useClientState } from "./ClientContext";
 
 interface ReactionsContextType {
   raisedHands: Record<string, Date>;
-  addRaisedHand: (userId: string, info: RaisedHandInfo) => void;
-  removeRaisedHand: (userId: string) => void;
   supportsReactions: boolean;
   myReactionId: string | null;
 }
@@ -99,23 +97,20 @@ export const ReactionsProvider = ({
     [raisedHands],
   );
 
-  const addRaisedHand = useCallback(
-    (userId: string, info: RaisedHandInfo) => {
-      setRaisedHands({
-        ...raisedHands,
-        [userId]: info,
-      });
-    },
-    [raisedHands],
-  );
+  const addRaisedHand = useCallback((userId: string, info: RaisedHandInfo) => {
+    setRaisedHands((prevRaisedHands) => ({
+      ...prevRaisedHands,
+      [userId]: info,
+    }));
+  }, []);
 
-  const removeRaisedHand = useCallback(
-    (userId: string) => {
-      delete raisedHands[userId];
-      setRaisedHands({ ...raisedHands });
-    },
-    [raisedHands],
-  );
+  const removeRaisedHand = useCallback((userId: string) => {
+    delete raisedHands[userId];
+    setRaisedHands((prevRaisedHands) => {
+      delete prevRaisedHands[userId];
+      return { ...prevRaisedHands };
+    });
+  }, []);
 
   // This effect will check the state whenever the membership of the session changes.
   useEffect(() => {
@@ -168,13 +163,16 @@ export const ReactionsProvider = ({
         }
       }
     }
-    // Deliberately ignoring addRaisedHand, raisedHands which was causing looping.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [room, memberships]);
+  }, [room, memberships, addRaisedHand, removeRaisedHand]);
 
   // This effect handles any *live* reaction/redactions in the room.
   useEffect(() => {
     const handleReactionEvent = (event: MatrixEvent): void => {
+      if (event.isSending()) {
+        // Skip any events that are still sending.
+        return;
+      }
+
       const sender = event.getSender();
       const reactionEventId = event.getId();
       if (!sender || !reactionEventId) {
@@ -222,9 +220,14 @@ export const ReactionsProvider = ({
     room.on(MatrixRoomEvent.Timeline, handleReactionEvent);
     room.on(MatrixRoomEvent.Redaction, handleReactionEvent);
 
+    // We listen for a local echo to get the real event ID, as timeline events
+    // may still be sending.
+    room.on(MatrixRoomEvent.LocalEchoUpdated, handleReactionEvent);
+
     return (): void => {
       room.off(MatrixRoomEvent.Timeline, handleReactionEvent);
       room.off(MatrixRoomEvent.Redaction, handleReactionEvent);
+      room.off(MatrixRoomEvent.LocalEchoUpdated, handleReactionEvent);
     };
   }, [room, addRaisedHand, removeRaisedHand, memberships, raisedHands]);
 
@@ -232,8 +235,6 @@ export const ReactionsProvider = ({
     <ReactionsContext.Provider
       value={{
         raisedHands: resultRaisedHands,
-        addRaisedHand,
-        removeRaisedHand,
         supportsReactions,
         myReactionId,
       }}

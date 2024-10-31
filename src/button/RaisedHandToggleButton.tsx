@@ -22,10 +22,11 @@ import { MatrixRTCSession } from "matrix-js-sdk/src/matrixrtc/MatrixRTCSession";
 import { useReactions } from "../useReactions";
 import { useMatrixRTCSessionMemberships } from "../useMatrixRTCSessionMemberships";
 
-interface InnerButtonButtonProps extends ComponentPropsWithoutRef<"button"> {
+interface InnerButtonProps extends ComponentPropsWithoutRef<"button"> {
   raised: boolean;
 }
-const InnerButton: FC<InnerButtonButtonProps> = ({ raised, ...props }) => {
+
+const InnerButton: FC<InnerButtonProps> = ({ raised, ...props }) => {
   const { t } = useTranslation();
 
   return (
@@ -37,7 +38,7 @@ const InnerButton: FC<InnerButtonButtonProps> = ({ raised, ...props }) => {
       >
         <p
           role="img"
-          aria-label="raised hand"
+          aria-hidden
           style={{
             width: "30px",
             height: "0px",
@@ -52,7 +53,7 @@ const InnerButton: FC<InnerButtonButtonProps> = ({ raised, ...props }) => {
   );
 };
 
-interface RaisedHandToggleButton {
+interface RaisedHandToggleButtonProps {
   rtcSession: MatrixRTCSession;
   client: MatrixClient;
 }
@@ -60,30 +61,27 @@ interface RaisedHandToggleButton {
 export function RaiseHandToggleButton({
   client,
   rtcSession,
-}: RaisedHandToggleButton): ReactNode {
-  const { raisedHands, removeRaisedHand, addRaisedHand, myReactionId } =
-    useReactions();
+}: RaisedHandToggleButtonProps): ReactNode {
+  const { raisedHands, myReactionId } = useReactions();
   const [busy, setBusy] = useState(false);
   const userId = client.getUserId()!;
   const isHandRaised = !!raisedHands[userId];
   const memberships = useMatrixRTCSessionMemberships(rtcSession);
 
-  const toggleRaisedHand = useCallback(() => {
+  const toggleRaisedHand = useCallback(async () => {
     if (isHandRaised) {
-      if (myReactionId) {
+      if (!myReactionId) {
+        logger.warn(`Hand raised but no reaction event to redact!`);
+        return;
+      }
+      try {
         setBusy(true);
-        client
-          .redactEvent(rtcSession.room.roomId, myReactionId)
-          .then(() => {
-            logger.debug("Redacted raise hand event");
-            removeRaisedHand(userId);
-          })
-          .catch((e) => {
-            logger.error("Failed to redact reaction event", e);
-          })
-          .finally(() => {
-            setBusy(false);
-          });
+        await client.redactEvent(rtcSession.room.roomId, myReactionId);
+        logger.debug("Redacted raise hand event");
+      } catch (ex) {
+        logger.error("Failed to redact reaction event", myReactionId, ex);
+      } finally {
+        setBusy(false);
       }
     } else {
       const myMembership = memberships.find((m) => m.sender === userId);
@@ -92,29 +90,25 @@ export function RaiseHandToggleButton({
         return;
       }
       const parentEventId = myMembership.eventId;
-      setBusy(true);
-      client
-        .sendEvent(rtcSession.room.roomId, EventType.Reaction, {
-          "m.relates_to": {
-            rel_type: RelationType.Annotation,
-            event_id: parentEventId,
-            key: "🖐️",
+      try {
+        setBusy(true);
+        const reaction = await client.sendEvent(
+          rtcSession.room.roomId,
+          EventType.Reaction,
+          {
+            "m.relates_to": {
+              rel_type: RelationType.Annotation,
+              event_id: parentEventId,
+              key: "🖐️",
+            },
           },
-        })
-        .then((reaction) => {
-          logger.debug("Sent raise hand event", reaction.event_id);
-          addRaisedHand(userId, {
-            membershipEventId: parentEventId,
-            reactionEventId: reaction.event_id,
-            time: new Date(),
-          });
-        })
-        .catch((e) => {
-          logger.error("Failed to send reaction event", e);
-        })
-        .finally(() => {
-          setBusy(false);
-        });
+        );
+        logger.debug("Sent raise hand event", reaction.event_id);
+      } catch (ex) {
+        logger.error("Failed to send reaction event", ex);
+      } finally {
+        setBusy(false);
+      }
     }
   }, [
     client,
@@ -122,8 +116,6 @@ export function RaiseHandToggleButton({
     memberships,
     myReactionId,
     rtcSession.room.roomId,
-    addRaisedHand,
-    removeRaisedHand,
     userId,
   ]);
 
