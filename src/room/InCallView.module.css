@@ -147,11 +147,11 @@ Please see LICENSE in the repository root for full details.
 
 .floatingReaction {
   position: relative;
+  display: inline;
   z-index: 2;
   font-size: 32pt;
-  animation-duration: 5s;
+  animation-duration: 4s;
   animation-name: reaction-up;
-  bottom: 0;
   width: fit-content;
 }
 

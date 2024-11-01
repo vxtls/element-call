@@ -21,7 +21,11 @@
 
 .reactionPopupMenuItem {
   list-style: none;
-  gap: 1em;
+  margin-left: var(--cpd-separator-spacing);
+}
+
+.reactionPopupMenuItem:first-child {
+  margin-left: 0;
 }
 
 .reactionButton {
@@ -36,4 +40,14 @@
   height: auto;
   margin-left: var(--cpd-separator-spacing);
   margin-right: var(--cpd-separator-spacing);
+}
+
+.searchForm {
+  display: flex;
+  flex-direction: row;
+  gap: var(--cpd-separator-spacing);
+}
+
+.searchForm > label {
+  flex: auto;
 }

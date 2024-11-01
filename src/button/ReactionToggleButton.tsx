@@ -12,7 +12,11 @@ import {
   Search,
   Form,
 } from "@vector-im/compound-web";
-import { ReactionIcon } from "@vector-im/compound-design-tokens/assets/web/icons";
+import {
+  SearchIcon,
+  ReactionIcon,
+  CloseIcon,
+} from "@vector-im/compound-design-tokens/assets/web/icons";
 import {
   ChangeEventHandler,
   ComponentPropsWithoutRef,
@@ -35,6 +39,7 @@ import {
   ECallReactionEventContent,
   ReactionOption,
   ReactionSet,
+  ElementCallReactionEventType,
 } from "../reactions";
 
 interface InnerButtonProps extends ComponentPropsWithoutRef<"button"> {
@@ -69,6 +74,7 @@ export function ReactionPopupMenu({
 }): ReactNode {
   const { t } = useTranslation();
   const [searchText, setSearchText] = useState("");
+  const [isSearching, setIsSearching] = useState(false);
   const onSearch = useCallback<ChangeEventHandler<HTMLInputElement>>((ev) => {
     ev.preventDefault();
     setSearchText(ev.target.value.trim().toLocaleLowerCase());
@@ -78,11 +84,14 @@ export function ReactionPopupMenu({
     () =>
       ReactionSet.filter(
         (reaction) =>
-          reaction.name.startsWith(searchText) ||
-          reaction.alias?.some((a) => a.startsWith(searchText)),
+          !isSearching ||
+          (!!searchText &&
+            (reaction.name.startsWith(searchText) ||
+              reaction.alias?.some((a) => a.startsWith(searchText)))),
       ).slice(0, 6),
-    [searchText],
+    [searchText, isSearching],
   );
+
   return (
     <div className={styles.reactionPopupMenu}>
       <section className={styles.handRaiseSection}>
@@ -99,14 +108,28 @@ export function ReactionPopupMenu({
       </section>
       <div className={styles.verticalSeperator} />
       <section>
-        <Form.Root onSubmit={(e) => e.preventDefault()}>
-          <Search
-            value={searchText}
-            name="reactionSearch"
-            onChange={onSearch}
-          />
-        </Form.Root>
-        <Separator />
+        {isSearching ? (
+          <>
+            <Form.Root
+              className={styles.searchForm}
+              onSubmit={(e) => e.preventDefault()}
+            >
+              <Search
+                value={searchText}
+                name="reactionSearch"
+                placeholder="Search reactions…"
+                onChange={onSearch}
+              />
+              <CpdButton
+                Icon={CloseIcon}
+                size="sm"
+                kind="destructive"
+                onClick={() => setIsSearching(false)}
+              />
+            </Form.Root>
+            <Separator />
+          </>
+        ) : null}
         <menu>
           {filteredReactionSet.map((reaction) => (
             <li className={styles.reactionPopupMenuItem}>
@@ -123,21 +146,33 @@ export function ReactionPopupMenu({
               </Tooltip>
             </li>
           ))}
+          {!isSearching ? (
+            <li key="search" className={styles.reactionPopupMenuItem}>
+              <Tooltip label="Search">
+                <CpdButton
+                  iconOnly
+                  Icon={SearchIcon}
+                  kind="tertiary"
+                  onClick={() => setIsSearching(true)}
+                />
+              </Tooltip>
+            </li>
+          ) : null}
         </menu>
       </section>
     </div>
   );
 }
 
-interface RaisedHandToggleButtonProps {
+interface ReactionToggleButtonProps {
   rtcSession: MatrixRTCSession;
   client: MatrixClient;
 }
 
-export function RaiseHandToggleButton({
+export function ReactionToggleButton({
   client,
   rtcSession,
-}: RaisedHandToggleButtonProps): ReactNode {
+}: ReactionToggleButtonProps): ReactNode {
   const { raisedHands, myReactionId, reactions } = useReactions();
   const [busy, setBusy] = useState(false);
   const userId = client.getUserId()!;
@@ -161,7 +196,7 @@ export function RaiseHandToggleButton({
         await client.sendEvent(
           rtcSession.room.roomId,
           null,
-          "io.element.call.reaction",
+          ElementCallReactionEventType,
           {
             "m.relates_to": {
               rel_type: RelationType.Reference,
@@ -171,7 +206,7 @@ export function RaiseHandToggleButton({
             name: reaction.name,
           } as ECallReactionEventContent,
         );
-        setShowReactionsMenu(false);
+        // Do NOT close the menu after this.
       } catch (ex) {
         logger.error("Failed to send reaction", ex);
       } finally {
@@ -222,6 +257,7 @@ export function RaiseHandToggleButton({
           logger.error("Failed to send reaction event", ex);
         } finally {
           setBusy(false);
+          setShowReactionsMenu(false);
         }
       }
     };

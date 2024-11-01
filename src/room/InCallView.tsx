@@ -41,7 +41,7 @@ import {
   VideoButton,
   ShareScreenButton,
   SettingsButton,
-  RaiseHandToggleButton,
+  ReactionToggleButton,
 } from "../button";
 import { Header, LeftNav, RightNav, RoomHeaderInfo } from "../Header";
 import { useUrlParams } from "../UrlParams";
@@ -83,6 +83,7 @@ import { makeSpotlightPortraitLayout } from "../grid/SpotlightPortraitLayout";
 import { ReactionsProvider, useReactions } from "../useReactions";
 import handSoundOgg from "../sound/raise_hand.ogg?url";
 import handSoundMp3 from "../sound/raise_hand.mp3?url";
+import { ReactionsAudioRenderer } from "./ReactionAudioRenderer";
 
 const canScreenshare = "getDisplayMedia" in (navigator.mediaDevices ?? {});
 
@@ -181,12 +182,6 @@ export const InCallView: FC<InCallViewProps> = ({
     [raisedHands],
   );
   const previousRaisedHandCount = useDeferredValue(raisedHandCount);
-
-  // TODO: This may need to ensure we don't change the value if a duplicate reaction comes down.
-  const reactionsSet = useMemo(
-    () => [...new Set([...Object.values(reactions)])],
-    [reactions],
-  );
 
   const reactionsIcons = useMemo(
     () =>
@@ -558,7 +553,7 @@ export const InCallView: FC<InCallViewProps> = ({
       }
       if (supportsReactions) {
         buttons.push(
-          <RaiseHandToggleButton
+          <ReactionToggleButton
             client={client}
             rtcSession={rtcSession}
             key="4"
@@ -650,17 +645,7 @@ export const InCallView: FC<InCallViewProps> = ({
         <source src={handSoundOgg} type="audio/ogg; codecs=vorbis" />
         <source src={handSoundMp3} type="audio/mpeg" />
       </audio>
-      {reactionsSet.map(
-        (r) =>
-          r.sound && (
-            <audio key={r.name} autoPlay hidden>
-              <source src={r.sound.ogg} type="audio/ogg; codecs=vorbis" />
-              {r.sound.mp3 ? (
-                <source src={r.sound.mp3} type="audio/mpeg" />
-              ) : null}
-            </audio>
-          ),
-      )}
+      <ReactionsAudioRenderer />
       {reactionsIcons.map(({ sender, emoji, startX }) => (
         <span
           style={{ left: `${startX}vw` }}
