@@ -34,7 +34,7 @@ import { MatrixRTCSession } from "matrix-js-sdk/src/matrixrtc/MatrixRTCSession";
 
 import { useReactions } from "../useReactions";
 import { useMatrixRTCSessionMemberships } from "../useMatrixRTCSessionMemberships";
-import styles from "./RaisedHandToggleButton.module.css";
+import styles from "./ReactionToggleButton.module.css";
 import {
   ECallReactionEventContent,
   ReactionOption,
