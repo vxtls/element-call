@@ -68,7 +68,6 @@ export const MediaView = forwardRef<HTMLDivElement, Props>(
         className={classNames(styles.media, className, {
           [styles.mirror]: mirror,
           [styles.videoMuted]: !videoEnabled,
-          [styles.raisedHandBorder]: !!raisedHandTime,
         })}
         style={style}
         ref={ref}

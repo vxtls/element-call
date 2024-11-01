@@ -109,6 +109,10 @@ const UserMediaTile = forwardRef<HTMLDivElement, UserMediaTileProps>(
       </>
     );
 
+    const handRaised: Date | undefined = raisedHands[vm.member?.userId ?? ""];
+
+    const showSpeaking = showSpeakingIndicators && speaking;
+
     const tile = (
       <MediaView
         ref={ref}
@@ -118,7 +122,8 @@ const UserMediaTile = forwardRef<HTMLDivElement, UserMediaTileProps>(
         videoEnabled={videoEnabled && showVideo}
         videoFit={cropVideo ? "cover" : "contain"}
         className={classNames(className, styles.tile, {
-          [styles.speaking]: showSpeakingIndicators && speaking,
+          [styles.speaking]: showSpeaking,
+          [styles.handRaised]: !showSpeaking && !!handRaised,
         })}
         nameTagLeadingIcon={
           <MicIcon
@@ -146,7 +151,7 @@ const UserMediaTile = forwardRef<HTMLDivElement, UserMediaTileProps>(
             {menu}
           </Menu>
         }
-        raisedHandTime={raisedHands[vm.member?.userId ?? ""]}
+        raisedHandTime={handRaised}
         {...props}
       />
     );
