@@ -154,7 +154,7 @@ export function RaiseHandToggleButton({
   const userId = client.getUserId()!;
   const isHandRaised = !!raisedHands[userId];
   const memberships = useMatrixRTCSessionMemberships(rtcSession);
-  const [showReactionsMenu, setShowReactionsMenu] = useState(true);
+  const [showReactionsMenu, setShowReactionsMenu] = useState(false);
 
   const canReact = !reactions[userId];
 
