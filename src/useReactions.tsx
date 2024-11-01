@@ -214,10 +214,13 @@ export const ReactionsProvider = ({
         }
 
         // One of our custom reactions
-        const reaction = ReactionSet.find((r) => r.name === content.name) ?? {
+        const reaction = {
           ...GenericReaction,
           emoji: content.emoji,
+          // If we don't find a reaction, we can fallback to the generic sound.
+          ...ReactionSet.find((r) => r.name === content.name),
         };
+
         setReactions((reactions) => {
           if (reactions[sender]) {
             // We've still got a reaction from this user, ignore it to prevent spamming

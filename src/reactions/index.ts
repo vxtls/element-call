@@ -1,7 +1,13 @@
+import catSoundOgg from "../sound/reactions/cat.mp3?url";
+import catSoundMp3 from "../sound/reactions/cat.mp3?url";
+import cricketsSoundOgg from "../sound/reactions/crickets.mp3?url";
+import cricketsSoundMp3 from "../sound/reactions/crickets.mp3?url";
 import dogSoundOgg from "../sound/reactions/dog.ogg?url";
 import dogSoundMp3 from "../sound/reactions/dog.mp3?url";
-import lightbulbOgg from "../sound/reactions/lightbulb.mp3?url";
-import lightbulbMp3 from "../sound/reactions/lightbulb.mp3?url";
+import genericSoundOgg from "../sound/reactions/generic.mp3?url";
+import genericSoundMp3 from "../sound/reactions/generic.mp3?url";
+import lightbulbSoundOgg from "../sound/reactions/lightbulb.mp3?url";
+import lightbulbSoundMp3 from "../sound/reactions/lightbulb.mp3?url";
 import { RelationType } from "matrix-js-sdk/src/types";
 
 export interface ReactionOption {
@@ -26,18 +32,13 @@ export interface ECallReactionEventContent {
 export const GenericReaction: ReactionOption = {
   name: "generic",
   emoji: "", // Filled in by user
+  sound: {
+    mp3: genericSoundMp3,
+    ogg: genericSoundOgg,
+  },
 };
 
 export const ReactionSet: ReactionOption[] = [
-  {
-    emoji: "🐶",
-    name: "dog",
-    alias: ["doggo", "pupper", "woofer"],
-    sound: {
-      ogg: dogSoundOgg,
-      mp3: dogSoundMp3,
-    },
-  },
   {
     emoji: "👍",
     name: "thumbsup",
@@ -54,14 +55,40 @@ export const ReactionSet: ReactionOption[] = [
     alias: ["hurray", "success"],
   },
   {
+    emoji: "🐶",
+    name: "dog",
+    alias: ["doggo", "pupper", "woofer"],
+    sound: {
+      ogg: dogSoundOgg,
+      mp3: dogSoundMp3,
+    },
+  },
+  {
     emoji: "🦗",
     name: "crickets",
     alias: ["awkward", "silence"],
+    sound: {
+      ogg: cricketsSoundOgg,
+      mp3: cricketsSoundMp3,
+    },
   },
   {
     emoji: "🐱",
     name: "cat",
     alias: ["meow", "kitty"],
+    sound: {
+      ogg: catSoundOgg,
+      mp3: catSoundMp3,
+    },
+  },
+  {
+    emoji: "💡",
+    name: "lightbulb",
+    alias: ["bulb", "light", "idea", "ping"],
+    sound: {
+      ogg: lightbulbSoundOgg,
+      mp3: lightbulbSoundMp3,
+    },
   },
   {
     emoji: "😵‍💫",
@@ -72,14 +99,5 @@ export const ReactionSet: ReactionOption[] = [
     emoji: "👌",
     name: "ok",
     alias: ["okay", "cool"],
-  },
-  {
-    emoji: "💡",
-    name: "lightbulb",
-    alias: ["bulb", "light", "idea", "ping"],
-    sound: {
-      ogg: lightbulbOgg,
-      mp3: lightbulbMp3,
-    },
   },
 ];

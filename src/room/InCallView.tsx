@@ -188,10 +188,6 @@ export const InCallView: FC<InCallViewProps> = ({
     [reactions],
   );
 
-  useEffect(() => {
-    console.log("Got reaction change", reactionsSet);
-  }, [reactionsSet]);
-
   useWakeLock();
 
   useEffect(() => {
