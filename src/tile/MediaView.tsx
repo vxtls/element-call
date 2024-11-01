@@ -20,6 +20,7 @@ import { Avatar } from "../Avatar";
 import { RaisedHandIndicator } from "../reactions/RaisedHandIndicator";
 import { showHandRaisedTimer, useSetting } from "../settings/settings";
 import { ReactionOption } from "../reactions";
+import { ReactionIndicator } from "../reactions/ReactionIndicator";
 
 interface Props extends ComponentProps<typeof animated.div> {
   className?: string;
@@ -96,15 +97,23 @@ export const MediaView = forwardRef<HTMLDivElement, Props>(
           )}
         </div>
         <div className={styles.fg}>
-          <RaisedHandIndicator
-            raisedHandTime={raisedHandTime}
-            minature={avatarSize < 96}
-            showTimer={handRaiseTimerVisible}
-          />
+          <div className={styles.reactionSet}>
+            <RaisedHandIndicator
+              raisedHandTime={raisedHandTime}
+              minature={avatarSize < 96}
+              showTimer={handRaiseTimerVisible}
+            />
+            {currentReaction && (
+              <ReactionIndicator
+                minature={avatarSize < 96}
+                emoji={currentReaction.emoji}
+              />
+            )}
+          </div>
           <div className={styles.nameTag}>
             {nameTagLeadingIcon}
             <Text as="span" size="sm" weight="medium" className={styles.name}>
-              {displayName} {currentReaction?.emoji ?? ""}
+              {displayName}
             </Text>
             {unencryptedWarning && (
               <Tooltip

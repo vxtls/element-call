@@ -11,6 +11,7 @@ import "@formatjs/intl-durationformat/polyfill";
 import { DurationFormat } from "@formatjs/intl-durationformat";
 
 import styles from "./RaisedHandIndicator.module.css";
+import { ReactionIndicator } from "./ReactionIndicator";
 
 const durationFormatter = new DurationFormat(undefined, {
   minutesDisplay: "always",
@@ -54,22 +55,9 @@ export function RaisedHandIndicator({
 
   if (raisedHandTime) {
     return (
-      <div
-        className={classNames(styles.raisedHandWidget, {
-          [styles.raisedHandWidgetLarge]: !minature,
-        })}
-      >
-        <div
-          className={classNames(styles.raisedHand, {
-            [styles.raisedHandLarge]: !minature,
-          })}
-        >
-          <span role="img" aria-label="raised hand">
-            ✋
-          </span>
-        </div>
+      <ReactionIndicator emoji="✋" minature={minature}>
         {showTimer && <p>{raisedHandDuration}</p>}
-      </div>
+      </ReactionIndicator>
     );
   }
 

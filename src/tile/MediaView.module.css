@@ -170,3 +170,7 @@ unconditionally select the container so we can use cqmin units */
 .fg > button:first-of-type {
   grid-area: button;
 }
+
+.reactionSet {
+  display: flex;
+}
