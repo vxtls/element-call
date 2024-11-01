@@ -111,8 +111,7 @@ export const ReactionsProvider = ({
 
   // This effect will check the state whenever the membership of the session changes.
   useEffect(() => {
-    // Fetches the first reaction for a given event. We assume no more than
-    // one reaction on an event here.
+    // Fetches the first reaction for a given event.
     const getLastReactionEvent = (
       eventId: string,
       expectedSender: string,
@@ -123,7 +122,12 @@ export const ReactionsProvider = ({
         EventType.Reaction,
       );
       const allEvents = relations?.getRelations() ?? [];
-      return allEvents.find((u) => u.event.sender === expectedSender);
+      return allEvents.find(
+        (reaction) =>
+          reaction.event.sender === expectedSender &&
+          reaction.getType() === EventType.Reaction &&
+          reaction.getContent()?.["m.relates_to"]?.key === "🖐️",
+      );
     };
 
     // Remove any raised hands for users no longer joined to the call.
@@ -148,19 +152,16 @@ export const ReactionsProvider = ({
         removeRaisedHand(m.sender);
       }
       const reaction = getLastReactionEvent(m.eventId, m.sender);
-      const eventId = reaction?.getId();
-      if (!eventId) {
-        continue;
-      }
-      if (reaction && reaction.getType() === EventType.Reaction) {
-        const content = reaction.getContent() as ReactionEventContent;
-        if (content?.["m.relates_to"]?.key === "🖐️") {
-          addRaisedHand(m.sender, {
-            membershipEventId: m.eventId,
-            reactionEventId: eventId,
-            time: new Date(reaction.localTimestamp),
-          });
+      if (reaction) {
+        const eventId = reaction?.getId();
+        if (!eventId) {
+          continue;
         }
+        addRaisedHand(m.sender, {
+          membershipEventId: m.eventId,
+          reactionEventId: eventId,
+          time: new Date(reaction.localTimestamp),
+        });
       }
     }
     // Ignoring raisedHands here because we don't want to trigger each time the raised
