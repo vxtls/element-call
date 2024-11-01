@@ -26,11 +26,18 @@ import { logger } from "matrix-js-sdk/src/logger";
 
 import { useMatrixRTCSessionMemberships } from "./useMatrixRTCSessionMemberships";
 import { useClientState } from "./ClientContext";
+import {
+  ECallReactionEventContent,
+  GenericReaction,
+  ReactionOption,
+  ReactionSet,
+} from "./reactions";
 
 interface ReactionsContextType {
   raisedHands: Record<string, Date>;
   supportsReactions: boolean;
   myReactionId: string | null;
+  reactions: Record<string, ReactionOption>;
 }
 
 const ReactionsContext = createContext<ReactionsContextType | undefined>(
@@ -79,6 +86,10 @@ export const ReactionsProvider = ({
     clientState?.state === "valid" && clientState.supportedFeatures.reactions;
   const room = rtcSession.room;
   const myUserId = room.client.getUserId();
+
+  const [reactions, setReactions] = useState<Record<string, ReactionOption>>(
+    {},
+  );
 
   // Calculate our own reaction event.
   const myReactionId = useMemo(
@@ -184,7 +195,44 @@ export const ReactionsProvider = ({
         return;
       }
 
-      if (event.getType() === EventType.Reaction) {
+      if (event.getType() === "io.element.call.reaction") {
+        // TODO: Validate content.
+        const content: ECallReactionEventContent = event.getContent();
+
+        const membershipEventId = content["m.relates_to"].event_id;
+        // Check to see if this reaction was made to a membership event (and the
+        // sender of the reaction matches the membership)
+        if (
+          !memberships.some(
+            (e) => e.eventId === membershipEventId && e.sender === sender,
+          )
+        ) {
+          logger.warn(
+            `Reaction target was not a membership event for ${sender}, ignoring`,
+          );
+          return;
+        }
+
+        // One of our custom reactions
+        const reaction = ReactionSet.find((r) => r.name === content.name) ?? {
+          ...GenericReaction,
+          emoji: content.emoji,
+        };
+        setReactions((reactions) => {
+          if (reactions[sender]) {
+            // We've still got a reaction from this user, ignore it to prevent spamming
+            return reactions;
+          }
+          setTimeout(() => {
+            // Clear the reaction after some time.
+            setReactions(({ [sender]: _unused, ...remaining }) => remaining);
+          }, 3000);
+          return {
+            ...reactions,
+            [sender]: reaction,
+          };
+        });
+      } else if (event.getType() === EventType.Reaction) {
         const content = event.getContent() as ReactionEventContent;
         const membershipEventId = content["m.relates_to"].event_id;
 
@@ -241,6 +289,7 @@ export const ReactionsProvider = ({
         raisedHands: resultRaisedHands,
         supportsReactions,
         myReactionId,
+        reactions,
       }}
     >
       {children}

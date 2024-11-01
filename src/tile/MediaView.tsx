@@ -19,6 +19,7 @@ import styles from "./MediaView.module.css";
 import { Avatar } from "../Avatar";
 import { RaisedHandIndicator } from "../reactions/RaisedHandIndicator";
 import { showHandRaisedTimer, useSetting } from "../settings/settings";
+import { ReactionOption } from "../reactions";
 
 interface Props extends ComponentProps<typeof animated.div> {
   className?: string;
@@ -35,6 +36,7 @@ interface Props extends ComponentProps<typeof animated.div> {
   displayName: string;
   primaryButton?: ReactNode;
   raisedHandTime?: Date;
+  currentReaction?: ReactionOption;
 }
 
 export const MediaView = forwardRef<HTMLDivElement, Props>(
@@ -54,6 +56,7 @@ export const MediaView = forwardRef<HTMLDivElement, Props>(
       displayName,
       primaryButton,
       raisedHandTime,
+      currentReaction,
       ...props
     },
     ref,
@@ -101,7 +104,7 @@ export const MediaView = forwardRef<HTMLDivElement, Props>(
           <div className={styles.nameTag}>
             {nameTagLeadingIcon}
             <Text as="span" size="sm" weight="medium" className={styles.name}>
-              {displayName}
+              {displayName} {currentReaction?.emoji ?? ""}
             </Text>
             {unencryptedWarning && (
               <Tooltip

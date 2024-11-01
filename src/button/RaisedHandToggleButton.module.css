@@ -1,0 +1,40 @@
+.reactionPopupMenu {
+  padding: 1em;
+  position: absolute;
+  z-index: 99;
+  background: var(--cpd-color-bg-canvas-default);
+  top: -8em;
+  border-radius: var(--cpd-space-4x);
+  display: flex;
+}
+
+.reactionPopupMenu menu {
+  margin: 0;
+  padding: 0;
+  display: flex;
+}
+
+.reactionPopupMenu section {
+  height: fit-content;
+  margin-top: auto;
+  margin-bottom: auto;
+}
+
+.reactionPopupMenuItem {
+  list-style: none;
+  gap: 1em;
+}
+
+.reactionButton {
+  width: 2em;
+  height: 2em;
+  border-radius: 2em;
+}
+
+.verticalSeperator {
+  background-color: var(--cpd-color-gray-400);
+  width: 1px;
+  height: auto;
+  margin-left: var(--cpd-separator-spacing);
+  margin-right: var(--cpd-separator-spacing);
+}

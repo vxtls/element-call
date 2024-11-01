@@ -175,12 +175,22 @@ export const InCallView: FC<InCallViewProps> = ({
   connState,
   onShareClick,
 }) => {
-  const { supportsReactions, raisedHands } = useReactions();
+  const { supportsReactions, raisedHands, reactions } = useReactions();
   const raisedHandCount = useMemo(
     () => Object.keys(raisedHands).length,
     [raisedHands],
   );
   const previousRaisedHandCount = useDeferredValue(raisedHandCount);
+
+  // TODO: This may need to ensure we don't change the value if a duplicate reaction comes down.
+  const reactionsSet = useMemo(
+    () => [...new Set([...Object.values(reactions)])],
+    [reactions],
+  );
+
+  useEffect(() => {
+    console.log("Got reaction change", reactionsSet);
+  }, [reactionsSet]);
 
   useWakeLock();
 
@@ -634,6 +644,17 @@ export const InCallView: FC<InCallViewProps> = ({
         <source src={handSoundOgg} type="audio/ogg; codecs=vorbis" />
         <source src={handSoundMp3} type="audio/mpeg" />
       </audio>
+      {reactionsSet.map(
+        (r) =>
+          r.sound && (
+            <audio key={r.name} autoPlay hidden>
+              <source src={r.sound.ogg} type="audio/ogg; codecs=vorbis" />
+              {r.sound.mp3 ? (
+                <source src={r.sound.mp3} type="audio/mpeg" />
+              ) : null}
+            </audio>
+          ),
+      )}
       {footer}
       {!noControls && <RageshakeRequestModal {...rageshakeRequestModalProps} />}
       <SettingsModal

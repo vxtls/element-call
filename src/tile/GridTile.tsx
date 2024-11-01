@@ -45,6 +45,7 @@ import { Slider } from "../Slider";
 import { MediaView } from "./MediaView";
 import { useLatest } from "../useLatest";
 import { useReactions } from "../useReactions";
+import { ReactionOption } from "../reactions";
 
 interface TileProps {
   className?: string;
@@ -91,7 +92,7 @@ const UserMediaTile = forwardRef<HTMLDivElement, UserMediaTileProps>(
       },
       [vm],
     );
-    const { raisedHands } = useReactions();
+    const { raisedHands, reactions } = useReactions();
 
     const MicIcon = audioEnabled ? MicOnSolidIcon : MicOffSolidIcon;
 
@@ -110,6 +111,8 @@ const UserMediaTile = forwardRef<HTMLDivElement, UserMediaTileProps>(
     );
 
     const handRaised: Date | undefined = raisedHands[vm.member?.userId ?? ""];
+    const currentReaction: ReactionOption | undefined =
+      reactions[vm.member?.userId ?? ""];
 
     const showSpeaking = showSpeakingIndicators && speaking;
 
@@ -152,6 +155,7 @@ const UserMediaTile = forwardRef<HTMLDivElement, UserMediaTileProps>(
           </Menu>
         }
         raisedHandTime={handRaised}
+        currentReaction={currentReaction}
         {...props}
       />
     );
