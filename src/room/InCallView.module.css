@@ -144,3 +144,27 @@ Please see LICENSE in the repository root for full details.
   position: relative;
   flex-grow: 1;
 }
+
+.floatingReaction {
+  position: relative;
+  z-index: 2;
+  font-size: 32pt;
+  animation-duration: 5s;
+  animation-name: reaction-up;
+  bottom: 0;
+  width: fit-content;
+}
+
+@keyframes reaction-up {
+  from {
+    opacity: 1;
+    translate: 100vw 0;
+    scale: 200%;
+  }
+
+  to {
+    opacity: 0;
+    translate: 100vw -100vh;
+    scale: 100%;
+  }
+}

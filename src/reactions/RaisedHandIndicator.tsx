@@ -6,11 +6,9 @@ Please see LICENSE in the repository root for full details.
 */
 
 import { ReactNode, useEffect, useState } from "react";
-import classNames from "classnames";
 import "@formatjs/intl-durationformat/polyfill";
 import { DurationFormat } from "@formatjs/intl-durationformat";
 
-import styles from "./RaisedHandIndicator.module.css";
 import { ReactionIndicator } from "./ReactionIndicator";
 
 const durationFormatter = new DurationFormat(undefined, {

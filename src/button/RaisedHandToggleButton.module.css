@@ -1,7 +1,6 @@
 .reactionPopupMenu {
   padding: 1em;
   position: absolute;
-  z-index: 99;
   background: var(--cpd-color-bg-canvas-default);
   top: -8em;
   border-radius: var(--cpd-space-4x);

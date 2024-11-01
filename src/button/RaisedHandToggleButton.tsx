@@ -12,6 +12,7 @@ import {
   Search,
   Form,
 } from "@vector-im/compound-web";
+import { ReactionIcon } from "@vector-im/compound-design-tokens/assets/web/icons";
 import {
   ChangeEventHandler,
   ComponentPropsWithoutRef,
@@ -46,23 +47,11 @@ const InnerButton: FC<InnerButtonProps> = ({ raised, ...props }) => {
   return (
     <Tooltip label={t("action.send_reaction")}>
       <CpdButton
+        iconOnly
         kind={raised ? "primary" : "secondary"}
         {...props}
-        style={{ paddingLeft: 8, paddingRight: 8 }}
-      >
-        <p
-          role="img"
-          aria-hidden
-          style={{
-            width: "30px",
-            height: "0px",
-            display: "inline-block",
-            fontSize: "22px",
-          }}
-        >
-          ✋
-        </p>
-      </CpdButton>
+        Icon={ReactionIcon}
+      />
     </Tooltip>
   );
 };
@@ -101,14 +90,14 @@ export function ReactionPopupMenu({
           <CpdButton
             kind={isHandRaised ? "primary" : "secondary"}
             className={styles.reactionButton}
-            key={"raise-hand"}
+            key="raise-hand"
             onClick={() => toggleRaisedHand()}
           >
             🖐️
           </CpdButton>
         </Tooltip>
       </section>
-      <div className={styles.verticalSeperator}></div>
+      <div className={styles.verticalSeperator} />
       <section>
         <Form.Root onSubmit={(e) => e.preventDefault()}>
           <Search
@@ -168,8 +157,7 @@ export function RaiseHandToggleButton({
       const parentEventId = myMembership.eventId;
       try {
         setBusy(true);
-        // XXX: Trying to send a unspec'd event seems to miss the 3rd overload, need to come back to this.
-        // @ts-expect-error
+        // @ts-expect-error Trying to send a unspec'd event seems to miss the 3rd overload, need to come back to this.
         await client.sendEvent(
           rtcSession.room.roomId,
           null,
@@ -190,7 +178,7 @@ export function RaiseHandToggleButton({
         setBusy(false);
       }
     },
-    [memberships, client],
+    [memberships, client, userId, rtcSession],
   );
 
   const toggleRaisedHand = useCallback(() => {
@@ -253,13 +241,13 @@ export function RaiseHandToggleButton({
       <InnerButton
         disabled={busy}
         onClick={() => setShowReactionsMenu((show) => !show)}
-        raised={isHandRaised}
+        raised={isHandRaised || showReactionsMenu}
       />
       {showReactionsMenu && (
         <ReactionPopupMenu
           isHandRaised={isHandRaised}
           canReact={canReact}
-          sendRelation={sendRelation}
+          sendRelation={(reaction) => void sendRelation(reaction)}
           toggleRaisedHand={toggleRaisedHand}
         />
       )}

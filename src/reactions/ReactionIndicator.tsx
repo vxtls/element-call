@@ -9,7 +9,7 @@ import { PropsWithChildren, ReactNode } from "react";
 import classNames from "classnames";
 import "@formatjs/intl-durationformat/polyfill";
 
-import styles from "./RaisedHandIndicator.module.css";
+import styles from "./ReactionIndicator.module.css";
 
 export function ReactionIndicator({
   emoji,

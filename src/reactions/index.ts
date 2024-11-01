@@ -1,3 +1,12 @@
+/*
+Copyright 2024 New Vector Ltd.
+
+SPDX-License-Identifier: AGPL-3.0-only
+Please see LICENSE in the repository root for full details.
+*/
+
+import { RelationType } from "matrix-js-sdk/src/types";
+
 import catSoundOgg from "../sound/reactions/cat.mp3?url";
 import catSoundMp3 from "../sound/reactions/cat.mp3?url";
 import cricketsSoundOgg from "../sound/reactions/crickets.mp3?url";
@@ -8,7 +17,7 @@ import genericSoundOgg from "../sound/reactions/generic.mp3?url";
 import genericSoundMp3 from "../sound/reactions/generic.mp3?url";
 import lightbulbSoundOgg from "../sound/reactions/lightbulb.mp3?url";
 import lightbulbSoundMp3 from "../sound/reactions/lightbulb.mp3?url";
-import { RelationType } from "matrix-js-sdk/src/types";
+
 
 export interface ReactionOption {
   emoji: string;

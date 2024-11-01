@@ -188,6 +188,16 @@ export const InCallView: FC<InCallViewProps> = ({
     [reactions],
   );
 
+  const reactionsIcons = useMemo(
+    () =>
+      Object.entries(reactions).map(([sender, { emoji }]) => ({
+        sender,
+        emoji,
+        startX: -Math.ceil(Math.random() * 50) - 25,
+      })),
+    [reactions],
+  );
+
   useWakeLock();
 
   useEffect(() => {
@@ -651,6 +661,15 @@ export const InCallView: FC<InCallViewProps> = ({
             </audio>
           ),
       )}
+      {reactionsIcons.map(({ sender, emoji, startX }) => (
+        <span
+          style={{ left: `${startX}vw` }}
+          className={styles.floatingReaction}
+          key={sender}
+        >
+          {emoji}
+        </span>
+      ))}
       {footer}
       {!noControls && <RageshakeRequestModal {...rageshakeRequestModalProps} />}
       <SettingsModal
