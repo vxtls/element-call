@@ -1,5 +1,7 @@
 import dogSoundOgg from "../sound/reactions/dog.ogg?url";
 import dogSoundMp3 from "../sound/reactions/dog.mp3?url";
+import lightbulbOgg from "../sound/reactions/lightbulb.mp3?url";
+import lightbulbMp3 from "../sound/reactions/lightbulb.mp3?url";
 import { RelationType } from "matrix-js-sdk/src/types";
 
 export interface ReactionOption {
@@ -70,5 +72,14 @@ export const ReactionSet: ReactionOption[] = [
     emoji: "👌",
     name: "ok",
     alias: ["okay", "cool"],
+  },
+  {
+    emoji: "💡",
+    name: "lightbulb",
+    alias: ["bulb", "light", "idea", "ping"],
+    sound: {
+      ogg: lightbulbOgg,
+      mp3: lightbulbMp3,
+    },
   },
 ];
