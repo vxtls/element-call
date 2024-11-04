@@ -86,6 +86,7 @@ import handSoundOgg from "../sound/raise_hand.ogg?url";
 import handSoundMp3 from "../sound/raise_hand.mp3?url";
 import { ReactionsAudioRenderer } from "./ReactionAudioRenderer";
 import { useSwitchCamera } from "./useSwitchCamera";
+import { showReactions, useSetting } from "../settings/settings";
 
 const canScreenshare = "getDisplayMedia" in (navigator.mediaDevices ?? {});
 
@@ -178,6 +179,7 @@ export const InCallView: FC<InCallViewProps> = ({
   connState,
   onShareClick,
 }) => {
+  const [shouldShowReactions] = useSetting(showReactions);
   const { supportsReactions, raisedHands, reactions } = useReactions();
   const raisedHandCount = useMemo(
     () => Object.keys(raisedHands).length,
@@ -187,12 +189,12 @@ export const InCallView: FC<InCallViewProps> = ({
 
   const reactionsIcons = useMemo(
     () =>
-      Object.entries(reactions).map(([sender, { emoji }]) => ({
+      shouldShowReactions ? Object.entries(reactions).map(([sender, { emoji }]) => ({
         sender,
         emoji,
         startX: -Math.ceil(Math.random() * 50) - 25,
-      })),
-    [reactions],
+      })) : [],
+    [shouldShowReactions, reactions],
   );
 
   useWakeLock();
@@ -232,7 +234,7 @@ export const InCallView: FC<InCallViewProps> = ({
     containerRef1,
     toggleMicrophone,
     toggleCamera,
-    (muted) => muteStates.audio.setEnabled?.(!muted),
+    (muted) => muteStates.audio.setEnabled?.(!muteprefered),
   );
 
   const mobile = boundsValid && bounds.width <= 660;

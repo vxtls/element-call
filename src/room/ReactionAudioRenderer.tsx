@@ -8,12 +8,13 @@ Please see LICENSE in the repository root for full details.
 import { ReactNode } from "react";
 
 import { useReactions } from "../useReactions";
+import { playReactionsSound, useSetting } from "../settings/settings";
 
 export function ReactionsAudioRenderer(): ReactNode {
   const { reactions } = useReactions();
+  const [shouldPlay] = useSetting(playReactionsSound);
 
-  // TODO: This may need to ensure we don't change the value if a duplicate reaction comes down.
-  const expectedReactions = [...new Set([...Object.values(reactions)])];
+  const expectedReactions = shouldPlay ? [...new Set([...Object.values(reactions)])] : [];
   return (
     <>
       {expectedReactions.map(

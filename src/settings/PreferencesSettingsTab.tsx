@@ -12,6 +12,8 @@ import { Text } from "@vector-im/compound-web";
 import { FieldRow, InputField } from "../input/Input";
 import {
   showHandRaisedTimer as showHandRaisedTimerSetting,
+  showReactions as showReactionsSetting,
+  playReactionsSound as playReactionsSoundSetting,
   useSetting,
 } from "./settings";
 
@@ -21,11 +23,20 @@ export const PreferencesSettingsTab: FC = () => {
     showHandRaisedTimerSetting,
   );
 
+  const [showReactions, setShowReactions] = useSetting(
+    showReactionsSetting,
+  );
+
+  const [playReactionsSound, setPlayReactionSound] = useSetting(
+    playReactionsSoundSetting,
+  );
+
+
   const onChangeSetting = useCallback(
-    (e: ChangeEvent<HTMLInputElement>) => {
-      setShowHandRaisedTimer(e.target.checked);
+    (e: ChangeEvent<HTMLInputElement>, fn: (value: boolean) => void) => {
+      fn(e.target.checked);
     },
-    [setShowHandRaisedTimer],
+    [],
   );
 
   return (
@@ -41,7 +52,32 @@ export const PreferencesSettingsTab: FC = () => {
           )}
           type="checkbox"
           checked={showHandRaisedTimer}
-          onChange={onChangeSetting}
+          onChange={(e) => onChangeSetting(e, setShowHandRaisedTimer)}
+        />
+      </FieldRow>
+      <h5>{t("settings.preferences_tab.reactions_title")}</h5>
+      <FieldRow>
+        <InputField
+          id="showReactions"
+          label={t("settings.preferences_tab.reactions_show_label")}
+          description={t(
+            "settings.preferences_tab.reactions_show_description",
+          )}
+          type="checkbox"
+          checked={showReactions}
+          onChange={(e) => onChangeSetting(e, setShowReactions)}
+        />
+      </FieldRow>
+      <FieldRow>
+        <InputField
+          id="playReactionSound"
+          label={t("settings.preferences_tab.reactions_play_sound_label")}
+          description={t(
+            "settings.preferences_tab.reactions_play_sound_description",
+          )}
+          type="checkbox"
+          checked={playReactionsSound}
+          onChange={(e) => onChangeSetting(e, setPlayReactionSound)}
         />
       </FieldRow>
     </div>

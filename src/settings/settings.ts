@@ -90,4 +90,14 @@ export const showHandRaisedTimer = new Setting<boolean>(
   false,
 );
 
+export const showReactions = new Setting<boolean>(
+  "reactions-show",
+  true,
+);
+
+export const playReactionsSound = new Setting<boolean>(
+  "reactions-play-sound",
+  true,
+);
+
 export const alwaysShowSelf = new Setting<boolean>("always-show-self", true);
