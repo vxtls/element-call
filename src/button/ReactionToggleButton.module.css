@@ -1,3 +1,9 @@
+
+.raisedButton > svg {
+  color: var(--cpd-color-icon-on-solid-primary);
+}
+
+
 .reactionPopupMenu {
   padding: 1em;
   position: absolute;

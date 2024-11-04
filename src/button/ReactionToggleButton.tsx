@@ -14,8 +14,8 @@ import {
 } from "@vector-im/compound-web";
 import {
   SearchIcon,
-  ReactionIcon,
   CloseIcon,
+  HandRaisedIcon,
 } from "@vector-im/compound-design-tokens/assets/web/icons";
 import {
   ChangeEventHandler,
@@ -41,6 +41,7 @@ import {
   ReactionSet,
   ElementCallReactionEventType,
 } from "../reactions";
+import classNames from "classnames";
 
 interface InnerButtonProps extends ComponentPropsWithoutRef<"button"> {
   raised: boolean;
@@ -50,12 +51,13 @@ const InnerButton: FC<InnerButtonProps> = ({ raised, ...props }) => {
   const { t } = useTranslation();
 
   return (
-    <Tooltip label={t("action.send_reaction")}>
+    <Tooltip label={t("action.raise_hand_or_send_reaction")}>
       <CpdButton
-        iconOnly
+        className={classNames(raised && styles.raisedButton)}
         kind={raised ? "primary" : "secondary"}
+        iconOnly
+        Icon={HandRaisedIcon}
         {...props}
-        Icon={ReactionIcon}
       />
     </Tooltip>
   );
