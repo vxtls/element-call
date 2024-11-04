@@ -4,7 +4,7 @@ Copyright 2023, 2024 New Vector Ltd.
 SPDX-License-Identifier: AGPL-3.0-only
 Please see LICENSE in the repository root for full details.
 */
-import { map } from "rxjs";
+import { map, of } from "rxjs";
 import { RunHelpers, TestScheduler } from "rxjs/testing";
 import { expect, vi } from "vitest";
 import { RoomMember, Room as MatrixRoom } from "matrix-js-sdk/src/matrix";
@@ -15,6 +15,7 @@ import {
   RemoteTrackPublication,
   Room as LivekitRoom,
 } from "livekit-client";
+import { MatrixRTCSession } from "matrix-js-sdk/src/matrixrtc";
 
 import {
   LocalUserMediaViewModel,
@@ -117,15 +118,17 @@ export function mockLocalParticipant(
 
 export async function withLocalMedia(
   member: Partial<RoomMember>,
+  rtcSession: MatrixRTCSession,
   continuation: (vm: LocalUserMediaViewModel) => void | Promise<void>,
 ): Promise<void> {
   const vm = new LocalUserMediaViewModel(
     "local",
     mockMember(member),
-    mockLocalParticipant({}),
+    of(mockLocalParticipant({})),
     {
       kind: E2eeType.PER_PARTICIPANT,
     },
+    rtcSession,
   );
   try {
     await continuation(vm);
@@ -150,15 +153,17 @@ export function mockRemoteParticipant(
 export async function withRemoteMedia(
   member: Partial<RoomMember>,
   participant: Partial<RemoteParticipant>,
+  rtcSession: MatrixRTCSession,
   continuation: (vm: RemoteUserMediaViewModel) => void | Promise<void>,
 ): Promise<void> {
   const vm = new RemoteUserMediaViewModel(
     "remote",
     mockMember(member),
-    mockRemoteParticipant(participant),
+    of(mockRemoteParticipant(participant)),
     {
       kind: E2eeType.PER_PARTICIPANT,
     },
+    rtcSession,
   );
   try {
     await continuation(vm);
