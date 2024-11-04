@@ -41,7 +41,7 @@
 }
 
 .verticalSeperator {
-  background-color: var(--cpd-color-gray-400);
+  background-color: var(--cpd-color-gray-800);
   width: 1px;
   height: auto;
   margin-left: var(--cpd-separator-spacing);
