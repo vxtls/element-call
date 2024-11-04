@@ -42,6 +42,7 @@ import {
   ShareScreenButton,
   SettingsButton,
   RaiseHandToggleButton,
+  SwitchCameraButton,
 } from "../button";
 import { Header, LeftNav, RightNav, RoomHeaderInfo } from "../Header";
 import { useUrlParams } from "../UrlParams";
@@ -82,7 +83,8 @@ import { makeSpotlightLandscapeLayout } from "../grid/SpotlightLandscapeLayout";
 import { makeSpotlightPortraitLayout } from "../grid/SpotlightPortraitLayout";
 import { ReactionsProvider, useReactions } from "../useReactions";
 import handSoundOgg from "../sound/raise_hand.ogg?url";
-import handSoundMp3 from "../sound/raise_hand.mp3?url";
+import handSoundMp3 from "../sound/raise_hand.mp3?url"
+import { useSwitchCamera } from "./useSwitchCamera";
 
 const canScreenshare = "getDisplayMedia" in (navigator.mediaDevices ?? {});
 
@@ -231,6 +233,7 @@ export const InCallView: FC<InCallViewProps> = ({
   const gridMode = useObservableEagerState(vm.gridMode);
   const showHeader = useObservableEagerState(vm.showHeader);
   const showFooter = useObservableEagerState(vm.showFooter);
+  const switchCamera = useSwitchCamera(vm.localVideo);
 
   // Ideally we could detect taps by listening for click events and checking
   // that the pointerType of the event is "touch", but this isn't yet supported
@@ -274,10 +277,17 @@ export const InCallView: FC<InCallViewProps> = ({
     [setSettingsModalOpen],
   );
 
-  const openProfile = useCallback(() => {
-    setSettingsTab("profile");
-    setSettingsModalOpen(true);
-  }, [setSettingsTab, setSettingsModalOpen]);
+  const openProfile = useMemo(
+    () =>
+      // Profile settings are unavailable in widget mode
+      widget === null
+        ? (): void => {
+            setSettingsTab("profile");
+            setSettingsModalOpen(true);
+          }
+        : null,
+    [setSettingsTab, setSettingsModalOpen],
+  );
 
   const [headerRef, headerBounds] = useMeasure();
   const [footerRef, footerBounds] = useMeasure();
@@ -515,14 +525,14 @@ export const InCallView: FC<InCallViewProps> = ({
 
     buttons.push(
       <MicButton
-        key="1"
+        key="audio"
         muted={!muteStates.audio.enabled}
         onClick={toggleMicrophone}
         disabled={muteStates.audio.setEnabled === null}
         data-testid="incall_mute"
       />,
       <VideoButton
-        key="2"
+        key="video"
         muted={!muteStates.video.enabled}
         onClick={toggleCamera}
         disabled={muteStates.video.setEnabled === null}
@@ -530,10 +540,14 @@ export const InCallView: FC<InCallViewProps> = ({
       />,
     );
     if (!reducedControls) {
+      if (switchCamera !== null)
+        buttons.push(
+          <SwitchCameraButton key="switch_camera" onClick={switchCamera} />,
+        );
       if (canScreenshare && !hideScreensharing) {
         buttons.push(
           <ShareScreenButton
-            key="3"
+            key="share_screen"
             enabled={isScreenShareEnabled}
             onClick={toggleScreensharing}
             data-testid="incall_screenshare"
@@ -549,12 +563,12 @@ export const InCallView: FC<InCallViewProps> = ({
           />,
         );
       }
-      buttons.push(<SettingsButton key="5" onClick={openSettings} />);
+      buttons.push(<SettingsButton key="settings" onClick={openSettings} />);
     }
 
     buttons.push(
       <EndCallButton
-        key="6"
+        key="end_call"
         onClick={function (): void {
           onLeave();
         }}
