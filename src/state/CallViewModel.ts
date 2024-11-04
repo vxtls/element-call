@@ -72,7 +72,6 @@ import { duplicateTiles, nonMemberTiles } from "../settings/settings";
 import { isFirefox } from "../Platform";
 import { setPipEnabled } from "../controls";
 import { EncryptionSystem } from "../e2ee/sharedKeyManagement";
-import { Config } from "../config/Config";
 
 // How long we wait after a focus switch before showing the real participant
 // list again
@@ -295,11 +294,11 @@ function findMatrixRoomMember(
 export class CallViewModel extends ViewModel {
   public readonly localVideo: Observable<LocalVideoTrack | null> =
     observeTrackReference(
-      this.livekitRoom.localParticipant,
+      of(this.livekitRoom.localParticipant),
       Track.Source.Camera,
     ).pipe(
       map((trackRef) => {
-        const track = trackRef.publication?.track;
+        const track = trackRef?.publication?.track;
         return track instanceof LocalVideoTrack ? track : null;
       }),
     );
@@ -366,6 +365,7 @@ export class CallViewModel extends ViewModel {
     );
 
   public readonly nonMemberItemCount = new BehaviorSubject<number>(0);
+
   private readonly mediaItems: Observable<MediaItem[]> = combineLatest([
     this.remoteParticipants,
     observeParticipantMedia(this.livekitRoom.localParticipant),
@@ -409,14 +409,24 @@ export class CallViewModel extends ViewModel {
               }
 
               const member = findMatrixRoomMember(room, mediaId);
-
+              if (!member) {
+                logger.error("Could not find member for media id: ", mediaId);
+              }
               for (let i = 0; i < 1 + duplicateTiles; i++) {
                 const indexedMediaId = `${mediaId}:${i}`;
-                const prevMedia = prevItems.get(indexedMediaId);
+                let prevMedia = prevItems.get(indexedMediaId);
                 if (prevMedia && prevMedia instanceof UserMedia) {
                   if (prevMedia.participant.value !== participant) {
                     // Update the BahviourSubject in the UserMedia.
                     prevMedia.participant.next(participant);
+                  }
+                  if (prevMedia.vm.member === undefined) {
+                    // We have a previous media created because of the `debugShowNonMember` flag.
+                    // In this case we actually replace the media item.
+                    // This "hack" never occurs if we do not use the `debugShowNonMember` debugging
+                    // option and if we always find a room member for each rtc member (which also
+                    // only fails if we have a fundamental problem)
+                    prevMedia = undefined;
                   }
                 }
                 yield [
@@ -483,7 +493,7 @@ export class CallViewModel extends ViewModel {
                             nonMemberId,
                             undefined,
                             participant,
-                            this.encrypted,
+                            this.encryptionSystem,
                             this.matrixRTCSession,
                           ),
                       ];
