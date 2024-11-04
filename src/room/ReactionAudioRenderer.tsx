@@ -14,7 +14,9 @@ export function ReactionsAudioRenderer(): ReactNode {
   const { reactions } = useReactions();
   const [shouldPlay] = useSetting(playReactionsSound);
 
-  const expectedReactions = shouldPlay ? [...new Set([...Object.values(reactions)])] : [];
+  const expectedReactions = shouldPlay
+    ? [...new Set([...Object.values(reactions)])]
+    : [];
   return (
     <>
       {expectedReactions.map(

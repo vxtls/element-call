@@ -189,11 +189,13 @@ export const InCallView: FC<InCallViewProps> = ({
 
   const reactionsIcons = useMemo(
     () =>
-      shouldShowReactions ? Object.entries(reactions).map(([sender, { emoji }]) => ({
-        sender,
-        emoji,
-        startX: -Math.ceil(Math.random() * 50) - 25,
-      })) : [],
+      shouldShowReactions
+        ? Object.entries(reactions).map(([sender, { emoji }]) => ({
+            sender,
+            emoji,
+            startX: -Math.ceil(Math.random() * 50) - 25,
+          }))
+        : [],
     [shouldShowReactions, reactions],
   );
 

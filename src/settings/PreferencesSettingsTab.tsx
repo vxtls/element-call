@@ -23,14 +23,11 @@ export const PreferencesSettingsTab: FC = () => {
     showHandRaisedTimerSetting,
   );
 
-  const [showReactions, setShowReactions] = useSetting(
-    showReactionsSetting,
-  );
+  const [showReactions, setShowReactions] = useSetting(showReactionsSetting);
 
   const [playReactionsSound, setPlayReactionSound] = useSetting(
     playReactionsSoundSetting,
   );
-
 
   const onChangeSetting = useCallback(
     (e: ChangeEvent<HTMLInputElement>, fn: (value: boolean) => void) => {
@@ -60,9 +57,7 @@ export const PreferencesSettingsTab: FC = () => {
         <InputField
           id="showReactions"
           label={t("settings.preferences_tab.reactions_show_label")}
-          description={t(
-            "settings.preferences_tab.reactions_show_description",
-          )}
+          description={t("settings.preferences_tab.reactions_show_description")}
           type="checkbox"
           checked={showReactions}
           onChange={(e) => onChangeSetting(e, setShowReactions)}
