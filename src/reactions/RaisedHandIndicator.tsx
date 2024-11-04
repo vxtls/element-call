@@ -8,7 +8,6 @@ Please see LICENSE in the repository root for full details.
 import { ReactNode, useEffect, useState } from "react";
 import "@formatjs/intl-durationformat/polyfill";
 import { DurationFormat } from "@formatjs/intl-durationformat";
-
 import { ReactionIndicator } from "./ReactionIndicator";
 
 const durationFormatter = new DurationFormat(undefined, {

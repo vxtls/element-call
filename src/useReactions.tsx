@@ -28,6 +28,7 @@ import { useMatrixRTCSessionMemberships } from "./useMatrixRTCSessionMemberships
 import { useClientState } from "./ClientContext";
 import {
   ECallReactionEventContent,
+  ElementCallReactionEventType,
   GenericReaction,
   ReactionOption,
   ReactionSet,
@@ -195,7 +196,7 @@ export const ReactionsProvider = ({
         return;
       }
 
-      if (event.getType() === "io.element.call.reaction") {
+      if (event.getType() === ElementCallReactionEventType) {
         // TODO: Validate content.
         const content: ECallReactionEventContent = event.getContent();
 
