@@ -197,10 +197,9 @@ export const ReactionsProvider = ({
       }
 
       if (event.getType() === ElementCallReactionEventType) {
-        // TODO: Validate content.
         const content: ECallReactionEventContent = event.getContent();
 
-        const membershipEventId = content["m.relates_to"].event_id;
+        const membershipEventId = content?.["m.relates_to"]?.event_id;
         // Check to see if this reaction was made to a membership event (and the
         // sender of the reaction matches the membership)
         if (
