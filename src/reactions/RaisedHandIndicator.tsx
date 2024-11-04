@@ -20,11 +20,11 @@ const durationFormatter = new DurationFormat(undefined, {
 
 export function RaisedHandIndicator({
   raisedHandTime,
-  minature,
+  miniature,
   showTimer,
 }: {
   raisedHandTime?: Date;
-  minature?: boolean;
+  miniature?: boolean;
   showTimer?: boolean;
 }): ReactNode {
   const [raisedHandDuration, setRaisedHandDuration] = useState("");
@@ -53,7 +53,7 @@ export function RaisedHandIndicator({
 
   if (raisedHandTime) {
     return (
-      <ReactionIndicator emoji="✋" minature={minature}>
+      <ReactionIndicator emoji="✋" miniature={miniature}>
         {showTimer && <p>{raisedHandDuration}</p>}
       </ReactionIndicator>
     );

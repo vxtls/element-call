@@ -13,24 +13,24 @@ import styles from "./ReactionIndicator.module.css";
 
 export function ReactionIndicator({
   emoji,
-  minature,
+  miniature,
   children,
 }: PropsWithChildren<{
-  minature?: boolean;
+  miniature?: boolean;
   emoji: string;
 }>): ReactNode {
   return (
     <div
-      className={classNames(styles.raisedHandWidget, {
-        [styles.raisedHandWidgetLarge]: !minature,
+      className={classNames(styles.reactionIndicatorWidget, {
+        [styles.reactionIndicatorWidgetLarge]: !miniature,
       })}
     >
       <div
-        className={classNames(styles.raisedHand, {
-          [styles.raisedHandLarge]: !minature,
+        className={classNames(styles.reaction, {
+          [styles.reactionLarge]: !miniature,
         })}
       >
-        <span role="img" aria-label="raised hand">
+        <span role="img" aria-label="reaction indicator">
           {emoji}
         </span>
       </div>
