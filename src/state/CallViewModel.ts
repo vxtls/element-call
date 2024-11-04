@@ -68,7 +68,7 @@ import {
 } from "./MediaViewModel";
 import { accumulate, finalizeValue } from "../utils/observable";
 import { ObservableScope } from "./ObservableScope";
-import { duplicateTiles } from "../settings/settings";
+import { duplicateTiles, nonMemberTiles } from "../settings/settings";
 import { isFirefox } from "../Platform";
 import { setPipEnabled } from "../controls";
 import { EncryptionSystem } from "../e2ee/sharedKeyManagement";
@@ -177,6 +177,7 @@ class UserMedia {
     member: RoomMember | undefined,
     participant: LocalParticipant | RemoteParticipant | undefined,
     encryptionSystem: EncryptionSystem,
+    rtcSession: MatrixRTCSession,
   ) {
     this.participant = new BehaviorSubject(participant);
 
@@ -186,6 +187,7 @@ class UserMedia {
         member,
         this.participant.asObservable() as Observable<LocalParticipant>,
         encryptionSystem,
+        rtcSession,
       );
     } else {
       this.vm = new RemoteUserMediaViewModel(
@@ -195,6 +197,7 @@ class UserMedia {
           RemoteParticipant | undefined
         >,
         encryptionSystem,
+        rtcSession,
       );
     }
 
@@ -362,6 +365,7 @@ export class CallViewModel extends ViewModel {
       },
     );
 
+  public readonly nonMemberItemCount = new BehaviorSubject<number>(0);
   private readonly mediaItems: Observable<MediaItem[]> = combineLatest([
     this.remoteParticipants,
     observeParticipantMedia(this.livekitRoom.localParticipant),
@@ -371,15 +375,18 @@ export class CallViewModel extends ViewModel {
       this.matrixRTCSession,
       MatrixRTCSessionEvent.MembershipsChanged,
     ).pipe(startWith(null)),
-    // fromEvent(
-    //   this.matrixRTCSession,
-    //   MatrixRTCSessionEvent.EncryptionKeyChanged,
-    // ).pipe(startWith(null)),
+    nonMemberTiles.value,
   ]).pipe(
     scan(
       (
         prevItems,
-        [remoteParticipants, { participant: localParticipant }, duplicateTiles],
+        [
+          remoteParticipants,
+          { participant: localParticipant },
+          duplicateTiles,
+          _participantChange,
+          nonMemberTiles,
+        ],
       ) => {
         const newItems = new Map(
           function* (this: CallViewModel): Iterable<[string, MediaItem]> {
@@ -423,6 +430,7 @@ export class CallViewModel extends ViewModel {
                       member,
                       participant,
                       this.encryptionSystem,
+                      this.matrixRTCSession,
                     ),
                 ];
               }
@@ -455,27 +463,28 @@ export class CallViewModel extends ViewModel {
         //  - If one wants to test scalability using the livekit cli.
         //  - If an experimental project does not yet do the matrixRTC bits.
         //  - If someone wants to debug if the LK connection works but matrixRTC room state failed to arrive.
-        const debugShowNonMember = Config.get().show_non_member_participants;
+        const debugShowNonMember = nonMemberTiles; //Config.get().show_non_member_tiles;
         const newNonMemberItems = debugShowNonMember
           ? new Map(
               function* (this: CallViewModel): Iterable<[string, MediaItem]> {
-                for (let p = 0; p < remoteParticipants.length; p++) {
+                for (const participant of remoteParticipants) {
                   for (let i = 0; i < 1 + duplicateTiles; i++) {
-                    const participant = remoteParticipants[p];
-                    const maybeNoMemberParticipantId =
+                    const maybeNonMemberParticipantId =
                       participant.identity + ":" + i;
-                    if (!newItems.has(maybeNoMemberParticipantId)) {
+                    if (!newItems.has(maybeNonMemberParticipantId)) {
+                      const nonMemberId = maybeNonMemberParticipantId;
                       yield [
-                        maybeNoMemberParticipantId,
+                        nonMemberId,
                         // We create UserMedia with or without a participant.
                         // This will be the initial value of a BehaviourSubject.
                         // Once a participant appears we will update the BehaviourSubject. (see above)
-                        prevItems.get(maybeNoMemberParticipantId) ??
+                        prevItems.get(nonMemberId) ??
                           new UserMedia(
-                            maybeNoMemberParticipantId,
+                            nonMemberId,
                             undefined,
                             participant,
                             this.encrypted,
+                            this.matrixRTCSession,
                           ),
                       ];
                     }
@@ -487,13 +496,18 @@ export class CallViewModel extends ViewModel {
         if (newNonMemberItems.size > 0) {
           logger.debug("Added NonMember items: ", newNonMemberItems);
         }
+        const newNonMemberItemCount =
+          newNonMemberItems.size / (1 + duplicateTiles);
+        if (this.nonMemberItemCount.value !== newNonMemberItemCount)
+          this.nonMemberItemCount.next(newNonMemberItemCount);
+
         const combinedNew = new Map([
           ...newNonMemberItems.entries(),
           ...newItems.entries(),
         ]);
 
         for (const [id, t] of prevItems) if (!combinedNew.has(id)) t.destroy();
-        return newItems;
+        return combinedNew;
       },
       new Map<string, MediaItem>(),
     ),

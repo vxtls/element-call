@@ -112,7 +112,7 @@ export interface ResolvedConfigOptions extends ConfigOptions {
     enable_video: boolean;
   };
   app_prompt: boolean;
-  show_non_member_participants: boolean;
+  show_non_member_tiles: boolean;
 }
 
 export const DEFAULT_CONFIG: ResolvedConfigOptions = {
@@ -128,5 +128,5 @@ export const DEFAULT_CONFIG: ResolvedConfigOptions = {
     enable_video: true,
   },
   app_prompt: true,
-  show_non_member_participants: false,
+  show_non_member_tiles: false,
 };

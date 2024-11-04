@@ -29,6 +29,7 @@ interface Props extends ComponentProps<typeof animated.div> {
   videoFit: "cover" | "contain";
   mirror: boolean;
   member: RoomMember | undefined;
+  keys: { index: number; key: Uint8Array }[];
   videoEnabled: boolean;
   unencryptedWarning: boolean;
   nameTagLeadingIcon?: ReactNode;
@@ -48,6 +49,7 @@ export const MediaView = forwardRef<HTMLDivElement, Props>(
       videoFit,
       mirror,
       member,
+      keys,
       videoEnabled,
       unencryptedWarning,
       nameTagLeadingIcon,
@@ -98,11 +100,18 @@ export const MediaView = forwardRef<HTMLDivElement, Props>(
             minature={avatarSize < 96}
             showTimer={handRaiseTimerVisible}
           />
+          {/* {keys &&
+            keys.map(({ index, key }) => (
+              <Text as="span" size="sm">
+                index:{index}, key:{key}
+              </Text>
+            ))} */}
           <div className={styles.nameTag}>
             {nameTagLeadingIcon}
             <Text as="span" size="sm" weight="medium" className={styles.name}>
               {displayName}
             </Text>
+
             {unencryptedWarning && (
               <Tooltip
                 label={t("common.unencrypted")}

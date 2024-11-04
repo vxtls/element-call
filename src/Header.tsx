@@ -117,6 +117,7 @@ interface RoomHeaderInfoProps {
   avatarUrl: string | null;
   encrypted: boolean;
   participantCount: number | null;
+  nonMemberItemCount: number | null;
 }
 
 export const RoomHeaderInfo: FC<RoomHeaderInfoProps> = ({
@@ -125,6 +126,7 @@ export const RoomHeaderInfo: FC<RoomHeaderInfoProps> = ({
   avatarUrl,
   encrypted,
   participantCount,
+  nonMemberItemCount,
 }) => {
   const { t } = useTranslation();
   const size = useMediaQuery("(max-width: 550px)") ? "sm" : "lg";
@@ -157,7 +159,8 @@ export const RoomHeaderInfo: FC<RoomHeaderInfoProps> = ({
             aria-label={t("header_participants_label")}
           />
           <Text as="span" size="sm" weight="medium">
-            {t("participant_count", { count: participantCount ?? 0 })}
+            {t("participant_count", { count: participantCount ?? 0 })}{" "}
+            {(nonMemberItemCount ?? 0) > 0 && <>(+ {nonMemberItemCount})</>}
           </Text>
         </div>
       )}

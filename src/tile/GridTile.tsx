@@ -84,6 +84,7 @@ const UserMediaTile = forwardRef<HTMLDivElement, UserMediaTileProps>(
     const videoEnabled = useObservableEagerState(vm.videoEnabled);
     const speaking = useObservableEagerState(vm.speaking);
     const cropVideo = useObservableEagerState(vm.cropVideo);
+    const keys = useObservableEagerState(vm.keys);
     const isRTCParticipantAvailable = useObservableEagerState(
       vm.isRTCParticipantAvailable,
     );
@@ -121,6 +122,7 @@ const UserMediaTile = forwardRef<HTMLDivElement, UserMediaTileProps>(
         ref={ref}
         video={video}
         member={vm.member}
+        keys={keys}
         unencryptedWarning={unencryptedWarning}
         videoEnabled={videoEnabled && showVideo}
         videoFit={cropVideo ? "cover" : "contain"}

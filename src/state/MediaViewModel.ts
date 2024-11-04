@@ -37,6 +37,11 @@ import {
   switchMap,
 } from "rxjs";
 import { useEffect } from "react";
+import {
+  MatrixRTCSession,
+  MatrixRTCSessionEvent,
+} from "matrix-js-sdk/src/matrixrtc";
+import { logger } from "matrix-js-sdk/src/logger";
 
 import { ViewModel } from "./ViewModel";
 import { useReactiveState } from "../useReactiveState";
@@ -196,11 +201,16 @@ abstract class BaseUserMediaViewModel extends BaseMediaViewModel {
    */
   public readonly cropVideo: Observable<boolean> = this._cropVideo;
 
+  public readonly keys = new BehaviorSubject(
+    [] as { index: number; key: Uint8Array }[],
+  );
+
   public constructor(
     id: string,
     member: RoomMember | undefined,
     participant: Observable<LocalParticipant | RemoteParticipant | undefined>,
     encryptionSystem: EncryptionSystem,
+    rtcSession: MatrixRTCSession,
   ) {
     super(
       id,
@@ -211,7 +221,18 @@ abstract class BaseUserMediaViewModel extends BaseMediaViewModel {
       Track.Source.Camera,
     );
 
-    // const media = observeParticipantMedia(participant).pipe(this.scope.state());
+    // rtcSession.on(
+    //   MatrixRTCSessionEvent.EncryptionKeyChanged,
+    //   (key, index, participantId) => {
+    //     if (id.startsWith(participantId))
+    //       logger.info("got new keys: ", participant, { index, key });
+    //     logger.info("All keys for participant ", participant, " - ", [
+    //       ...this.keys.value,
+    //       { index, key },
+    //     ]);
+    //     this.keys.next([...this.keys.value, { index, key }]);
+    //   },
+    // );
 
     const media = participant.pipe(
       switchMap((p) => (p && observeParticipantMedia(p)) ?? of(undefined)),
@@ -263,8 +284,9 @@ export class LocalUserMediaViewModel extends BaseUserMediaViewModel {
     member: RoomMember | undefined,
     participant: Observable<LocalParticipant | undefined>,
     encryptionSystem: EncryptionSystem,
+    rtcSession: MatrixRTCSession,
   ) {
-    super(id, member, participant, encryptionSystem);
+    super(id, member, participant, encryptionSystem, rtcSession);
   }
 }
 
@@ -323,8 +345,9 @@ export class RemoteUserMediaViewModel extends BaseUserMediaViewModel {
     member: RoomMember | undefined,
     participant: Observable<RemoteParticipant | undefined>,
     encryptionSystem: EncryptionSystem,
+    rtcSession: MatrixRTCSession,
   ) {
-    super(id, member, participant, encryptionSystem);
+    super(id, member, participant, encryptionSystem, rtcSession);
 
     // Sync the local volume with LiveKit
     combineLatest([

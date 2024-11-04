@@ -28,6 +28,8 @@ import { Initializer } from "./initializer";
 import { MediaDevicesProvider } from "./livekit/MediaDevicesContext";
 import { widget } from "./widget";
 import { useTheme } from "./useTheme";
+import { nonMemberTiles } from "./settings/settings";
+import { Config } from "./config/Config";
 
 const SentryRoute = Sentry.withSentryRouting(Route);
 
@@ -69,6 +71,13 @@ export const App: FC<AppProps> = ({ history }) => {
         await widget?.api.sendContentLoaded();
       })
       .catch(logger.error);
+  });
+
+  // Update settings to use the non member tile information from the config if set
+  useEffect(() => {
+    if (loaded && Config.get().show_non_member_tiles) {
+      nonMemberTiles.setValue(true);
+    }
   });
 
   const errorPage = <CrashView />;

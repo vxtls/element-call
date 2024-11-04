@@ -194,6 +194,7 @@ export const InCallView: FC<InCallViewProps> = ({
     }
   }, [connState, onLeave]);
 
+  const nonMemberItemCount = useObservableEagerState(vm.nonMemberItemCount);
   const containerRef1 = useRef<HTMLDivElement | null>(null);
   const [containerRef2, bounds] = useMeasure();
   const boundsValid = bounds.height > 0;
@@ -633,6 +634,7 @@ export const InCallView: FC<InCallViewProps> = ({
                 avatarUrl={matrixInfo.roomAvatar}
                 encrypted={matrixInfo.e2eeSystem.kind !== E2eeType.NONE}
                 participantCount={participantCount}
+                nonMemberItemCount={nonMemberItemCount}
               />
             </LeftNav>
             <RightNav>

@@ -146,6 +146,7 @@
     "feedback_tab_thank_you": "Thanks, we received your feedback!",
     "feedback_tab_title": "Feedback",
     "more_tab_title": "More",
+    "non_member_tiles": "Show non member tiles",
     "opt_in_description": "<0></0><1></1>You may withdraw consent by unchecking this box. If you are currently in a call, this setting will take effect at the end of the call.",
     "preferences_tab_body": "Here you can configure extra options for an improved experience",
     "preferences_tab_h4": "Preferences",
