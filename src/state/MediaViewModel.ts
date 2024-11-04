@@ -37,11 +37,7 @@ import {
   switchMap,
 } from "rxjs";
 import { useEffect } from "react";
-import {
-  MatrixRTCSession,
-  MatrixRTCSessionEvent,
-} from "matrix-js-sdk/src/matrixrtc";
-import { logger } from "matrix-js-sdk/src/logger";
+import { MatrixRTCSession } from "matrix-js-sdk/src/matrixrtc";
 
 import { ViewModel } from "./ViewModel";
 import { useReactiveState } from "../useReactiveState";
