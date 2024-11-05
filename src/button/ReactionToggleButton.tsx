@@ -36,7 +36,6 @@ import { useReactions } from "../useReactions";
 import { useMatrixRTCSessionMemberships } from "../useMatrixRTCSessionMemberships";
 import styles from "./ReactionToggleButton.module.css";
 import {
-  ECallReactionEventContent,
   ReactionOption,
   ReactionSet,
   ElementCallReactionEventType,
@@ -195,7 +194,6 @@ export function ReactionToggleButton({
       const parentEventId = myMembership.eventId;
       try {
         setBusy(true);
-        // @ts-expect-error Trying to send a unspec'd event seems to miss the 3rd overload, need to come back to this.
         await client.sendEvent(
           rtcSession.room.roomId,
           null,
@@ -207,7 +205,8 @@ export function ReactionToggleButton({
             },
             emoji: reaction.emoji,
             name: reaction.name,
-          } as ECallReactionEventContent,
+          },
+          undefined,
         );
         // Do NOT close the menu after this.
       } catch (ex) {
