@@ -14,6 +14,11 @@ import {
   RemoteParticipant,
 } from "livekit-client";
 import * as ComponentsCore from "@livekit/components-core";
+import {
+  CallMembership,
+  MatrixRTCSession,
+  MatrixRTCSessionEvent,
+} from "matrix-js-sdk/src/matrixrtc";
 
 import { CallViewModel, Layout } from "./CallViewModel";
 import {
@@ -30,25 +35,33 @@ import {
   ECConnectionState,
 } from "../livekit/useECConnectionState";
 import { E2eeType } from "../e2ee/e2eeType";
+import { MockRoom, MockRTCSession } from "../useReactions.test";
 
 vi.mock("@livekit/components-core");
 
-const aliceId = "@alice:example.org:AAAA";
-const bobId = "@bob:example.org:BBBB";
+const carolId = "@carol:example.org";
+const carolDev = "CCCC";
+const aliceId = "@alice:example.org";
+const aliceDev = "AAAA";
+const aliceRTCId = aliceId + ":" + aliceDev;
 
-const alice = mockMember({ userId: "@alice:example.org" });
-const bob = mockMember({ userId: "@bob:example.org" });
-const carol = mockMember({ userId: "@carol:example.org" });
+const bobId = "@bob:example.org";
+const bobDev = "BBBB";
+const bobRTCId = bobId + ":" + bobDev;
+
+const alice = mockMember({ userId: aliceId });
+const bob = mockMember({ userId: bobId });
+const carol = mockMember({ userId: carolId });
 
 const localParticipant = mockLocalParticipant({ identity: "" });
-const aliceParticipant = mockRemoteParticipant({ identity: aliceId });
+const aliceParticipant = mockRemoteParticipant({ identity: aliceRTCId });
 const aliceSharingScreen = mockRemoteParticipant({
-  identity: aliceId,
+  identity: aliceRTCId,
   isScreenShareEnabled: true,
 });
-const bobParticipant = mockRemoteParticipant({ identity: bobId });
+const bobParticipant = mockRemoteParticipant({ identity: bobRTCId });
 const bobSharingScreen = mockRemoteParticipant({
-  identity: bobId,
+  identity: bobRTCId,
   isScreenShareEnabled: true,
 });
 
@@ -58,6 +71,9 @@ const members = new Map([
   [carol.userId, carol],
 ]);
 
+const rtcMemberAlice = { sender: aliceId, deviceId: aliceDev };
+const rtcMemberBob = { sender: bobId, deviceId: bobDev };
+const rtcMemberCarol = { sender: carolId, deviceId: carolDev };
 export interface GridLayoutSummary {
   type: "grid";
   spotlight?: string[];
@@ -132,9 +148,22 @@ function summarizeLayout(l: Layout): LayoutSummary {
 function withCallViewModel(
   { cold }: OurRunHelpers,
   remoteParticipants: Observable<RemoteParticipant[]>,
+  rtcMembers: Observable<Partial<CallMembership>[]>,
   connectionState: Observable<ECConnectionState>,
   continuation: (vm: CallViewModel) => void,
 ): void {
+  const room = mockMatrixRoom({
+    client: {
+      getUserId: () => carolId,
+      getDeviceId: () => carolDev,
+    } as Partial<MatrixClient> as MatrixClient,
+    getMember: (userId) => members.get(userId) ?? null,
+  });
+  const rtcSession = new MockRTCSession(room as unknown as MockRoom);
+  rtcMembers.subscribe((m) => {
+    rtcSession.memberships = m;
+    rtcSession.emit(MatrixRTCSessionEvent.MembershipsChanged);
+  });
   const participantsSpy = vi
     .spyOn(ComponentsCore, "connectedParticipantsObserver")
     .mockReturnValue(remoteParticipants);
@@ -152,12 +181,7 @@ function withCallViewModel(
     .mockImplementation((p) => cold("a", { a: p }));
 
   const vm = new CallViewModel(
-    mockMatrixRoom({
-      client: {
-        getUserId: () => "@carol:example.org",
-      } as Partial<MatrixClient> as MatrixClient,
-      getMember: (userId) => members.get(userId) ?? null,
-    }),
+    rtcSession as unknown as MatrixRTCSession,
     mockLivekitRoom({ localParticipant }),
     {
       kind: E2eeType.PER_PARTICIPANT,
@@ -180,6 +204,8 @@ test("participants are retained during a focus switch", () => {
     const { hot, expectObservable } = helpers;
     // Participants disappear on frame 2 and come back on frame 3
     const partMarbles = "a-ba";
+    // The RTC members never disappear
+    const rtcMemberMarbles = "a---";
     // Start switching focus on frame 1 and reconnect on frame 3
     const connMarbles = "ab-a";
     // The visible participants should remain the same throughout the switch
@@ -190,6 +216,9 @@ test("participants are retained during a focus switch", () => {
       hot(partMarbles, {
         a: [aliceParticipant, bobParticipant],
         b: [],
+      }),
+      hot(rtcMemberMarbles, {
+        a: [rtcMemberAlice, rtcMemberBob, rtcMemberCarol],
       }),
       hot(connMarbles, {
         a: ConnectionState.Connected,
@@ -202,7 +231,7 @@ test("participants are retained during a focus switch", () => {
             a: {
               type: "grid",
               spotlight: undefined,
-              grid: ["local:0", `${aliceId}:0`, `${bobId}:0`],
+              grid: ["local:0", `${aliceRTCId}:0`, `${bobRTCId}:0`],
             },
           },
         );

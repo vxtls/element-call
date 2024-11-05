@@ -23,6 +23,7 @@ import {
 } from "matrix-js-sdk/src/matrix";
 import EventEmitter from "events";
 import { randomUUID } from "crypto";
+import { CallMembership } from "matrix-js-sdk/src/matrixrtc";
 
 import { ReactionsProvider, useReactions } from "./useReactions";
 
@@ -74,10 +75,12 @@ const TestComponentWrapper = ({
 };
 
 export class MockRTCSession extends EventEmitter {
-  public memberships = Object.entries(membership).map(([eventId, sender]) => ({
+  public memberships: Partial<CallMembership>[] = Object.entries(
+    membership,
+  ).map(([eventId, sender]) => ({
     sender,
     eventId,
-    createdTs: (): Date => new Date(),
+    createdTs: (): number => Date.now(),
   }));
 
   public constructor(public readonly room: MockRoom) {
@@ -93,7 +96,7 @@ export class MockRTCSession extends EventEmitter {
     this.memberships.push({
       sender,
       eventId: `!fake-${randomUUID()}:event`,
-      createdTs: (): Date => new Date(),
+      createdTs: (): number => Date.now(),
     });
     this.emit(MatrixRTCSessionEvent.MembershipsChanged);
   }
