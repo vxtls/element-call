@@ -15,7 +15,6 @@ import {
   RemoteTrackPublication,
   Room as LivekitRoom,
 } from "livekit-client";
-import { MatrixRTCSession } from "matrix-js-sdk/src/matrixrtc";
 
 import {
   LocalUserMediaViewModel,
@@ -118,7 +117,6 @@ export function mockLocalParticipant(
 
 export async function withLocalMedia(
   member: Partial<RoomMember>,
-  rtcSession: MatrixRTCSession,
   continuation: (vm: LocalUserMediaViewModel) => void | Promise<void>,
 ): Promise<void> {
   const vm = new LocalUserMediaViewModel(
@@ -128,7 +126,6 @@ export async function withLocalMedia(
     {
       kind: E2eeType.PER_PARTICIPANT,
     },
-    rtcSession,
   );
   try {
     await continuation(vm);
@@ -153,7 +150,6 @@ export function mockRemoteParticipant(
 export async function withRemoteMedia(
   member: Partial<RoomMember>,
   participant: Partial<RemoteParticipant>,
-  rtcSession: MatrixRTCSession,
   continuation: (vm: RemoteUserMediaViewModel) => void | Promise<void>,
 ): Promise<void> {
   const vm = new RemoteUserMediaViewModel(
@@ -163,7 +159,6 @@ export async function withRemoteMedia(
     {
       kind: E2eeType.PER_PARTICIPANT,
     },
-    rtcSession,
   );
   try {
     await continuation(vm);

@@ -37,7 +37,6 @@ import {
   switchMap,
 } from "rxjs";
 import { useEffect } from "react";
-import { MatrixRTCSession } from "matrix-js-sdk/src/matrixrtc";
 
 import { ViewModel } from "./ViewModel";
 import { useReactiveState } from "../useReactiveState";
@@ -206,7 +205,6 @@ abstract class BaseUserMediaViewModel extends BaseMediaViewModel {
     member: RoomMember | undefined,
     participant: Observable<LocalParticipant | RemoteParticipant | undefined>,
     encryptionSystem: EncryptionSystem,
-    rtcSession: MatrixRTCSession,
   ) {
     super(
       id,
@@ -216,19 +214,6 @@ abstract class BaseUserMediaViewModel extends BaseMediaViewModel {
       Track.Source.Microphone,
       Track.Source.Camera,
     );
-
-    // rtcSession.on(
-    //   MatrixRTCSessionEvent.EncryptionKeyChanged,
-    //   (key, index, participantId) => {
-    //     if (id.startsWith(participantId))
-    //       logger.info("got new keys: ", participant, { index, key });
-    //     logger.info("All keys for participant ", participant, " - ", [
-    //       ...this.keys.value,
-    //       { index, key },
-    //     ]);
-    //     this.keys.next([...this.keys.value, { index, key }]);
-    //   },
-    // );
 
     const media = participant.pipe(
       switchMap((p) => (p && observeParticipantMedia(p)) ?? of(undefined)),
@@ -280,9 +265,8 @@ export class LocalUserMediaViewModel extends BaseUserMediaViewModel {
     member: RoomMember | undefined,
     participant: Observable<LocalParticipant | undefined>,
     encryptionSystem: EncryptionSystem,
-    rtcSession: MatrixRTCSession,
   ) {
-    super(id, member, participant, encryptionSystem, rtcSession);
+    super(id, member, participant, encryptionSystem);
   }
 }
 
@@ -341,9 +325,8 @@ export class RemoteUserMediaViewModel extends BaseUserMediaViewModel {
     member: RoomMember | undefined,
     participant: Observable<RemoteParticipant | undefined>,
     encryptionSystem: EncryptionSystem,
-    rtcSession: MatrixRTCSession,
   ) {
-    super(id, member, participant, encryptionSystem, rtcSession);
+    super(id, member, participant, encryptionSystem);
 
     // Sync the local volume with LiveKit
     combineLatest([

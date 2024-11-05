@@ -176,7 +176,6 @@ class UserMedia {
     member: RoomMember | undefined,
     participant: LocalParticipant | RemoteParticipant | undefined,
     encryptionSystem: EncryptionSystem,
-    rtcSession: MatrixRTCSession,
   ) {
     this.participant = new BehaviorSubject(participant);
 
@@ -186,7 +185,6 @@ class UserMedia {
         member,
         this.participant.asObservable() as Observable<LocalParticipant>,
         encryptionSystem,
-        rtcSession,
       );
     } else {
       this.vm = new RemoteUserMediaViewModel(
@@ -196,7 +194,6 @@ class UserMedia {
           RemoteParticipant | undefined
         >,
         encryptionSystem,
-        rtcSession,
       );
     }
 
@@ -440,7 +437,6 @@ export class CallViewModel extends ViewModel {
                       member,
                       participant,
                       this.encryptionSystem,
-                      this.matrixRTCSession,
                     ),
                 ];
               }
@@ -494,7 +490,6 @@ export class CallViewModel extends ViewModel {
                             undefined,
                             participant,
                             this.encryptionSystem,
-                            this.matrixRTCSession,
                           ),
                       ];
                     }
