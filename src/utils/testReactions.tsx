@@ -1,5 +1,11 @@
+/*
+Copyright 2024 New Vector Ltd.
+
+SPDX-License-Identifier: AGPL-3.0-only
+Please see LICENSE in the repository root for full details.
+*/
+
 import { PropsWithChildren, ReactNode } from "react";
-import { ReactionsProvider } from "../useReactions";
 import { randomUUID } from "crypto";
 import EventEmitter from "events";
 import { MatrixClient } from "matrix-js-sdk/src/client";
@@ -14,6 +20,8 @@ import {
   MatrixRTCSession,
   MatrixRTCSessionEvent,
 } from "matrix-js-sdk/src/matrixrtc";
+
+import { ReactionsProvider } from "../useReactions";
 
 export const TestReactionsWrapper = ({
   rtcSession,
@@ -99,7 +107,9 @@ export function createRedaction(
 
 export class MockRoom extends EventEmitter {
   public readonly testSentEvents: Parameters<MatrixClient["sendEvent"]>[] = [];
-  public readonly testRedactedEvents: Parameters<MatrixClient["redactEvent"]>[] = [];
+  public readonly testRedactedEvents: Parameters<
+    MatrixClient["redactEvent"]
+  >[] = [];
 
   public constructor(
     private readonly ownUserId: string,
@@ -115,13 +125,13 @@ export class MockRoom extends EventEmitter {
         ...props: Parameters<MatrixClient["sendEvent"]>
       ): ReturnType<MatrixClient["sendEvent"]> => {
         this.testSentEvents.push(props);
-        return { event_id: randomUUID() };
+        return Promise.resolve({ event_id: randomUUID() });
       },
       redactEvent: async (
         ...props: Parameters<MatrixClient["redactEvent"]>
       ): ReturnType<MatrixClient["redactEvent"]> => {
         this.testRedactedEvents.push(props);
-        return { event_id: randomUUID() };
+        return Promise.resolve({ event_id: randomUUID() });
       },
     } as unknown as MatrixClient;
   }
