@@ -21,8 +21,12 @@ import {
   ChangeEventHandler,
   ComponentPropsWithoutRef,
   FC,
+  FormEventHandler,
+  KeyboardEvent,
+  KeyboardEventHandler,
   ReactNode,
   useCallback,
+  useEffect,
   useMemo,
   useState,
 } from "react";
@@ -31,6 +35,7 @@ import { logger } from "matrix-js-sdk/src/logger";
 import { EventType, RelationType } from "matrix-js-sdk/src/matrix";
 import { MatrixClient } from "matrix-js-sdk/src/client";
 import { MatrixRTCSession } from "matrix-js-sdk/src/matrixrtc/MatrixRTCSession";
+import classNames from "classnames";
 
 import { useReactions } from "../useReactions";
 import { useMatrixRTCSessionMemberships } from "../useMatrixRTCSessionMemberships";
@@ -40,7 +45,6 @@ import {
   ReactionSet,
   ElementCallReactionEventType,
 } from "../reactions";
-import classNames from "classnames";
 
 interface InnerButtonProps extends ComponentPropsWithoutRef<"button"> {
   raised: boolean;
@@ -64,12 +68,12 @@ const InnerButton: FC<InnerButtonProps> = ({ raised, ...props }) => {
 };
 
 export function ReactionPopupMenu({
-  sendRelation,
+  sendReaction,
   toggleRaisedHand,
   isHandRaised,
   canReact,
 }: {
-  sendRelation: (reaction: ReactionOption) => void;
+  sendReaction: (reaction: ReactionOption) => void;
   toggleRaisedHand: () => void;
   isHandRaised: boolean;
   canReact: boolean;
@@ -94,6 +98,26 @@ export function ReactionPopupMenu({
     [searchText, isSearching],
   );
 
+  const onSearchKeyDown = useCallback<KeyboardEventHandler<never>>(
+    (ev) => {
+      if (ev.key === "Enter") {
+        ev.preventDefault();
+        if (!canReact) {
+          return;
+        }
+        if (filteredReactionSet.length !== 1) {
+          return;
+        }
+        sendReaction(filteredReactionSet[0]);
+        setIsSearching(false);
+      } else if (ev.key === "Escape") {
+        ev.preventDefault();
+        setIsSearching(false);
+      }
+    },
+    [sendReaction, filteredReactionSet, canReact, setIsSearching],
+  );
+
   return (
     <div className={styles.reactionPopupMenu}>
       <section className={styles.handRaiseSection}>
@@ -114,15 +138,17 @@ export function ReactionPopupMenu({
       <section>
         {isSearching ? (
           <>
-            <Form.Root
-              className={styles.searchForm}
-              onSubmit={(e) => e.preventDefault()}
-            >
+            <Form.Root className={styles.searchForm}>
               <Search
+                required
                 value={searchText}
                 name="reactionSearch"
                 placeholder="Search reactions…"
                 onChange={onSearch}
+                onKeyDown={onSearchKeyDown}
+                // This is a reasonable use of autofocus, we are focusing when
+                // the search button is clicked (which matches the Element Web reaction picker)
+                // eslint-disable-next-line jsx-a11y/no-autofocus
                 autoFocus
               />
               <CpdButton
@@ -144,7 +170,7 @@ export function ReactionPopupMenu({
                   kind="secondary"
                   className={styles.reactionButton}
                   disabled={!canReact}
-                  onClick={() => sendRelation(reaction)}
+                  onClick={() => sendReaction(reaction)}
                 >
                   {reaction.emoji}
                 </CpdButton>
@@ -287,7 +313,7 @@ export function ReactionToggleButton({
         <ReactionPopupMenu
           isHandRaised={isHandRaised}
           canReact={canReact}
-          sendRelation={(reaction) => void sendRelation(reaction)}
+          sendReaction={(reaction) => void sendRelation(reaction)}
           toggleRaisedHand={toggleRaisedHand}
         />
       )}

@@ -204,7 +204,7 @@ exports[`Can close search 1`] = `
   <button
     aria-disabled="false"
     aria-expanded="true"
-    aria-labelledby=":rba:"
+    aria-labelledby=":rfg:"
     class="_button_i91xf_17 raisedButton _has-icon_i91xf_66 _icon-only_i91xf_59"
     data-kind="primary"
     data-size="lg"
@@ -232,7 +232,7 @@ exports[`Can close search 1`] = `
     >
       <button
         aria-label="Toggle hand raised"
-        aria-labelledby=":rbg:"
+        aria-labelledby=":rfm:"
         aria-pressed="false"
         class="_button_i91xf_17 reactionButton"
         data-kind="secondary"
@@ -253,7 +253,7 @@ exports[`Can close search 1`] = `
         >
           <button
             aria-disabled="false"
-            aria-labelledby=":rd2:"
+            aria-labelledby=":rh8:"
             class="_button_i91xf_17 reactionButton"
             data-kind="secondary"
             data-size="lg"
@@ -268,7 +268,7 @@ exports[`Can close search 1`] = `
         >
           <button
             aria-disabled="false"
-            aria-labelledby=":rd7:"
+            aria-labelledby=":rhd:"
             class="_button_i91xf_17 reactionButton"
             data-kind="secondary"
             data-size="lg"
@@ -283,7 +283,7 @@ exports[`Can close search 1`] = `
         >
           <button
             aria-disabled="false"
-            aria-labelledby=":rdc:"
+            aria-labelledby=":rhi:"
             class="_button_i91xf_17 reactionButton"
             data-kind="secondary"
             data-size="lg"
@@ -298,7 +298,7 @@ exports[`Can close search 1`] = `
         >
           <button
             aria-disabled="false"
-            aria-labelledby=":rdh:"
+            aria-labelledby=":rhn:"
             class="_button_i91xf_17 reactionButton"
             data-kind="secondary"
             data-size="lg"
@@ -313,7 +313,7 @@ exports[`Can close search 1`] = `
         >
           <button
             aria-disabled="false"
-            aria-labelledby=":rdm:"
+            aria-labelledby=":rhs:"
             class="_button_i91xf_17 reactionButton"
             data-kind="secondary"
             data-size="lg"
@@ -328,7 +328,7 @@ exports[`Can close search 1`] = `
         >
           <button
             aria-disabled="false"
-            aria-labelledby=":rdr:"
+            aria-labelledby=":ri1:"
             class="_button_i91xf_17 reactionButton"
             data-kind="secondary"
             data-size="lg"
@@ -343,7 +343,178 @@ exports[`Can close search 1`] = `
         >
           <button
             aria-label="Open reactions search"
-            aria-labelledby=":re0:"
+            aria-labelledby=":ri6:"
+            class="_button_i91xf_17 _has-icon_i91xf_66 _icon-only_i91xf_59"
+            data-kind="tertiary"
+            data-size="lg"
+            role="button"
+            tabindex="0"
+          >
+            <svg
+              aria-hidden="true"
+              fill="currentColor"
+              height="24"
+              viewBox="0 0 24 24"
+              width="24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M15.05 16.463a7.5 7.5 0 1 1 1.414-1.414l3.243 3.244a1 1 0 0 1-1.414 1.414l-3.244-3.244ZM16 10.5a5.5 5.5 0 1 0-11 0 5.5 5.5 0 0 0 11 0Z"
+              />
+            </svg>
+          </button>
+        </li>
+      </menu>
+    </section>
+  </div>
+</div>
+`;
+
+exports[`Can close search with the escape key 1`] = `
+<div>
+  <button
+    aria-disabled="false"
+    aria-expanded="true"
+    aria-labelledby=":rii:"
+    class="_button_i91xf_17 raisedButton _has-icon_i91xf_66 _icon-only_i91xf_59"
+    data-kind="primary"
+    data-size="lg"
+    role="button"
+    tabindex="0"
+  >
+    <svg
+      aria-hidden="true"
+      fill="currentColor"
+      height="24"
+      viewBox="0 0 24 24"
+      width="24"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="M11 3a1 1 0 1 1 2 0v8.5a.5.5 0 0 0 1 0V4a1 1 0 1 1 2 0v10.2l3.284-2.597a1.081 1.081 0 0 1 1.47 1.577c-.613.673-1.214 1.367-1.818 2.064-1.267 1.463-2.541 2.934-3.944 4.235A6 6 0 0 1 5 15V7a1 1 0 0 1 2 0v5.5a.5.5 0 0 0 1 0V4a1 1 0 0 1 2 0v7.5a.5.5 0 0 0 1 0V3Z"
+      />
+    </svg>
+  </button>
+  <div
+    class="reactionPopupMenu"
+  >
+    <section
+      class="handRaiseSection"
+    >
+      <button
+        aria-label="Toggle hand raised"
+        aria-labelledby=":rio:"
+        aria-pressed="false"
+        class="_button_i91xf_17 reactionButton"
+        data-kind="secondary"
+        data-size="lg"
+        role="button"
+        tabindex="0"
+      >
+        🖐️
+      </button>
+    </section>
+    <div
+      class="verticalSeperator"
+    />
+    <section>
+      <menu>
+        <li
+          class="reactionPopupMenuItem"
+        >
+          <button
+            aria-disabled="false"
+            aria-labelledby=":rka:"
+            class="_button_i91xf_17 reactionButton"
+            data-kind="secondary"
+            data-size="lg"
+            role="button"
+            tabindex="0"
+          >
+            👍
+          </button>
+        </li>
+        <li
+          class="reactionPopupMenuItem"
+        >
+          <button
+            aria-disabled="false"
+            aria-labelledby=":rkf:"
+            class="_button_i91xf_17 reactionButton"
+            data-kind="secondary"
+            data-size="lg"
+            role="button"
+            tabindex="0"
+          >
+            🎉
+          </button>
+        </li>
+        <li
+          class="reactionPopupMenuItem"
+        >
+          <button
+            aria-disabled="false"
+            aria-labelledby=":rkk:"
+            class="_button_i91xf_17 reactionButton"
+            data-kind="secondary"
+            data-size="lg"
+            role="button"
+            tabindex="0"
+          >
+            👏
+          </button>
+        </li>
+        <li
+          class="reactionPopupMenuItem"
+        >
+          <button
+            aria-disabled="false"
+            aria-labelledby=":rkp:"
+            class="_button_i91xf_17 reactionButton"
+            data-kind="secondary"
+            data-size="lg"
+            role="button"
+            tabindex="0"
+          >
+            🐶
+          </button>
+        </li>
+        <li
+          class="reactionPopupMenuItem"
+        >
+          <button
+            aria-disabled="false"
+            aria-labelledby=":rku:"
+            class="_button_i91xf_17 reactionButton"
+            data-kind="secondary"
+            data-size="lg"
+            role="button"
+            tabindex="0"
+          >
+            🐱
+          </button>
+        </li>
+        <li
+          class="reactionPopupMenuItem"
+        >
+          <button
+            aria-disabled="false"
+            aria-labelledby=":rl3:"
+            class="_button_i91xf_17 reactionButton"
+            data-kind="secondary"
+            data-size="lg"
+            role="button"
+            tabindex="0"
+          >
+            💡
+          </button>
+        </li>
+        <li
+          class="reactionPopupMenuItem"
+        >
+          <button
+            aria-label="Open reactions search"
+            aria-labelledby=":rl8:"
             class="_button_i91xf_17 _has-icon_i91xf_66 _icon-only_i91xf_59"
             data-kind="tertiary"
             data-size="lg"
@@ -784,6 +955,7 @@ exports[`Can search for and send emoji 1`] = `
             id=":ra4:"
             name="reactionSearch"
             placeholder="Search reactions…"
+            required=""
             type="search"
             value="crickets"
           />
@@ -823,6 +995,133 @@ exports[`Can search for and send emoji 1`] = `
           <button
             aria-disabled="false"
             aria-labelledby=":rag:"
+            class="_button_i91xf_17 reactionButton"
+            data-kind="secondary"
+            data-size="lg"
+            role="button"
+            tabindex="0"
+          >
+            🦗
+          </button>
+        </li>
+      </menu>
+    </section>
+  </div>
+</div>
+`;
+
+exports[`Can search for and send emoji with the keyboard 1`] = `
+<div>
+  <button
+    aria-disabled="false"
+    aria-expanded="true"
+    aria-labelledby=":rba:"
+    class="_button_i91xf_17 raisedButton _has-icon_i91xf_66 _icon-only_i91xf_59"
+    data-kind="primary"
+    data-size="lg"
+    role="button"
+    tabindex="0"
+  >
+    <svg
+      aria-hidden="true"
+      fill="currentColor"
+      height="24"
+      viewBox="0 0 24 24"
+      width="24"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="M11 3a1 1 0 1 1 2 0v8.5a.5.5 0 0 0 1 0V4a1 1 0 1 1 2 0v10.2l3.284-2.597a1.081 1.081 0 0 1 1.47 1.577c-.613.673-1.214 1.367-1.818 2.064-1.267 1.463-2.541 2.934-3.944 4.235A6 6 0 0 1 5 15V7a1 1 0 0 1 2 0v5.5a.5.5 0 0 0 1 0V4a1 1 0 0 1 2 0v7.5a.5.5 0 0 0 1 0V3Z"
+      />
+    </svg>
+  </button>
+  <div
+    class="reactionPopupMenu"
+  >
+    <section
+      class="handRaiseSection"
+    >
+      <button
+        aria-label="Toggle hand raised"
+        aria-labelledby=":rbg:"
+        aria-pressed="false"
+        class="_button_i91xf_17 reactionButton"
+        data-kind="secondary"
+        data-size="lg"
+        role="button"
+        tabindex="0"
+      >
+        🖐️
+      </button>
+    </section>
+    <div
+      class="verticalSeperator"
+    />
+    <section>
+      <form
+        class="_root_dgy0u_24 searchForm"
+      >
+        <label
+          class="_label_dgy0u_67 _field_dgy0u_34 _search_qztja_17"
+          for=":rd0:"
+        >
+          <svg
+            class="_icon_qztja_46"
+            fill="currentColor"
+            height="20"
+            viewBox="0 0 24 24"
+            width="20"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M15.05 16.463a7.5 7.5 0 1 1 1.414-1.414l3.243 3.244a1 1 0 0 1-1.414 1.414l-3.244-3.244ZM16 10.5a5.5 5.5 0 1 0-11 0 5.5 5.5 0 0 0 11 0Z"
+            />
+          </svg>
+          <input
+            class="_input_qztja_61"
+            id=":rd0:"
+            name="reactionSearch"
+            placeholder="Search reactions…"
+            required=""
+            type="search"
+            value="crickets"
+          />
+        </label>
+        <button
+          aria-label="close search"
+          class="_button_i91xf_17 _has-icon_i91xf_66 _destructive_i91xf_116"
+          data-kind="secondary"
+          data-size="sm"
+          role="button"
+          tabindex="0"
+        >
+          <svg
+            aria-hidden="true"
+            fill="currentColor"
+            height="20"
+            viewBox="0 0 24 24"
+            width="20"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M6.293 6.293a1 1 0 0 1 1.414 0L12 10.586l4.293-4.293a1 1 0 1 1 1.414 1.414L13.414 12l4.293 4.293a1 1 0 0 1-1.414 1.414L12 13.414l-4.293 4.293a1 1 0 0 1-1.414-1.414L10.586 12 6.293 7.707a1 1 0 0 1 0-1.414Z"
+            />
+          </svg>
+        </button>
+      </form>
+      <div
+        class="_separator_144s5_17"
+        data-kind="primary"
+        data-orientation="horizontal"
+        role="separator"
+      />
+      <menu>
+        <li
+          class="reactionPopupMenuItem"
+        >
+          <button
+            aria-disabled="false"
+            aria-labelledby=":rdc:"
             class="_button_i91xf_17 reactionButton"
             data-kind="secondary"
             data-size="lg"
