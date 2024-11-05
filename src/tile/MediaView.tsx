@@ -29,7 +29,6 @@ interface Props extends ComponentProps<typeof animated.div> {
   videoFit: "cover" | "contain";
   mirror: boolean;
   member: RoomMember | undefined;
-  keys: { index: number; key: Uint8Array }[];
   videoEnabled: boolean;
   unencryptedWarning: boolean;
   nameTagLeadingIcon?: ReactNode;
@@ -49,7 +48,6 @@ export const MediaView = forwardRef<HTMLDivElement, Props>(
       videoFit,
       mirror,
       member,
-      keys,
       videoEnabled,
       unencryptedWarning,
       nameTagLeadingIcon,

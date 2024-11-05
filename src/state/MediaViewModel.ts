@@ -196,10 +196,6 @@ abstract class BaseUserMediaViewModel extends BaseMediaViewModel {
    */
   public readonly cropVideo: Observable<boolean> = this._cropVideo;
 
-  public readonly keys = new BehaviorSubject(
-    [] as { index: number; key: Uint8Array }[],
-  );
-
   public constructor(
     id: string,
     member: RoomMember | undefined,
