@@ -213,10 +213,17 @@ export const ReactionsProvider = ({
           return;
         }
 
+        const emoji = content.emoji?.split(/(?:)/u)?.[0];
+
+        if (!emoji) {
+          logger.warn(`Reaction had no emoji from ${reactionEventId}`);
+          return;
+        }
+
         // One of our custom reactions
         const reaction = {
           ...GenericReaction,
-          emoji: content.emoji,
+          emoji,
           // If we don't find a reaction, we can fallback to the generic sound.
           ...ReactionSet.find((r) => r.name === content.name),
         };
