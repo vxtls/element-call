@@ -8,6 +8,7 @@ Please see LICENSE in the repository root for full details.
 import { act, render } from "@testing-library/react";
 import { FC } from "react";
 import { describe, expect, test } from "vitest";
+import { RoomEvent } from "matrix-js-sdk/src/matrix";
 
 import { useReactions } from "./useReactions";
 import {
@@ -17,7 +18,6 @@ import {
   MockRTCSession,
   TestReactionsWrapper,
 } from "./utils/testReactions";
-import { RoomEvent } from "matrix-js-sdk/src/matrix";
 
 const memberUserIdAlice = "@alice:example.org";
 const memberEventAlice = "$membership-alice:example.org";
