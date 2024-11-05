@@ -9,7 +9,7 @@ import { PropsWithChildren, ReactNode } from "react";
 import { randomUUID } from "crypto";
 import EventEmitter from "events";
 import { MatrixClient } from "matrix-js-sdk/src/client";
-import { EventType, RoomEvent } from "matrix-js-sdk/src/matrix";
+import { EventType, RoomEvent, RelationType } from "matrix-js-sdk/src/matrix";
 import {
   MatrixEvent,
   EventTimeline,
@@ -22,6 +22,11 @@ import {
 } from "matrix-js-sdk/src/matrixrtc";
 
 import { ReactionsProvider } from "../useReactions";
+import {
+  ECallReactionEventContent,
+  ElementCallReactionEventType,
+  ReactionOption,
+} from "../reactions";
 
 export const TestReactionsWrapper = ({
   rtcSession,
@@ -70,7 +75,7 @@ export class MockRTCSession extends EventEmitter {
   }
 }
 
-export function createReaction(
+export function createHandRaisedReaction(
   parentMemberEvent: string,
   membershipOrOverridenSender: Record<string, string> | string,
 ): MatrixEvent {
@@ -149,19 +154,43 @@ export class MockRoom extends EventEmitter {
     } as unknown as Room["relations"];
   }
 
-  public testSendReaction(
-    parentMemberEvent: string,
-    overridenSender: string,
-  ): string;
-  public testSendReaction(
-    parentMemberEvent: string,
-    membershipOrOverridenSender: Record<string, string>,
-  ): string;
-  public testSendReaction(
+  public testSendHandRaise(
     parentMemberEvent: string,
     membershipOrOverridenSender: Record<string, string> | string,
   ): string {
-    const evt = createReaction(parentMemberEvent, membershipOrOverridenSender);
+    const evt = createHandRaisedReaction(
+      parentMemberEvent,
+      membershipOrOverridenSender,
+    );
+    this.emit(RoomEvent.Timeline, evt, this, undefined, false, {
+      timeline: new EventTimeline(new EventTimelineSet(undefined)),
+    });
+    return evt.getId()!;
+  }
+
+  public testSendReaction(
+    parentMemberEvent: string,
+    reaction: ReactionOption,
+    membershipOrOverridenSender: Record<string, string> | string,
+  ): string {
+    const evt = new MatrixEvent({
+      sender:
+        typeof membershipOrOverridenSender === "string"
+          ? membershipOrOverridenSender
+          : membershipOrOverridenSender[parentMemberEvent],
+      type: ElementCallReactionEventType,
+      origin_server_ts: new Date().getTime(),
+      content: {
+        "m.relates_to": {
+          rel_type: RelationType.Reference,
+          event_id: parentMemberEvent,
+        },
+        emoji: reaction.emoji,
+        name: reaction.name,
+      } satisfies ECallReactionEventContent,
+      event_id: randomUUID(),
+    });
+
     this.emit(RoomEvent.Timeline, evt, this, undefined, false, {
       timeline: new EventTimeline(new EventTimelineSet(undefined)),
     });

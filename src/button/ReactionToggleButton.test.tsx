@@ -103,7 +103,7 @@ test("Can can lower hand", () => {
   const { getByRole, getByText, container } = render(
     <TestComponent rtcSession={rtcSession} room={room} />,
   );
-  const reactionEvent = room.testSendReaction(memberEventAlice, membership);
+  const reactionEvent = room.testSendHandRaise(memberEventAlice, membership);
   act(() => {
     getByRole("button").click();
   });
@@ -185,7 +185,7 @@ test("Can search for and send emoji with the keyboard", async () => {
   const user = userEvent.setup();
   const room = new MockRoom(memberUserIdAlice);
   const rtcSession = new MockRTCSession(room, membership);
-  const { getByText, getByRole, getByPlaceholderText, container } = render(
+  const { getByRole, getByPlaceholderText, container } = render(
     <TestComponent rtcSession={rtcSession} room={room} />,
   );
   act(() => {

@@ -12,7 +12,7 @@ import { RoomEvent } from "matrix-js-sdk/src/matrix";
 
 import { useReactions } from "./useReactions";
 import {
-  createReaction,
+  createHandRaisedReaction,
   createRedaction,
   MockRoom,
   MockRTCSession,
@@ -75,7 +75,7 @@ describe("useReactions", () => {
         <TestComponent />
       </TestReactionsWrapper>,
     );
-    await act(() => room.testSendReaction(memberEventAlice, membership));
+    await act(() => room.testSendHandRaise(memberEventAlice, membership));
     expect(queryByText("Local reaction")).toBeTruthy();
   });
   test("handles incoming raised hand", async () => {
@@ -86,9 +86,9 @@ describe("useReactions", () => {
         <TestComponent />
       </TestReactionsWrapper>,
     );
-    await act(() => room.testSendReaction(memberEventAlice, membership));
+    await act(() => room.testSendHandRaise(memberEventAlice, membership));
     expect(queryByRole("list")?.children).to.have.lengthOf(1);
-    await act(() => room.testSendReaction(memberEventBob, membership));
+    await act(() => room.testSendHandRaise(memberEventBob, membership));
     expect(queryByRole("list")?.children).to.have.lengthOf(2);
   });
   test("handles incoming unraised hand", async () => {
@@ -100,7 +100,7 @@ describe("useReactions", () => {
       </TestReactionsWrapper>,
     );
     const reactionEventId = await act(() =>
-      room.testSendReaction(memberEventAlice, membership),
+      room.testSendHandRaise(memberEventAlice, membership),
     );
     expect(queryByRole("list")?.children).to.have.lengthOf(1);
     await act(() =>
@@ -115,7 +115,7 @@ describe("useReactions", () => {
   });
   test("handles loading prior raised hand events", () => {
     const room = new MockRoom(memberUserIdAlice, [
-      createReaction(memberEventAlice, membership),
+      createHandRaisedReaction(memberEventAlice, membership),
     ]);
     const rtcSession = new MockRTCSession(room, membership);
     const { queryByRole } = render(
@@ -129,7 +129,7 @@ describe("useReactions", () => {
   // the raised hand event.
   test("will remove reaction when a member leaves the call", () => {
     const room = new MockRoom(memberUserIdAlice, [
-      createReaction(memberEventAlice, membership),
+      createHandRaisedReaction(memberEventAlice, membership),
     ]);
     const rtcSession = new MockRTCSession(room, membership);
     const { queryByRole } = render(
@@ -143,7 +143,7 @@ describe("useReactions", () => {
   });
   test("will remove reaction when a member joins via a new event", () => {
     const room = new MockRoom(memberUserIdAlice, [
-      createReaction(memberEventAlice, membership),
+      createHandRaisedReaction(memberEventAlice, membership),
     ]);
     const rtcSession = new MockRTCSession(room, membership);
     const { queryByRole } = render(
@@ -161,7 +161,7 @@ describe("useReactions", () => {
   });
   test("ignores invalid sender for historic event", () => {
     const room = new MockRoom(memberUserIdAlice, [
-      createReaction(memberEventAlice, memberUserIdBob),
+      createHandRaisedReaction(memberEventAlice, memberUserIdBob),
     ]);
     const rtcSession = new MockRTCSession(room, membership);
     const { queryByRole } = render(
@@ -179,7 +179,7 @@ describe("useReactions", () => {
         <TestComponent />
       </TestReactionsWrapper>,
     );
-    await act(() => room.testSendReaction(memberEventAlice, memberUserIdBob));
+    await act(() => room.testSendHandRaise(memberEventAlice, memberUserIdBob));
     expect(queryByRole("list")?.children).to.have.lengthOf(0);
   });
 });

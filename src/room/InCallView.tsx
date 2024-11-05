@@ -236,7 +236,7 @@ export const InCallView: FC<InCallViewProps> = ({
     containerRef1,
     toggleMicrophone,
     toggleCamera,
-    (muted) => muteStates.audio.setEnabled?.(!muteprefered),
+    (muted) => muteStates.audio.setEnabled?.(!muted),
   );
 
   const mobile = boundsValid && bounds.width <= 660;
