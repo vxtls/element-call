@@ -53,6 +53,7 @@ const InnerButton: FC<InnerButtonProps> = ({ raised, ...props }) => {
     <Tooltip label={t("action.raise_hand_or_send_reaction")}>
       <CpdButton
         className={classNames(raised && styles.raisedButton)}
+        aria-expanded={raised}
         kind={raised ? "primary" : "secondary"}
         iconOnly
         Icon={RaisedHandSolidIcon}
@@ -99,6 +100,8 @@ export function ReactionPopupMenu({
         <Tooltip label={t("common.raise_hand")}>
           <CpdButton
             kind={isHandRaised ? "primary" : "secondary"}
+            aria-pressed={isHandRaised}
+            aria-label="Toggle hand raised"
             className={styles.reactionButton}
             key="raise-hand"
             onClick={() => toggleRaisedHand()}
@@ -124,6 +127,7 @@ export function ReactionPopupMenu({
               />
               <CpdButton
                 Icon={CloseIcon}
+                aria-label="close search"
                 size="sm"
                 kind="destructive"
                 onClick={() => setIsSearching(false)}
@@ -134,12 +138,11 @@ export function ReactionPopupMenu({
         ) : null}
         <menu>
           {filteredReactionSet.map((reaction) => (
-            <li className={styles.reactionPopupMenuItem}>
+            <li className={styles.reactionPopupMenuItem} key={reaction.name}>
               <Tooltip label={reaction.name}>
                 <CpdButton
                   kind="secondary"
                   className={styles.reactionButton}
-                  key={reaction.name}
                   disabled={!canReact}
                   onClick={() => sendRelation(reaction)}
                 >
@@ -153,6 +156,7 @@ export function ReactionPopupMenu({
               <Tooltip label="Search">
                 <CpdButton
                   iconOnly
+                  aria-label="Open reactions search"
                   Icon={SearchIcon}
                   kind="tertiary"
                   onClick={() => setIsSearching(true)}
@@ -196,7 +200,6 @@ export function ReactionToggleButton({
         setBusy(true);
         await client.sendEvent(
           rtcSession.room.roomId,
-          null,
           ElementCallReactionEventType,
           {
             "m.relates_to": {
@@ -206,7 +209,6 @@ export function ReactionToggleButton({
             emoji: reaction.emoji,
             name: reaction.name,
           },
-          undefined,
         );
         // Do NOT close the menu after this.
       } catch (ex) {

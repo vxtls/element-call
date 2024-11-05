@@ -15,7 +15,7 @@ import {
   MatrixRTCSessionEvent,
 } from "matrix-js-sdk/src/matrixrtc";
 
-export const TestComponentWrapper = ({
+export const TestReactionsWrapper = ({
   rtcSession,
   children,
 }: PropsWithChildren<{
@@ -98,6 +98,9 @@ export function createRedaction(
 }
 
 export class MockRoom extends EventEmitter {
+  public readonly testSentEvents: Parameters<MatrixClient["sendEvent"]>[] = [];
+  public readonly testRedactedEvents: Parameters<MatrixClient["redactEvent"]>[] = [];
+
   public constructor(
     private readonly ownUserId: string,
     private readonly existingRelations: MatrixEvent[] = [],
@@ -108,6 +111,18 @@ export class MockRoom extends EventEmitter {
   public get client(): MatrixClient {
     return {
       getUserId: (): string => this.ownUserId,
+      sendEvent: async (
+        ...props: Parameters<MatrixClient["sendEvent"]>
+      ): ReturnType<MatrixClient["sendEvent"]> => {
+        this.testSentEvents.push(props);
+        return { event_id: randomUUID() };
+      },
+      redactEvent: async (
+        ...props: Parameters<MatrixClient["redactEvent"]>
+      ): ReturnType<MatrixClient["redactEvent"]> => {
+        this.testRedactedEvents.push(props);
+        return { event_id: randomUUID() };
+      },
     } as unknown as MatrixClient;
   }
 

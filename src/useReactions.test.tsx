@@ -15,8 +15,8 @@ import {
   createRedaction,
   MockRoom,
   MockRTCSession,
-  TestComponentWrapper,
-} from "./utils/test-reactions";
+  TestReactionsWrapper,
+} from "./utils/testReactions";
 import { RoomEvent } from "matrix-js-sdk/src/matrix";
 
 const memberUserIdAlice = "@alice:example.org";
@@ -61,9 +61,9 @@ describe("useReactions", () => {
       membership,
     );
     const { queryByRole } = render(
-      <TestComponentWrapper rtcSession={rtcSession}>
+      <TestReactionsWrapper rtcSession={rtcSession}>
         <TestComponent />
-      </TestComponentWrapper>,
+      </TestReactionsWrapper>,
     );
     expect(queryByRole("list")?.children).to.have.lengthOf(0);
   });
@@ -71,9 +71,9 @@ describe("useReactions", () => {
     const room = new MockRoom(memberUserIdAlice);
     const rtcSession = new MockRTCSession(room, membership);
     const { queryByText } = render(
-      <TestComponentWrapper rtcSession={rtcSession}>
+      <TestReactionsWrapper rtcSession={rtcSession}>
         <TestComponent />
-      </TestComponentWrapper>,
+      </TestReactionsWrapper>,
     );
     await act(() => room.testSendReaction(memberEventAlice, membership));
     expect(queryByText("Local reaction")).toBeTruthy();
@@ -82,9 +82,9 @@ describe("useReactions", () => {
     const room = new MockRoom(memberUserIdAlice);
     const rtcSession = new MockRTCSession(room, membership);
     const { queryByRole } = render(
-      <TestComponentWrapper rtcSession={rtcSession}>
+      <TestReactionsWrapper rtcSession={rtcSession}>
         <TestComponent />
-      </TestComponentWrapper>,
+      </TestReactionsWrapper>,
     );
     await act(() => room.testSendReaction(memberEventAlice, membership));
     expect(queryByRole("list")?.children).to.have.lengthOf(1);
@@ -95,9 +95,9 @@ describe("useReactions", () => {
     const room = new MockRoom(memberUserIdAlice);
     const rtcSession = new MockRTCSession(room, membership);
     const { queryByRole } = render(
-      <TestComponentWrapper rtcSession={rtcSession}>
+      <TestReactionsWrapper rtcSession={rtcSession}>
         <TestComponent />
-      </TestComponentWrapper>,
+      </TestReactionsWrapper>,
     );
     const reactionEventId = await act(() =>
       room.testSendReaction(memberEventAlice, membership),
@@ -119,9 +119,9 @@ describe("useReactions", () => {
     ]);
     const rtcSession = new MockRTCSession(room, membership);
     const { queryByRole } = render(
-      <TestComponentWrapper rtcSession={rtcSession}>
+      <TestReactionsWrapper rtcSession={rtcSession}>
         <TestComponent />
-      </TestComponentWrapper>,
+      </TestReactionsWrapper>,
     );
     expect(queryByRole("list")?.children).to.have.lengthOf(1);
   });
@@ -133,9 +133,9 @@ describe("useReactions", () => {
     ]);
     const rtcSession = new MockRTCSession(room, membership);
     const { queryByRole } = render(
-      <TestComponentWrapper rtcSession={rtcSession}>
+      <TestReactionsWrapper rtcSession={rtcSession}>
         <TestComponent />
-      </TestComponentWrapper>,
+      </TestReactionsWrapper>,
     );
     expect(queryByRole("list")?.children).to.have.lengthOf(1);
     act(() => rtcSession.testRemoveMember(memberUserIdAlice));
@@ -147,9 +147,9 @@ describe("useReactions", () => {
     ]);
     const rtcSession = new MockRTCSession(room, membership);
     const { queryByRole } = render(
-      <TestComponentWrapper rtcSession={rtcSession}>
+      <TestReactionsWrapper rtcSession={rtcSession}>
         <TestComponent />
-      </TestComponentWrapper>,
+      </TestReactionsWrapper>,
     );
     expect(queryByRole("list")?.children).to.have.lengthOf(1);
     // Simulate leaving and rejoining
@@ -161,13 +161,13 @@ describe("useReactions", () => {
   });
   test("ignores invalid sender for historic event", () => {
     const room = new MockRoom(memberUserIdAlice, [
-      createReaction(memberEventAlice, membership),
+      createReaction(memberEventAlice, memberUserIdBob),
     ]);
     const rtcSession = new MockRTCSession(room, membership);
     const { queryByRole } = render(
-      <TestComponentWrapper rtcSession={rtcSession}>
+      <TestReactionsWrapper rtcSession={rtcSession}>
         <TestComponent />
-      </TestComponentWrapper>,
+      </TestReactionsWrapper>,
     );
     expect(queryByRole("list")?.children).to.have.lengthOf(0);
   });
@@ -175,9 +175,9 @@ describe("useReactions", () => {
     const room = new MockRoom(memberUserIdAlice);
     const rtcSession = new MockRTCSession(room, membership);
     const { queryByRole } = render(
-      <TestComponentWrapper rtcSession={rtcSession}>
+      <TestReactionsWrapper rtcSession={rtcSession}>
         <TestComponent />
-      </TestComponentWrapper>,
+      </TestReactionsWrapper>,
     );
     await act(() => room.testSendReaction(memberEventAlice, memberUserIdBob));
     expect(queryByRole("list")?.children).to.have.lengthOf(0);
