@@ -16,6 +16,7 @@ import {
 } from "../utils/testReactions";
 import { ReactionsAudioRenderer } from "./ReactionAudioRenderer";
 import { ReactionSet } from "../reactions";
+import { ReactNode } from "react";
 
 const memberUserIdAlice = "@alice:example.org";
 const memberUserIdBob = "@bob:example.org";
@@ -30,7 +31,11 @@ const membership: Record<string, string> = {
   [memberEventCharlie]: memberUserIdCharlie,
 };
 
-function TestComponent({ rtcSession }: { rtcSession: MockRTCSession }) {
+function TestComponent({
+  rtcSession,
+}: {
+  rtcSession: MockRTCSession;
+}): ReactNode {
   return (
     <TooltipProvider>
       <TestReactionsWrapper rtcSession={rtcSession}>
@@ -40,7 +45,7 @@ function TestComponent({ rtcSession }: { rtcSession: MockRTCSession }) {
   );
 }
 
-test("defaults to no audio elements", async () => {
+test("defaults to no audio elements", () => {
   const rtcSession = new MockRTCSession(
     new MockRoom(memberUserIdAlice),
     membership,
@@ -49,7 +54,7 @@ test("defaults to no audio elements", async () => {
   expect(container.getElementsByTagName("audio")).toHaveLength(0);
 });
 
-test("will play an audio sound when there is a reaction", async () => {
+test("will play an audio sound when there is a reaction", () => {
   const room = new MockRoom(memberUserIdAlice);
   const rtcSession = new MockRTCSession(room, membership);
   const { container } = render(<TestComponent rtcSession={rtcSession} />);
@@ -78,7 +83,7 @@ test("will play an audio sound when there is a reaction", async () => {
   expect(sources[1].src).toContain(chosenReaction.sound?.mp3);
 });
 
-test("will play multiple audio sounds when there are multiple different reactions", async () => {
+test("will play multiple audio sounds when there are multiple different reactions", () => {
   const room = new MockRoom(memberUserIdAlice);
   const rtcSession = new MockRTCSession(room, membership);
   const { container } = render(<TestComponent rtcSession={rtcSession} />);
