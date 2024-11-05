@@ -21,6 +21,8 @@ import lightbulbSoundOgg from "../sound/reactions/lightbulb.ogg?url";
 import lightbulbSoundMp3 from "../sound/reactions/lightbulb.mp3?url";
 import partySoundOgg from "../sound/reactions/party.ogg?url";
 import partySoundMp3 from "../sound/reactions/party.mp3?url";
+import deerSoundOgg from "../sound/reactions/deer.ogg?url";
+import deerSoundMp3 from "../sound/reactions/deer.mp3?url";
 
 export const ElementCallReactionEventType = "io.element.call.reaction";
 
@@ -80,7 +82,7 @@ export const ReactionSet: ReactionOption[] = [
   {
     emoji: "🐶",
     name: "dog",
-    alias: ["doggo", "pupper", "woofer"],
+    alias: ["doggo", "pupper", "woofer", "bark"],
     sound: {
       ogg: dogSoundOgg,
       mp3: dogSoundMp3,
@@ -137,5 +139,14 @@ export const ReactionSet: ReactionOption[] = [
     emoji: "😄",
     name: "laugh",
     alias: ["giggle", "joy", "smiling"],
+  },
+  {
+    emoji: "🦌",
+    name: "deer",
+    alias: ["stag", "doe", "bleat"],
+    sound: {
+      ogg: deerSoundOgg,
+      mp3: deerSoundMp3,
+    },
   },
 ];
