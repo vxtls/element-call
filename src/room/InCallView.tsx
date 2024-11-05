@@ -126,12 +126,7 @@ export const ActiveCall: FC<ActiveCallProps> = (props) => {
       setVm(vm);
       return (): void => vm.destroy();
     }
-  }, [
-    props.rtcSession,
-    livekitRoom,
-    props.e2eeSystem,
-    connStateObservable,
-  ]);
+  }, [props.rtcSession, livekitRoom, props.e2eeSystem, connStateObservable]);
 
   if (livekitRoom === undefined || vm === null) return null;
 
