@@ -60,6 +60,8 @@ interface RaisedHandInfo {
   time: Date;
 }
 
+const REACTION_ACTIVE_TIME_MS = 3000;
+
 export const useReactions = (): ReactionsContextType => {
   const context = useContext(ReactionsContext);
   if (!context) {
@@ -236,7 +238,7 @@ export const ReactionsProvider = ({
           setTimeout(() => {
             // Clear the reaction after some time.
             setReactions(({ [sender]: _unused, ...remaining }) => remaining);
-          }, 3000);
+          }, REACTION_ACTIVE_TIME_MS);
           return {
             ...reactions,
             [sender]: reaction,
