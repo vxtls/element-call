@@ -15,7 +15,7 @@ import {
 import {
   SearchIcon,
   CloseIcon,
-  HandRaisedIcon,
+  RaisedHandSolidIcon,
 } from "@vector-im/compound-design-tokens/assets/web/icons";
 import {
   ChangeEventHandler,
@@ -56,7 +56,7 @@ const InnerButton: FC<InnerButtonProps> = ({ raised, ...props }) => {
         className={classNames(raised && styles.raisedButton)}
         kind={raised ? "primary" : "secondary"}
         iconOnly
-        Icon={HandRaisedIcon}
+        Icon={RaisedHandSolidIcon}
         {...props}
       />
     </Tooltip>
@@ -121,6 +121,7 @@ export function ReactionPopupMenu({
                 name="reactionSearch"
                 placeholder="Search reactions…"
                 onChange={onSearch}
+                autoFocus
               />
               <CpdButton
                 Icon={CloseIcon}
