@@ -23,6 +23,8 @@ import partySoundOgg from "../sound/reactions/party.ogg?url";
 import partySoundMp3 from "../sound/reactions/party.mp3?url";
 import deerSoundOgg from "../sound/reactions/deer.ogg?url";
 import deerSoundMp3 from "../sound/reactions/deer.mp3?url";
+import rockSoundOgg from "../sound/reactions/rock.ogg?url";
+import rockSoundMp3 from "../sound/reactions/rock.mp3?url";
 
 export const ElementCallReactionEventType = "io.element.call.reaction";
 
@@ -147,6 +149,15 @@ export const ReactionSet: ReactionOption[] = [
     sound: {
       ogg: deerSoundOgg,
       mp3: deerSoundMp3,
+    },
+  },
+  {
+    emoji: "🤘",
+    name: "cool",
+    alias: ["rock"],
+    sound: {
+      ogg: rockSoundOgg,
+      mp3: rockSoundMp3,
     },
   },
 ];
