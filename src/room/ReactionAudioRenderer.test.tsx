@@ -8,6 +8,7 @@ Please see LICENSE in the repository root for full details.
 import { act, render } from "@testing-library/react";
 import { expect, test } from "vitest";
 import { TooltipProvider } from "@vector-im/compound-web";
+import { ReactNode } from "react";
 
 import {
   MockRoom,
@@ -16,7 +17,6 @@ import {
 } from "../utils/testReactions";
 import { ReactionsAudioRenderer } from "./ReactionAudioRenderer";
 import { ReactionSet } from "../reactions";
-import { ReactNode } from "react";
 
 const memberUserIdAlice = "@alice:example.org";
 const memberUserIdBob = "@bob:example.org";
@@ -66,9 +66,9 @@ test("will play an audio sound when there is a reaction", () => {
       "No reactions have sounds configured, this test cannot succeed",
     );
   }
-  act(() =>
-    room.testSendReaction(memberEventAlice, chosenReaction, membership),
-  );
+  act(() => {
+    room.testSendReaction(memberEventAlice, chosenReaction, membership);
+  });
   const elements = container.getElementsByTagName("audio");
   expect(elements).toHaveLength(1);
   const audioElement = elements[0];
