@@ -153,8 +153,8 @@ export const ReactionSet: ReactionOption[] = [
   },
   {
     emoji: "🤘",
-    name: "cool",
-    alias: ["rock"],
+    name: "rock",
+    alias: ["cool", "horns", "guitar"],
     sound: {
       ogg: rockSoundOgg,
       mp3: rockSoundMp3,
