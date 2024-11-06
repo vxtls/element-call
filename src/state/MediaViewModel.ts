@@ -224,7 +224,7 @@ abstract class BaseMediaViewModel extends ViewModel {
    */
   public readonly unencryptedWarning: Observable<boolean>;
 
-  public readonly isRTCParticipantAvailable: Observable<boolean> =
+  public readonly isLiveKitParticipantAvailable: Observable<boolean> =
     this.participant.pipe(map((p) => !!p));
 
   public readonly encryptionStatus: Observable<EncryptionStatus>;
