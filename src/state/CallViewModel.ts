@@ -497,7 +497,7 @@ export class CallViewModel extends ViewModel {
                       member,
                       participant,
                       this.encryptionSystem,
-                      this.livekitRoom
+                      this.livekitRoom,
                     ),
                 ];
               }
@@ -552,6 +552,7 @@ export class CallViewModel extends ViewModel {
                             undefined,
                             participant,
                             this.encryptionSystem,
+                            this.livekitRoom,
                           ),
                       ];
                     }
@@ -722,14 +723,6 @@ export class CallViewModel extends ViewModel {
     this.spotlightAndPip.pipe(
       switchMap(([spotlight]) => spotlight),
       this.scope.state(),
-    );
-
-  private readonly hasRemoteScreenShares: Observable<boolean> =
-    this.spotlight.pipe(
-      map((spotlight) =>
-        spotlight.some((vm) => !vm.local && vm instanceof ScreenShareViewModel),
-      ),
-      distinctUntilChanged(),
     );
 
   private readonly pip: Observable<UserMediaViewModel | null> =

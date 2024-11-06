@@ -24,7 +24,11 @@ import {
 } from "livekit-client";
 import * as ComponentsCore from "@livekit/components-core";
 import { isEqual } from "lodash";
-import { CallMembership, MatrixRTCSession, MatrixRTCSessionEvent } from "matrix-js-sdk/src/matrixrtc";
+import {
+  CallMembership,
+  MatrixRTCSession,
+  MatrixRTCSessionEvent,
+} from "matrix-js-sdk/src/matrixrtc";
 
 import { CallViewModel, Layout } from "./CallViewModel";
 import {
@@ -77,7 +81,7 @@ const members = new Map([alice, bob, carol, dave].map((p) => [p.userId, p]));
 
 const aliceRtcMember = mockMembership(aliceId, aliceDev);
 const bobRtcMember = mockMembership(bobId, bobDev);
-const carolRtcMember = mockMembership(carolId, carolDev);
+// const carolRtcMember = mockMembership(carolId, carolDev);
 const daveRtcMember = mockMembership(daveId, daveDev);
 
 export interface GridLayoutSummary {
