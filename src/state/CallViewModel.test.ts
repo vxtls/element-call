@@ -6,7 +6,7 @@ Please see LICENSE in the repository root for full details.
 */
 
 import { test, vi, onTestFinished } from "vitest";
-import { map, Observable } from "rxjs";
+import { map, Observable, of } from "rxjs";
 import { MatrixClient } from "matrix-js-sdk/src/matrix";
 import {
   ConnectionState,
@@ -25,10 +25,11 @@ import {
   mockLivekitRoom,
   mockLocalParticipant,
   mockMatrixRoom,
-  mockMember,
+  mockRoomMember,
   mockRemoteParticipant,
   OurRunHelpers,
   withTestScheduler,
+  mockMembership,
 } from "../utils/test";
 import {
   ECAddonConnectionState,
@@ -49,9 +50,9 @@ const bobId = "@bob:example.org";
 const bobDev = "BBBB";
 const bobRTCId = bobId + ":" + bobDev;
 
-const alice = mockMember({ userId: aliceId });
-const bob = mockMember({ userId: bobId });
-const carol = mockMember({ userId: carolId });
+const alice = mockRoomMember({ userId: aliceId });
+const bob = mockRoomMember({ userId: bobId });
+const carol = mockRoomMember({ userId: carolId });
 
 const localParticipant = mockLocalParticipant({ identity: "" });
 const aliceParticipant = mockRemoteParticipant({ identity: aliceRTCId });
@@ -71,9 +72,10 @@ const members = new Map([
   [carol.userId, carol],
 ]);
 
-const rtcMemberAlice = { sender: aliceId, deviceId: aliceDev };
-const rtcMemberBob = { sender: bobId, deviceId: bobDev };
-const rtcMemberCarol = { sender: carolId, deviceId: carolDev };
+const rtcMemberAlice = mockMembership(aliceId, aliceDev);
+const rtcMemberBob = mockMembership(bobId, bobDev);
+const rtcMemberCarol = mockMembership(carolId, carolDev);
+
 export interface GridLayoutSummary {
   type: "grid";
   spotlight?: string[];
@@ -262,6 +264,7 @@ test("screen sharing activates spotlight layout", () => {
         c: [aliceSharingScreen, bobSharingScreen],
         d: [aliceParticipant, bobSharingScreen],
       }),
+      of([rtcMemberAlice, rtcMemberAlice]),
       hot("a", { a: ConnectionState.Connected }),
       (vm) => {
         schedule(modeMarbles, {

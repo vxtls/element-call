@@ -7,7 +7,16 @@ Please see LICENSE in the repository root for full details.
 import { map, of } from "rxjs";
 import { RunHelpers, TestScheduler } from "rxjs/testing";
 import { expect, vi } from "vitest";
-import { RoomMember, Room as MatrixRoom } from "matrix-js-sdk/src/matrix";
+import {
+  RoomMember,
+  Room as MatrixRoom,
+  MatrixEvent,
+} from "matrix-js-sdk/src/matrix";
+import {
+  CallMembership,
+  Focus,
+  SessionMembershipData,
+} from "matrix-js-sdk/src/matrixrtc";
 import {
   LocalParticipant,
   LocalTrackPublication,
@@ -88,10 +97,32 @@ function mockEmitter<T>(): EmitterMock<T> {
   };
 }
 
+export function mockMembership(
+  userId: string,
+  deviceId: string,
+  callId = "",
+  fociPreferred: Focus[] = [],
+  focusActive: Focus = { type: "oldest_membership" },
+  membership: Partial<SessionMembershipData> = {},
+): CallMembership {
+  const data: SessionMembershipData = {
+    application: "m.call",
+    call_id: callId,
+    device_id: deviceId,
+    foci_preferred: fociPreferred,
+    focus_active: focusActive,
+    ...membership,
+  };
+  const event = new MatrixEvent({
+    sender: userId,
+  });
+  return new CallMembership(event, data);
+}
+
 // Maybe it'd be good to move this to matrix-js-sdk? Our testing needs are
 // rather simple, but if one util to mock a member is good enough for us, maybe
 // it's useful for matrix-js-sdk consumers in general.
-export function mockMember(member: Partial<RoomMember>): RoomMember {
+export function mockRoomMember(member: Partial<RoomMember>): RoomMember {
   return { ...mockEmitter(), ...member } as RoomMember;
 }
 
@@ -121,7 +152,7 @@ export async function withLocalMedia(
 ): Promise<void> {
   const vm = new LocalUserMediaViewModel(
     "local",
-    mockMember(member),
+    mockRoomMember(member),
     of(mockLocalParticipant({})),
     {
       kind: E2eeType.PER_PARTICIPANT,
@@ -154,7 +185,7 @@ export async function withRemoteMedia(
 ): Promise<void> {
   const vm = new RemoteUserMediaViewModel(
     "remote",
-    mockMember(member),
+    mockRoomMember(member),
     of(mockRemoteParticipant(participant)),
     {
       kind: E2eeType.PER_PARTICIPANT,
