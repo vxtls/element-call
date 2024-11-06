@@ -79,10 +79,10 @@ const daveParticipant = mockRemoteParticipant({ identity: daveId });
 
 const members = new Map([alice, bob, carol, dave].map((p) => [p.userId, p]));
 
-const aliceRtcMember = mockMembership(aliceId, aliceDev);
-const bobRtcMember = mockMembership(bobId, bobDev);
-// const carolRtcMember = mockMembership(carolId, carolDev);
-const daveRtcMember = mockMembership(daveId, daveDev);
+const aliceRtcMember = mockMembership(alice, aliceDev);
+const bobRtcMember = mockMembership(bob, bobDev);
+// const carolRtcMember = mockMembership(carol, carolDev);
+const daveRtcMember = mockMembership(dave, daveDev);
 
 export interface GridLayoutSummary {
   type: "grid";

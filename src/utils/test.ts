@@ -98,7 +98,7 @@ function mockEmitter<T>(): EmitterMock<T> {
 }
 
 export function mockMembership(
-  userId: string,
+  user: string | RoomMember,
   deviceId: string,
   callId = "",
   fociPreferred: Focus[] = [],
@@ -114,7 +114,7 @@ export function mockMembership(
     ...membership,
   };
   const event = new MatrixEvent({
-    sender: userId,
+    sender: typeof user === "string" ? user : user.userId,
   });
   return new CallMembership(event, data);
 }
