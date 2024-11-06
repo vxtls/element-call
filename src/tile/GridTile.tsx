@@ -86,8 +86,8 @@ const UserMediaTile = forwardRef<HTMLDivElement, UserMediaTileProps>(
     const videoEnabled = useObservableEagerState(vm.videoEnabled);
     const speaking = useObservableEagerState(vm.speaking);
     const cropVideo = useObservableEagerState(vm.cropVideo);
-    const isRTCParticipantAvailable = useObservableEagerState(
-      vm.isRTCParticipantAvailable,
+    const isLiveKitParticipantAvailable = useObservableEagerState(
+      vm.isLiveKitParticipantAvailable,
     );
     const onSelectFitContain = useCallback(
       (e: Event) => {
@@ -144,7 +144,9 @@ const UserMediaTile = forwardRef<HTMLDivElement, UserMediaTileProps>(
         }
         displayName={
           displayName +
-          (isRTCParticipantAvailable ? "" : " missing Livekit Participant...")
+          (isLiveKitParticipantAvailable
+            ? ""
+            : " missing Livekit Participant...")
         }
         primaryButton={
           <Menu
@@ -261,7 +263,7 @@ const RemoteUserMediaTile = forwardRef<
       mirror={false}
       menuStart={
         <>
-          {/* {isRTCParticipantAvailable
+          {/* {isLiveKitParticipantAvailable
             ? "is available"
             : "Loading RTC participant"} */}
           <ToggleMenuItem
