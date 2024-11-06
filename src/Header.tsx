@@ -117,7 +117,7 @@ interface RoomHeaderInfoProps {
   avatarUrl: string | null;
   encrypted: boolean;
   participantCount: number | null;
-  nonMemberItemCount: number | null;
+  nonMemberItemCount?: number;
 }
 
 export const RoomHeaderInfo: FC<RoomHeaderInfoProps> = ({
