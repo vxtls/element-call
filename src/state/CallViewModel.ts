@@ -220,7 +220,7 @@ interface LayoutScanState {
 class UserMedia {
   private readonly scope = new ObservableScope();
   public readonly vm: UserMediaViewModel;
-  public participant: BehaviorSubject<
+  public readonly participant: BehaviorSubject<
     LocalParticipant | RemoteParticipant | undefined
   >;
 
@@ -298,7 +298,9 @@ class UserMedia {
 
 class ScreenShare {
   public readonly vm: ScreenShareViewModel;
-  private participant: BehaviorSubject<LocalParticipant | RemoteParticipant>;
+  private readonly participant: BehaviorSubject<
+    LocalParticipant | RemoteParticipant
+  >;
 
   public constructor(
     id: string,
