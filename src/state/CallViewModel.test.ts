@@ -279,7 +279,7 @@ test("participants are retained during a focus switch", () => {
           a: {
             type: "grid",
             spotlight: undefined,
-            grid: [`local:0`, `${aliceId}:0`, `${bobId}:0`],
+            grid: ["local:0", `${aliceId}:0`, `${bobId}:0`],
           },
         });
       },
