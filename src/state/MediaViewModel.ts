@@ -208,14 +208,6 @@ export enum EncryptionStatus {
 
 abstract class BaseMediaViewModel extends ViewModel {
   /**
-   * Whether the media belongs to the local user.
-   */
-  public readonly local: Observable<boolean> = this.participant.pipe(
-    // We can assume, that the user is not local if the participant is undefined
-    // We assume the local LK participant will always be available.
-    map((p) => p?.isLocal ?? false),
-  );
-  /**
    * The LiveKit video track for this media.
    */
   public readonly video: Observable<TrackReferenceOrPlaceholder | undefined>;
@@ -414,6 +406,7 @@ abstract class BaseUserMediaViewModel extends BaseMediaViewModel {
  * The local participant's user media.
  */
 export class LocalUserMediaViewModel extends BaseUserMediaViewModel {
+  public readonly local = true;
   /**
    * Whether the video should be mirrored.
    */
@@ -453,6 +446,8 @@ export class LocalUserMediaViewModel extends BaseUserMediaViewModel {
  * A remote participant's user media.
  */
 export class RemoteUserMediaViewModel extends BaseUserMediaViewModel {
+  public readonly local = false;
+
   private readonly locallyMutedToggle = new Subject<void>();
   private readonly localVolumeAdjustment = new Subject<number>();
   private readonly localVolumeCommit = new Subject<void>();
@@ -538,6 +533,7 @@ export class ScreenShareViewModel extends BaseMediaViewModel {
     participant: Observable<LocalParticipant | RemoteParticipant>,
     encryptionSystem: EncryptionSystem,
     livekitRoom: LivekitRoom,
+    public readonly local: boolean,
   ) {
     super(
       id,

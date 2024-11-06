@@ -317,6 +317,7 @@ class ScreenShare {
       this.participant.asObservable(),
       encryptionSystem,
       liveKitRoom,
+      participant.isLocal,
     );
   }
 
