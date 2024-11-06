@@ -49,24 +49,21 @@ import { MockRoom, MockRTCSession } from "../useReactions.test";
 
 vi.mock("@livekit/components-core");
 
-const local = mockRoomMember({ userId: "@local:example.org" });
 const alice = mockRoomMember({ userId: "@alice:example.org" });
 const bob = mockRoomMember({ userId: "@bob:example.org" });
 const carol = mockRoomMember({ userId: "@carol:example.org" });
 const dave = mockRoomMember({ userId: "@dave:example.org" });
 
-const localDev = "LLLL";
 const aliceDev = "AAAA";
 const bobDev = "BBBB";
 const carolDev = "CCCC";
 const daveDev = "DDDD";
-const localId = `${local.userId}:${localDev}`;
 const aliceId = `${alice.userId}:${aliceDev}`;
 const bobId = `${bob.userId}:${bobDev}`;
 const carolId = `${carol.userId}:${carolDev}`;
 const daveId = `${dave.userId}:${daveDev}`;
 
-const localParticipant = mockLocalParticipant({ identity: localId });
+const localParticipant = mockLocalParticipant({ identity: carolId });
 
 const aliceParticipant = mockRemoteParticipant({ identity: aliceId });
 const aliceSharingScreen = mockRemoteParticipant({
@@ -82,10 +79,9 @@ const daveParticipant = mockRemoteParticipant({ identity: daveId });
 
 const members = new Map([alice, bob, carol, dave].map((p) => [p.userId, p]));
 
-const localRtcMember = mockMembership(local, localDev);
 const aliceRtcMember = mockMembership(alice, aliceDev);
 const bobRtcMember = mockMembership(bob, bobDev);
-// const carolRtcMember = mockMembership(carol, carolDev);
+const carolRtcMember = mockMembership(carol, carolDev);
 const daveRtcMember = mockMembership(dave, daveDev);
 
 export interface GridLayoutSummary {
@@ -201,7 +197,7 @@ function withCallViewModel(
 ): void {
   const room = mockMatrixRoom({
     client: {
-      getUserId: () => carolId,
+      getUserId: () => carol.userId,
       getDeviceId: () => carolDev,
     } as Partial<MatrixClient> as MatrixClient,
     getMember: (userId) => members.get(userId) ?? null,
@@ -272,7 +268,7 @@ test("participants are retained during a focus switch", () => {
         a: [aliceParticipant, bobParticipant],
         b: [],
       }),
-      of([localRtcMember, aliceRtcMember, bobRtcMember]),
+      of([carolRtcMember, aliceRtcMember, bobRtcMember]),
       cold(connectionMarbles, {
         c: ConnectionState.Connected,
         s: ECAddonConnectionState.ECSwitchingFocus,
@@ -283,7 +279,7 @@ test("participants are retained during a focus switch", () => {
           a: {
             type: "grid",
             spotlight: undefined,
-            grid: [`${localId}:0`, `${aliceId}:0`, `${bobId}:0`],
+            grid: [`local:0`, `${aliceId}:0`, `${bobId}:0`],
           },
         });
       },
@@ -311,7 +307,7 @@ test("screen sharing activates spotlight layout", () => {
         c: [aliceSharingScreen, bobSharingScreen],
         d: [aliceParticipant, bobSharingScreen],
       }),
-      of([localRtcMember, aliceRtcMember, bobRtcMember]),
+      of([carolRtcMember, bobRtcMember, aliceRtcMember]),
       of(ConnectionState.Connected),
       new Map(),
       (vm) => {
@@ -324,37 +320,37 @@ test("screen sharing activates spotlight layout", () => {
           a: {
             type: "grid",
             spotlight: undefined,
-            grid: [`${localId}:0`, `${aliceId}:0`, `${bobId}:0`],
+            grid: ["local:0", `${aliceId}:0`, `${bobId}:0`],
           },
           b: {
             type: "spotlight-landscape",
             spotlight: [`${aliceId}:0:screen-share`],
-            grid: [`${localId}:0`, `${aliceId}:0`, `${bobId}:0`],
+            grid: ["local:0", `${aliceId}:0`, `${bobId}:0`],
           },
           c: {
             type: "spotlight-landscape",
             spotlight: [`${aliceId}:0:screen-share`, `${bobId}:0:screen-share`],
-            grid: [`${localId}:0`, `${aliceId}:0`, `${bobId}:0`],
+            grid: ["local:0", `${aliceId}:0`, `${bobId}:0`],
           },
           d: {
             type: "spotlight-landscape",
             spotlight: [`${bobId}:0:screen-share`],
-            grid: [`${localId}:0`, `${aliceId}:0`, `${bobId}:0`],
+            grid: ["local:0", `${aliceId}:0`, `${bobId}:0`],
           },
           e: {
             type: "spotlight-landscape",
             spotlight: [`${aliceId}:0`],
-            grid: [`${localId}:0`, `${bobId}:0`],
+            grid: ["local:0", `${bobId}:0`],
           },
           f: {
             type: "spotlight-landscape",
             spotlight: [`${aliceId}:0:screen-share`],
-            grid: [`${localId}:0`, `${bobId}:0`, `${aliceId}:0`],
+            grid: ["local:0", `${bobId}:0`, `${aliceId}:0`],
           },
           g: {
             type: "grid",
             spotlight: undefined,
-            grid: [`${localId}:0`, `${bobId}:0`, `${aliceId}:0`],
+            grid: ["local:0", `${bobId}:0`, `${aliceId}:0`],
           },
         });
         expectObservable(vm.showSpeakingIndicators).toBe(showSpeakingMarbles, {
@@ -381,7 +377,7 @@ test("participants stay in the same order unless to appear/disappear", () => {
 
     withCallViewModel(
       of([aliceParticipant, bobParticipant, daveParticipant]),
-      of([localRtcMember, aliceRtcMember, bobRtcMember, daveRtcMember]),
+      of([carolRtcMember, aliceRtcMember, bobRtcMember, daveRtcMember]),
       of(ConnectionState.Connected),
       new Map([
         [aliceParticipant, cold(aSpeakingMarbles, { y: true, n: false })],
@@ -406,17 +402,17 @@ test("participants stay in the same order unless to appear/disappear", () => {
           a: {
             type: "grid",
             spotlight: undefined,
-            grid: [`${localId}:0`, `${aliceId}:0`, `${bobId}:0`, `${daveId}:0`],
+            grid: ["local:0", `${aliceId}:0`, `${bobId}:0`, `${daveId}:0`],
           },
           b: {
             type: "grid",
             spotlight: undefined,
-            grid: [`${localId}:0`, `${daveId}:0`, `${bobId}:0`, `${aliceId}:0`],
+            grid: ["local:0", `${daveId}:0`, `${bobId}:0`, `${aliceId}:0`],
           },
           c: {
             type: "grid",
             spotlight: undefined,
-            grid: [`${localId}:0`, `${aliceId}:0`, `${daveId}:0`, `${bobId}:0`],
+            grid: ["local:0", `${aliceId}:0`, `${daveId}:0`, `${bobId}:0`],
           },
         });
       },
@@ -440,7 +436,7 @@ test("spotlight speakers swap places", () => {
 
     withCallViewModel(
       of([aliceParticipant, bobParticipant, daveParticipant]),
-      of([localRtcMember, aliceRtcMember, bobRtcMember, daveRtcMember]),
+      of([carolRtcMember, aliceRtcMember, bobRtcMember, daveRtcMember]),
       of(ConnectionState.Connected),
       new Map([
         [aliceParticipant, cold(aSpeakingMarbles, { y: true, n: false })],
@@ -454,22 +450,22 @@ test("spotlight speakers swap places", () => {
           a: {
             type: "spotlight-landscape",
             spotlight: [`${aliceId}:0`],
-            grid: [`${localId}:0`, `${bobId}:0`, `${daveId}:0`],
+            grid: ["local:0", `${bobId}:0`, `${daveId}:0`],
           },
           b: {
             type: "spotlight-landscape",
             spotlight: [`${bobId}:0`],
-            grid: [`${localId}:0`, `${aliceId}:0`, `${daveId}:0`],
+            grid: ["local:0", `${aliceId}:0`, `${daveId}:0`],
           },
           c: {
             type: "spotlight-landscape",
             spotlight: [`${daveId}:0`],
-            grid: [`${localId}:0`, `${aliceId}:0`, `${bobId}:0`],
+            grid: ["local:0", `${aliceId}:0`, `${bobId}:0`],
           },
           d: {
             type: "spotlight-landscape",
             spotlight: [`${aliceId}:0`],
-            grid: [`${localId}:0`, `${daveId}:0`, `${bobId}:0`],
+            grid: ["local:0", `${daveId}:0`, `${bobId}:0`],
           },
         });
       },
@@ -486,7 +482,7 @@ test("layout enters picture-in-picture mode when requested", () => {
 
     withCallViewModel(
       of([aliceParticipant, bobParticipant]),
-      of([localRtcMember, aliceRtcMember, bobRtcMember]),
+      of([carolRtcMember, aliceRtcMember, bobRtcMember]),
       of(ConnectionState.Connected),
       new Map(),
       (vm) => {
@@ -499,7 +495,7 @@ test("layout enters picture-in-picture mode when requested", () => {
           a: {
             type: "grid",
             spotlight: undefined,
-            grid: [`${localId}:0`, `${aliceId}:0`, `${bobId}:0`],
+            grid: ["local:0", `${aliceId}:0`, `${bobId}:0`],
           },
           b: {
             type: "pip",
@@ -524,7 +520,7 @@ test("spotlight remembers whether it's expanded", () => {
 
     withCallViewModel(
       of([aliceParticipant, bobParticipant]),
-      of([localRtcMember, aliceRtcMember, bobRtcMember]),
+      of([carolRtcMember, aliceRtcMember, bobRtcMember]),
       of(ConnectionState.Connected),
       new Map(),
       (vm) => {
@@ -544,22 +540,22 @@ test("spotlight remembers whether it's expanded", () => {
           a: {
             type: "spotlight-landscape",
             spotlight: [`${aliceId}:0`],
-            grid: [`${localId}:0`, `${bobId}:0`],
+            grid: ["local:0", `${bobId}:0`],
           },
           b: {
             type: "spotlight-expanded",
             spotlight: [`${aliceId}:0`],
-            pip: `${localId}:0`,
+            pip: "local:0",
           },
           c: {
             type: "grid",
             spotlight: undefined,
-            grid: [`${localId}:0`, `${aliceId}:0`, `${bobId}:0`],
+            grid: ["local:0", `${aliceId}:0`, `${bobId}:0`],
           },
           d: {
             type: "grid",
             spotlight: undefined,
-            grid: [`${localId}:0`, `${bobId}:0`, `${aliceId}:0`],
+            grid: ["local:0", `${bobId}:0`, `${aliceId}:0`],
           },
         });
       },
