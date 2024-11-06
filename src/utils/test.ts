@@ -4,7 +4,7 @@ Copyright 2023, 2024 New Vector Ltd.
 SPDX-License-Identifier: AGPL-3.0-only
 Please see LICENSE in the repository root for full details.
 */
-import { map, of } from "rxjs";
+import { map, Observable, of } from "rxjs";
 import { RunHelpers, TestScheduler } from "rxjs/testing";
 import { expect, vi } from "vitest";
 import {
@@ -130,8 +130,27 @@ export function mockMatrixRoom(room: Partial<MatrixRoom>): MatrixRoom {
   return { ...mockEmitter(), ...room } as Partial<MatrixRoom> as MatrixRoom;
 }
 
-export function mockLivekitRoom(room: Partial<LivekitRoom>): LivekitRoom {
-  return { ...mockEmitter(), ...room } as Partial<LivekitRoom> as LivekitRoom;
+export function mockLivekitRoom(
+  room: Partial<LivekitRoom>,
+  {
+    remoteParticipants,
+  }: { remoteParticipants?: Observable<RemoteParticipant[]> } = {},
+): LivekitRoom {
+  const livekitRoom = {
+    ...mockEmitter(),
+    ...room,
+  } as Partial<LivekitRoom> as LivekitRoom;
+  if (remoteParticipants) {
+    livekitRoom.remoteParticipants = new Map();
+    remoteParticipants.subscribe((newRemoteParticipants) => {
+      livekitRoom.remoteParticipants.clear();
+      newRemoteParticipants.forEach((p) => {
+        livekitRoom.remoteParticipants.set(p.identity, p);
+      });
+    });
+  }
+
+  return livekitRoom;
 }
 
 export function mockLocalParticipant(
@@ -150,13 +169,15 @@ export async function withLocalMedia(
   member: Partial<RoomMember>,
   continuation: (vm: LocalUserMediaViewModel) => void | Promise<void>,
 ): Promise<void> {
+  const localParticipant = mockLocalParticipant({});
   const vm = new LocalUserMediaViewModel(
     "local",
     mockRoomMember(member),
-    of(mockLocalParticipant({})),
+    of(localParticipant),
     {
       kind: E2eeType.PER_PARTICIPANT,
     },
+    mockLivekitRoom({ localParticipant }),
   );
   try {
     await continuation(vm);
@@ -183,13 +204,15 @@ export async function withRemoteMedia(
   participant: Partial<RemoteParticipant>,
   continuation: (vm: RemoteUserMediaViewModel) => void | Promise<void>,
 ): Promise<void> {
+  const remoteParticipant = mockRemoteParticipant(participant);
   const vm = new RemoteUserMediaViewModel(
     "remote",
     mockRoomMember(member),
-    of(mockRemoteParticipant(participant)),
+    of(remoteParticipant),
     {
       kind: E2eeType.PER_PARTICIPANT,
     },
+    mockLivekitRoom({}, { remoteParticipants: of([remoteParticipant]) }),
   );
   try {
     await continuation(vm);

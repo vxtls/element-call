@@ -28,8 +28,8 @@ import {
 import useMeasure from "react-use-measure";
 import { MatrixRTCSession } from "matrix-js-sdk/src/matrixrtc/MatrixRTCSession";
 import classNames from "classnames";
-import { BehaviorSubject, of } from "rxjs";
-import { useObservableEagerState } from "observable-hooks";
+import { BehaviorSubject, map } from "rxjs";
+import { useObservable, useObservableEagerState } from "observable-hooks";
 import { logger } from "matrix-js-sdk/src/logger";
 
 import LogoMark from "../icons/LogoMark.svg?react";
@@ -65,7 +65,6 @@ import { ECConnectionState } from "../livekit/useECConnectionState";
 import { useOpenIDSFU } from "../livekit/openIDSFU";
 import { CallViewModel, GridMode, Layout } from "../state/CallViewModel";
 import { Grid, TileProps } from "../grid/Grid";
-import { useObservable } from "../state/useObservable";
 import { useInitial } from "../useInitial";
 import { SpotlightTile } from "../tile/SpotlightTile";
 import { EncryptionSystem } from "../e2ee/sharedKeyManagement";
@@ -73,7 +72,6 @@ import { E2eeType } from "../e2ee/e2eeType";
 import { makeGridLayout } from "../grid/GridLayout";
 import {
   CallLayoutOutputs,
-  TileModel,
   defaultPipAlignment,
   defaultSpotlightAlignment,
 } from "../grid/CallLayout";
@@ -81,6 +79,7 @@ import { makeOneOnOneLayout } from "../grid/OneOnOneLayout";
 import { makeSpotlightExpandedLayout } from "../grid/SpotlightExpandedLayout";
 import { makeSpotlightLandscapeLayout } from "../grid/SpotlightLandscapeLayout";
 import { makeSpotlightPortraitLayout } from "../grid/SpotlightPortraitLayout";
+import { GridTileViewModel, TileViewModel } from "../state/TileViewModel";
 import { ReactionsProvider, useReactions } from "../useReactions";
 import handSoundOgg from "../sound/raise_hand.ogg?url";
 import handSoundMp3 from "../sound/raise_hand.mp3?url";
@@ -103,7 +102,10 @@ export const ActiveCall: FC<ActiveCallProps> = (props) => {
     sfuConfig,
     props.e2eeSystem,
   );
-  const connStateObservable = useObservable(connState);
+  const connStateObservable = useObservable(
+    (inputs) => inputs.pipe(map(([connState]) => connState)),
+    [connState],
+  );
   const [vm, setVm] = useState<CallViewModel | null>(null);
 
   useEffect(() => {
@@ -304,7 +306,10 @@ export const InCallView: FC<InCallViewProps> = ({
       windowMode,
     ],
   );
-  const gridBoundsObservable = useObservable(gridBounds);
+  const gridBoundsObservable = useObservable(
+    (inputs) => inputs.pipe(map(([gridBounds]) => gridBounds)),
+    [gridBounds],
+  );
 
   const spotlightAlignment = useInitial(
     () => new BehaviorSubject(defaultSpotlightAlignment),
@@ -375,7 +380,7 @@ export const InCallView: FC<InCallViewProps> = ({
     () =>
       forwardRef<
         HTMLDivElement,
-        PropsWithoutRef<TileProps<TileModel, HTMLDivElement>>
+        PropsWithoutRef<TileProps<TileViewModel, HTMLDivElement>>
       >(function Tile(
         { className, style, targetWidth, targetHeight, model },
         ref,
@@ -384,13 +389,6 @@ export const InCallView: FC<InCallViewProps> = ({
         const onToggleExpanded = useObservableEagerState(
           vm.toggleSpotlightExpanded,
         );
-        const showVideo = useObservableEagerState(
-          useMemo(
-            () =>
-              model.type === "grid" ? vm.showGridVideo(model.vm) : of(true),
-            [model],
-          ),
-        );
         const showSpeakingIndicatorsValue = useObservableEagerState(
           vm.showSpeakingIndicators,
         );
@@ -398,23 +396,21 @@ export const InCallView: FC<InCallViewProps> = ({
           vm.showSpotlightIndicators,
         );
 
-        return model.type === "grid" ? (
+        return model instanceof GridTileViewModel ? (
           <GridTile
             ref={ref}
-            vm={model.vm}
+            vm={model}
             onOpenProfile={openProfile}
             targetWidth={targetWidth}
             targetHeight={targetHeight}
             className={classNames(className, styles.tile)}
             style={style}
-            showVideo={showVideo}
             showSpeakingIndicators={showSpeakingIndicatorsValue}
           />
         ) : (
           <SpotlightTile
             ref={ref}
-            vms={model.vms}
-            maximised={model.maximised}
+            vm={model}
             expanded={spotlightExpanded}
             onToggleExpanded={onToggleExpanded}
             targetWidth={targetWidth}
@@ -448,8 +444,7 @@ export const InCallView: FC<InCallViewProps> = ({
       return (
         <SpotlightTile
           className={classNames(styles.tile, styles.maximised)}
-          vms={layout.spotlight!}
-          maximised
+          vm={layout.spotlight}
           expanded
           onToggleExpanded={null}
           targetWidth={gridBounds.height}

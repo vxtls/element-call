@@ -71,6 +71,12 @@ import { ObservableScope } from "./ObservableScope";
 import { duplicateTiles, nonMemberTiles } from "../settings/settings";
 import { isFirefox } from "../Platform";
 import { setPipEnabled } from "../controls";
+import { GridTileViewModel, SpotlightTileViewModel } from "./TileViewModel";
+import { TileStore } from "./TileStore";
+import { gridLikeLayout } from "./GridLikeLayout";
+import { spotlightExpandedLayout } from "./SpotlightExpandedLayout";
+import { oneOnOneLayout } from "./OneOnOneLayout";
+import { pipLayout } from "./PipLayout";
 import { EncryptionSystem } from "../e2ee/sharedKeyManagement";
 
 // How long we wait after a focus switch before showing the real participant
@@ -81,39 +87,82 @@ const POST_FOCUS_PARTICIPANT_UPDATE_DELAY_MS = 3000;
 // on mobile. No spotlight tile should be shown below this threshold.
 const smallMobileCallThreshold = 3;
 
-export interface GridLayout {
+export interface GridLayoutMedia {
   type: "grid";
   spotlight?: MediaViewModel[];
   grid: UserMediaViewModel[];
 }
 
-export interface SpotlightLandscapeLayout {
+export interface SpotlightLandscapeLayoutMedia {
   type: "spotlight-landscape";
   spotlight: MediaViewModel[];
   grid: UserMediaViewModel[];
 }
 
-export interface SpotlightPortraitLayout {
+export interface SpotlightPortraitLayoutMedia {
   type: "spotlight-portrait";
   spotlight: MediaViewModel[];
   grid: UserMediaViewModel[];
 }
 
-export interface SpotlightExpandedLayout {
+export interface SpotlightExpandedLayoutMedia {
   type: "spotlight-expanded";
   spotlight: MediaViewModel[];
   pip?: UserMediaViewModel;
 }
 
+export interface OneOnOneLayoutMedia {
+  type: "one-on-one";
+  local: UserMediaViewModel;
+  remote: UserMediaViewModel;
+}
+
+export interface PipLayoutMedia {
+  type: "pip";
+  spotlight: MediaViewModel[];
+}
+
+export type LayoutMedia =
+  | GridLayoutMedia
+  | SpotlightLandscapeLayoutMedia
+  | SpotlightPortraitLayoutMedia
+  | SpotlightExpandedLayoutMedia
+  | OneOnOneLayoutMedia
+  | PipLayoutMedia;
+
+export interface GridLayout {
+  type: "grid";
+  spotlight?: SpotlightTileViewModel;
+  grid: GridTileViewModel[];
+}
+
+export interface SpotlightLandscapeLayout {
+  type: "spotlight-landscape";
+  spotlight: SpotlightTileViewModel;
+  grid: GridTileViewModel[];
+}
+
+export interface SpotlightPortraitLayout {
+  type: "spotlight-portrait";
+  spotlight: SpotlightTileViewModel;
+  grid: GridTileViewModel[];
+}
+
+export interface SpotlightExpandedLayout {
+  type: "spotlight-expanded";
+  spotlight: SpotlightTileViewModel;
+  pip?: GridTileViewModel;
+}
+
 export interface OneOnOneLayout {
   type: "one-on-one";
-  local: LocalUserMediaViewModel;
-  remote: RemoteUserMediaViewModel;
+  local: GridTileViewModel;
+  remote: GridTileViewModel;
 }
 
 export interface PipLayout {
   type: "pip";
-  spotlight: MediaViewModel[];
+  spotlight: SpotlightTileViewModel;
 }
 
 /**
@@ -162,6 +211,12 @@ enum SortingBin {
   SelfNotAlwaysShown,
 }
 
+interface LayoutScanState {
+  layout: Layout | null;
+  tiles: TileStore;
+  visibleTiles: Set<GridTileViewModel>;
+}
+
 class UserMedia {
   private readonly scope = new ObservableScope();
   public readonly vm: UserMediaViewModel;
@@ -176,6 +231,7 @@ class UserMedia {
     member: RoomMember | undefined,
     participant: LocalParticipant | RemoteParticipant | undefined,
     encryptionSystem: EncryptionSystem,
+    livekitRoom: LivekitRoom,
   ) {
     this.participant = new BehaviorSubject(participant);
 
@@ -185,6 +241,7 @@ class UserMedia {
         member,
         this.participant.asObservable() as Observable<LocalParticipant>,
         encryptionSystem,
+        livekitRoom,
       );
     } else {
       this.vm = new RemoteUserMediaViewModel(
@@ -194,6 +251,7 @@ class UserMedia {
           RemoteParticipant | undefined
         >,
         encryptionSystem,
+        livekitRoom,
       );
     }
 
@@ -247,6 +305,7 @@ class ScreenShare {
     member: RoomMember | undefined,
     participant: LocalParticipant | RemoteParticipant,
     encryptionSystem: EncryptionSystem,
+    liveKitRoom: LivekitRoom,
   ) {
     this.participant = new BehaviorSubject(participant);
 
@@ -255,6 +314,7 @@ class ScreenShare {
       member,
       this.participant.asObservable(),
       encryptionSystem,
+      liveKitRoom,
     );
   }
 
@@ -437,6 +497,7 @@ export class CallViewModel extends ViewModel {
                       member,
                       participant,
                       this.encryptionSystem,
+                      this.livekitRoom
                     ),
                 ];
               }
@@ -450,6 +511,7 @@ export class CallViewModel extends ViewModel {
                       member,
                       participant,
                       this.encryptionSystem,
+                      this.livekitRoom,
                     ),
                 ];
               }
@@ -662,6 +724,14 @@ export class CallViewModel extends ViewModel {
       this.scope.state(),
     );
 
+  private readonly hasRemoteScreenShares: Observable<boolean> =
+    this.spotlight.pipe(
+      map((spotlight) =>
+        spotlight.some((vm) => !vm.local && vm instanceof ScreenShareViewModel),
+      ),
+      distinctUntilChanged(),
+    );
+
   private readonly pip: Observable<UserMediaViewModel | null> =
     this.spotlightAndPip.pipe(switchMap(([, pip]) => pip));
 
@@ -742,7 +812,7 @@ export class CallViewModel extends ViewModel {
       screenShares.length === 0,
   );
 
-  private readonly gridLayout: Observable<Layout> = combineLatest(
+  private readonly gridLayout: Observable<LayoutMedia> = combineLatest(
     [this.grid, this.spotlight],
     (grid, spotlight) => ({
       type: "grid",
@@ -753,38 +823,44 @@ export class CallViewModel extends ViewModel {
     }),
   );
 
-  private readonly spotlightLandscapeLayout: Observable<Layout> = combineLatest(
-    [this.grid, this.spotlight],
-    (grid, spotlight) => ({ type: "spotlight-landscape", spotlight, grid }),
-  );
+  private readonly spotlightLandscapeLayout: Observable<LayoutMedia> =
+    combineLatest([this.grid, this.spotlight], (grid, spotlight) => ({
+      type: "spotlight-landscape",
+      spotlight,
+      grid,
+    }));
 
-  private readonly spotlightPortraitLayout: Observable<Layout> = combineLatest(
-    [this.grid, this.spotlight],
-    (grid, spotlight) => ({ type: "spotlight-portrait", spotlight, grid }),
-  );
+  private readonly spotlightPortraitLayout: Observable<LayoutMedia> =
+    combineLatest([this.grid, this.spotlight], (grid, spotlight) => ({
+      type: "spotlight-portrait",
+      spotlight,
+      grid,
+    }));
 
-  private readonly spotlightExpandedLayout: Observable<Layout> = combineLatest(
-    [this.spotlight, this.pip],
-    (spotlight, pip) => ({
+  private readonly spotlightExpandedLayout: Observable<LayoutMedia> =
+    combineLatest([this.spotlight, this.pip], (spotlight, pip) => ({
       type: "spotlight-expanded",
       spotlight,
       pip: pip ?? undefined,
-    }),
-  );
+    }));
 
-  private readonly oneOnOneLayout: Observable<Layout> = this.grid.pipe(
-    map((grid) => ({
-      type: "one-on-one",
-      local: grid.find((vm) => vm.local) as LocalUserMediaViewModel,
-      remote: grid.find((vm) => !vm.local) as RemoteUserMediaViewModel,
-    })),
-  );
+  private readonly oneOnOneLayout: Observable<LayoutMedia> =
+    this.mediaItems.pipe(
+      map((grid) => ({
+        type: "one-on-one",
+        local: grid.find((vm) => vm.vm.local)!.vm as LocalUserMediaViewModel,
+        remote: grid.find((vm) => !vm.vm.local)!.vm as RemoteUserMediaViewModel,
+      })),
+    );
 
-  private readonly pipLayout: Observable<Layout> = this.spotlight.pipe(
+  private readonly pipLayout: Observable<LayoutMedia> = this.spotlight.pipe(
     map((spotlight) => ({ type: "pip", spotlight })),
   );
 
-  public readonly layout: Observable<Layout> = this.windowMode.pipe(
+  /**
+   * The media to be used to produce a layout.
+   */
+  private readonly layoutMedia: Observable<LayoutMedia> = this.windowMode.pipe(
     switchMap((windowMode) => {
       switch (windowMode) {
         case "normal":
@@ -845,32 +921,97 @@ export class CallViewModel extends ViewModel {
     this.scope.state(),
   );
 
+  /**
+   * The layout of tiles in the call interface.
+   */
+  public readonly layout: Observable<Layout> = this.layoutMedia.pipe(
+    // Each layout will produce a set of tiles, and these tiles have an
+    // observable indicating whether they're visible. We loop this information
+    // back into the layout process by using switchScan.
+    switchScan<
+      LayoutMedia,
+      LayoutScanState,
+      Observable<LayoutScanState & { layout: Layout }>
+    >(
+      ({ tiles: prevTiles, visibleTiles }, media) => {
+        let layout: Layout;
+        let newTiles: TileStore;
+        switch (media.type) {
+          case "grid":
+          case "spotlight-landscape":
+          case "spotlight-portrait":
+            [layout, newTiles] = gridLikeLayout(media, visibleTiles, prevTiles);
+            break;
+          case "spotlight-expanded":
+            [layout, newTiles] = spotlightExpandedLayout(
+              media,
+              visibleTiles,
+              prevTiles,
+            );
+            break;
+          case "one-on-one":
+            [layout, newTiles] = oneOnOneLayout(media, visibleTiles, prevTiles);
+            break;
+          case "pip":
+            [layout, newTiles] = pipLayout(media, visibleTiles, prevTiles);
+            break;
+        }
+
+        // Take all of the 'visible' observables and combine them into one big
+        // observable array
+        const visibilities =
+          newTiles.gridTiles.length === 0
+            ? of([])
+            : combineLatest(newTiles.gridTiles.map((tile) => tile.visible));
+        return visibilities.pipe(
+          map((visibilities) => ({
+            layout: layout,
+            tiles: newTiles,
+            visibleTiles: new Set(
+              newTiles.gridTiles.filter((_tile, i) => visibilities[i]),
+            ),
+          })),
+        );
+      },
+      {
+        layout: null,
+        tiles: TileStore.empty(),
+        visibleTiles: new Set(),
+      },
+    ),
+    map(({ layout }) => layout),
+    this.scope.state(),
+  );
+
   public showSpotlightIndicators: Observable<boolean> = this.layout.pipe(
     map((l) => l.type !== "grid"),
     this.scope.state(),
   );
 
-  /**
-   * Determines whether video should be shown for a certain piece of media
-   * appearing in the grid.
-   */
-  public showGridVideo(vm: MediaViewModel): Observable<boolean> {
-    return this.layout.pipe(
-      map(
-        (l) =>
-          !(
-            (l.type === "spotlight-landscape" ||
-              l.type === "spotlight-portrait") &&
-            // This media is already visible in the spotlight; avoid duplication
-            l.spotlight.some((spotlightVm) => spotlightVm === vm)
-          ),
-      ),
-      distinctUntilChanged(),
-    );
-  }
-
   public showSpeakingIndicators: Observable<boolean> = this.layout.pipe(
-    map((l) => l.type !== "one-on-one" && !l.type.startsWith("spotlight-")),
+    switchMap((l) => {
+      switch (l.type) {
+        case "spotlight-landscape":
+        case "spotlight-portrait":
+          // If the spotlight is showing the active speaker, we can do without
+          // speaking indicators as they're a redundant visual cue. But if
+          // screen sharing feeds are in the spotlight we still need them.
+          return l.spotlight.media.pipe(
+            map((models: MediaViewModel[]) =>
+              models.some((m) => m instanceof ScreenShareViewModel),
+            ),
+          );
+        // In expanded spotlight layout, the active speaker is always shown in
+        // the picture-in-picture tile so there is no need for speaking
+        // indicators. And in one-on-one layout there's no question as to who is
+        // speaking.
+        case "spotlight-expanded":
+        case "one-on-one":
+          return of(false);
+        default:
+          return of(true);
+      }
+    }),
     this.scope.state(),
   );
 
