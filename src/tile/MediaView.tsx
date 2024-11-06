@@ -122,12 +122,6 @@ export const MediaView = forwardRef<HTMLDivElement, Props>(
             showTimer={handRaiseTimerVisible}
             onClick={raisedHandOnClick}
           />
-          {/* {keys &&
-            keys.map(({ index, key }) => (
-              <Text as="span" size="sm">
-                index:{index}, key:{key}
-              </Text>
-            ))} */}
           <div className={styles.nameTag}>
             {nameTagLeadingIcon}
             <Text as="span" size="sm" weight="medium" className={styles.name}>
