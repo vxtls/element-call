@@ -32,7 +32,6 @@ import {
   Observable,
   Subject,
   combineLatest,
-  distinctUntilChanged,
   distinctUntilKeyChanged,
   filter,
   fromEvent,
@@ -40,7 +39,6 @@ import {
   map,
   merge,
   of,
-  shareReplay,
   startWith,
   switchMap,
   throttleTime,
@@ -114,11 +112,11 @@ function observeRemoteTrackReceivingOkay(
   };
 
   return combineLatest([
-    observeTrackReference(participant, source),
+    observeTrackReference(of(participant), source),
     interval(1000).pipe(startWith(0)),
   ]).pipe(
     switchMap(async ([trackReference]) => {
-      const track = trackReference.publication?.track;
+      const track = trackReference?.publication?.track;
       if (!track || !(track instanceof RemoteTrack)) {
         return undefined;
       }
@@ -267,64 +265,69 @@ abstract class BaseMediaViewModel extends ViewModel {
         encryptionSystem.kind !== E2eeType.NONE &&
         (a?.publication?.isEncrypted === false ||
           v?.publication?.isEncrypted === false),
-        ).pipe(this.scope.state());
+    ).pipe(this.scope.state());
 
-    if (participant.isLocal || encryptionSystem.kind === E2eeType.NONE) {
-      this.encryptionStatus = of(EncryptionStatus.Okay).pipe(
-        this.scope.state(),
-      );
-    } else if (encryptionSystem.kind === E2eeType.PER_PARTICIPANT) {
-      this.encryptionStatus = combineLatest([
-        encryptionErrorObservable(
-          livekitRoom,
-          participant,
-          encryptionSystem,
-          "MissingKey",
-        ),
-        encryptionErrorObservable(
-          livekitRoom,
-          participant,
-          encryptionSystem,
-          "InvalidKey",
-        ),
-        observeRemoteTrackReceivingOkay(participant, audioSource),
-        observeRemoteTrackReceivingOkay(participant, videoSource),
-      ]).pipe(
-        map(([keyMissing, keyInvalid, audioOkay, videoOkay]) => {
-          if (keyMissing) return EncryptionStatus.KeyMissing;
-          if (keyInvalid) return EncryptionStatus.KeyInvalid;
-          if (audioOkay || videoOkay) return EncryptionStatus.Okay;
-          return undefined; // no change
-        }),
-        filter((x) => !!x),
-        startWith(EncryptionStatus.Connecting),
-        this.scope.state(),
-      );
-    } else {
-      this.encryptionStatus = combineLatest([
-        encryptionErrorObservable(
-          livekitRoom,
-          participant,
-          encryptionSystem,
-          "InvalidKey",
-        ),
-        observeRemoteTrackReceivingOkay(participant, audioSource),
-        observeRemoteTrackReceivingOkay(participant, videoSource),
-      ]).pipe(
-        map(
-          ([keyInvalid, audioOkay, videoOkay]):
-            | EncryptionStatus
-            | undefined => {
-            if (keyInvalid) return EncryptionStatus.PasswordInvalid;
-            if (audioOkay || videoOkay) return EncryptionStatus.Okay;
-            return undefined; // no change
-          },
-        ),
-        filter((x) => !!x),
-        startWith(EncryptionStatus.Connecting),
-        this.scope.state(),
-      );
-    }
+    this.encryptionStatus = this.participant.pipe(
+      switchMap((participant): Observable<EncryptionStatus> => {
+        if (
+          !participant ||
+          participant.isLocal ||
+          encryptionSystem.kind === E2eeType.NONE
+        ) {
+          return of(EncryptionStatus.Okay);
+        } else if (encryptionSystem.kind === E2eeType.PER_PARTICIPANT) {
+          return combineLatest([
+            encryptionErrorObservable(
+              livekitRoom,
+              participant,
+              encryptionSystem,
+              "MissingKey",
+            ),
+            encryptionErrorObservable(
+              livekitRoom,
+              participant,
+              encryptionSystem,
+              "InvalidKey",
+            ),
+            observeRemoteTrackReceivingOkay(participant, audioSource),
+            observeRemoteTrackReceivingOkay(participant, videoSource),
+          ]).pipe(
+            map(([keyMissing, keyInvalid, audioOkay, videoOkay]) => {
+              if (keyMissing) return EncryptionStatus.KeyMissing;
+              if (keyInvalid) return EncryptionStatus.KeyInvalid;
+              if (audioOkay || videoOkay) return EncryptionStatus.Okay;
+              return undefined; // no change
+            }),
+            filter((x) => !!x),
+            startWith(EncryptionStatus.Connecting),
+          );
+        } else {
+          return combineLatest([
+            encryptionErrorObservable(
+              livekitRoom,
+              participant,
+              encryptionSystem,
+              "InvalidKey",
+            ),
+            observeRemoteTrackReceivingOkay(participant, audioSource),
+            observeRemoteTrackReceivingOkay(participant, videoSource),
+          ]).pipe(
+            map(
+              ([keyInvalid, audioOkay, videoOkay]):
+                | EncryptionStatus
+                | undefined => {
+                if (keyInvalid) return EncryptionStatus.PasswordInvalid;
+                if (audioOkay || videoOkay) return EncryptionStatus.Okay;
+                return undefined; // no change
+              },
+            ),
+            filter((x) => !!x),
+            startWith(EncryptionStatus.Connecting),
+          );
+        }
+      }),
+      this.scope.state(),
+    );
   }
 }
 
