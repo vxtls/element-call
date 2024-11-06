@@ -210,7 +210,7 @@ abstract class BaseMediaViewModel extends ViewModel {
   /**
    * Whether the media belongs to the local user.
    */
-  public readonly local = this.participant.pipe(
+  public readonly local: Observable<boolean> = this.participant.pipe(
     // We can assume, that the user is not local if the participant is undefined
     // We assume the local LK participant will always be available.
     map((p) => p?.isLocal ?? false),
@@ -224,9 +224,8 @@ abstract class BaseMediaViewModel extends ViewModel {
    */
   public readonly unencryptedWarning: Observable<boolean>;
 
-  public readonly isRTCParticipantAvailable = this.participant.pipe(
-    map((p) => !!p),
-  );
+  public readonly isRTCParticipantAvailable: Observable<boolean> =
+    this.participant.pipe(map((p) => !!p));
 
   public readonly encryptionStatus: Observable<EncryptionStatus>;
 
