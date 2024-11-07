@@ -107,6 +107,7 @@ export const MediaView = forwardRef<HTMLDivElement, Props>(
               raisedHandTime={raisedHandTime}
               miniature={avatarSize < 96}
               showTimer={handRaiseTimerVisible}
+              onClick={raisedHandOnClick}
             />
             {currentReaction && (
               <ReactionIndicator
@@ -129,12 +130,6 @@ export const MediaView = forwardRef<HTMLDivElement, Props>(
               </Text>
             </div>
           )}
-          <RaisedHandIndicator
-            raisedHandTime={raisedHandTime}
-            miniature={avatarSize < 96}
-            showTimer={handRaiseTimerVisible}
-            onClick={raisedHandOnClick}
-          />
           <div className={styles.nameTag}>
             {nameTagLeadingIcon}
             <Text as="span" size="sm" weight="medium" className={styles.name}>
