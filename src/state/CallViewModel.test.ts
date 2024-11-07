@@ -81,7 +81,7 @@ const members = new Map([alice, bob, carol, dave].map((p) => [p.userId, p]));
 
 const aliceRtcMember = mockMembership(alice, aliceDev);
 const bobRtcMember = mockMembership(bob, bobDev);
-const carolRtcMember = mockMembership(carol, carolDev);
+const localRtcMember = mockMembership(carol, carolDev);
 const daveRtcMember = mockMembership(dave, daveDev);
 
 export interface GridLayoutSummary {
@@ -204,7 +204,8 @@ function withCallViewModel(
   });
   const rtcSession = new MockRTCSession(room as unknown as MockRoom);
   rtcMembers.subscribe((m) => {
-    rtcSession.memberships = m;
+    // always prepend the local participant
+    rtcSession.memberships = [localRtcMember, ...m];
     rtcSession.emit(MatrixRTCSessionEvent.MembershipsChanged);
   });
   const participantsSpy = vi
@@ -268,7 +269,7 @@ test("participants are retained during a focus switch", () => {
         a: [aliceParticipant, bobParticipant],
         b: [],
       }),
-      of([carolRtcMember, aliceRtcMember, bobRtcMember]),
+      of([aliceRtcMember, bobRtcMember]),
       cold(connectionMarbles, {
         c: ConnectionState.Connected,
         s: ECAddonConnectionState.ECSwitchingFocus,
@@ -307,7 +308,7 @@ test("screen sharing activates spotlight layout", () => {
         c: [aliceSharingScreen, bobSharingScreen],
         d: [aliceParticipant, bobSharingScreen],
       }),
-      of([carolRtcMember, bobRtcMember, aliceRtcMember]),
+      of([aliceRtcMember, bobRtcMember]),
       of(ConnectionState.Connected),
       new Map(),
       (vm) => {
@@ -364,10 +365,10 @@ test("screen sharing activates spotlight layout", () => {
 
 test("participants stay in the same order unless to appear/disappear", () => {
   withTestScheduler(({ cold, schedule, expectObservable }) => {
-    const modeMarbles = "a";
+    const modeMarbles = "     g";
     // First Bob speaks, then Dave, then Alice
     const aSpeakingMarbles = "n- 1998ms - 1999ms y";
-    const bSpeakingMarbles = "ny 1998ms n 1999ms ";
+    const bSpeakingMarbles = "ny 1998ms n 1999ms -";
     const dSpeakingMarbles = "n- 1998ms y 1999ms n";
     // Nothing should change when Bob speaks, because Bob is already on screen.
     // When Dave speaks he should switch with Alice because she's the one who
@@ -377,7 +378,7 @@ test("participants stay in the same order unless to appear/disappear", () => {
 
     withCallViewModel(
       of([aliceParticipant, bobParticipant, daveParticipant]),
-      of([carolRtcMember, aliceRtcMember, bobRtcMember, daveRtcMember]),
+      of([aliceRtcMember, bobRtcMember, daveRtcMember]),
       of(ConnectionState.Connected),
       new Map([
         [aliceParticipant, cold(aSpeakingMarbles, { y: true, n: false })],
@@ -386,7 +387,7 @@ test("participants stay in the same order unless to appear/disappear", () => {
       ]),
       (vm) => {
         schedule(modeMarbles, {
-          a: () => {
+          g: () => {
             // We imagine that only three tiles (the first three) will be visible
             // on screen at a time
             vm.layout.subscribe((layout) => {
@@ -436,7 +437,7 @@ test("spotlight speakers swap places", () => {
 
     withCallViewModel(
       of([aliceParticipant, bobParticipant, daveParticipant]),
-      of([carolRtcMember, aliceRtcMember, bobRtcMember, daveRtcMember]),
+      of([aliceRtcMember, bobRtcMember, daveRtcMember]),
       of(ConnectionState.Connected),
       new Map([
         [aliceParticipant, cold(aSpeakingMarbles, { y: true, n: false })],
@@ -482,7 +483,7 @@ test("layout enters picture-in-picture mode when requested", () => {
 
     withCallViewModel(
       of([aliceParticipant, bobParticipant]),
-      of([carolRtcMember, aliceRtcMember, bobRtcMember]),
+      of([aliceRtcMember, bobRtcMember]),
       of(ConnectionState.Connected),
       new Map(),
       (vm) => {
@@ -520,7 +521,7 @@ test("spotlight remembers whether it's expanded", () => {
 
     withCallViewModel(
       of([aliceParticipant, bobParticipant]),
-      of([carolRtcMember, aliceRtcMember, bobRtcMember]),
+      of([aliceRtcMember, bobRtcMember]),
       of(ConnectionState.Connected),
       new Map(),
       (vm) => {
