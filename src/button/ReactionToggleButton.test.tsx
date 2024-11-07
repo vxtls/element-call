@@ -5,7 +5,8 @@ SPDX-License-Identifier: AGPL-3.0-only
 Please see LICENSE in the repository root for full details.
 */
 
-import { act, fireEvent, render } from "@testing-library/react";
+import { fireEvent, render } from "@testing-library/react";
+import { act } from "react";
 import { expect, test } from "vitest";
 import { MatrixRTCSession } from "matrix-js-sdk/src/matrixrtc";
 import { TooltipProvider } from "@vector-im/compound-web";
@@ -59,14 +60,14 @@ test("Can open menu", () => {
 test("Can raise hand", () => {
   const room = new MockRoom(memberUserIdAlice);
   const rtcSession = new MockRTCSession(room, membership);
-  const { getByRole, getByText, container } = render(
+  const { getByRole, getByLabelText, container } = render(
     <TestComponent rtcSession={rtcSession} room={room} />,
   );
   act(() => {
     getByRole("button").click();
   });
   act(() => {
-    getByText("🖐️").click();
+    getByLabelText("Toggle hand raised").click();
   });
   expect(room.testSentEvents).toEqual([
     [
@@ -87,7 +88,7 @@ test("Can raise hand", () => {
 test("Can lower hand", () => {
   const room = new MockRoom(memberUserIdAlice);
   const rtcSession = new MockRTCSession(room, membership);
-  const { getByRole, getByText, container } = render(
+  const { getByRole, getByLabelText, container } = render(
     <TestComponent rtcSession={rtcSession} room={room} />,
   );
   const reactionEvent = room.testSendHandRaise(memberEventAlice, membership);
@@ -95,7 +96,7 @@ test("Can lower hand", () => {
     getByRole("button").click();
   });
   act(() => {
-    getByText("🖐️").click();
+    getByLabelText("Toggle hand raised").click();
   });
   expect(room.testRedactedEvents).toEqual([[undefined, reactionEvent]]);
   expect(container).toMatchSnapshot();

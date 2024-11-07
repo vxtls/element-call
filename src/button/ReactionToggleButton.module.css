@@ -14,9 +14,11 @@
   top: 82vh !important;
 }
 
-.reactionPopupMenuModal > div > div {
-  padding-inline: var(--cpd-space-6x) !important;
-  padding-block: var(--cpd-space-6x) var(--cpd-space-8x) !important;
+@media not ((hover: none) or (pointer: coarse)) {
+  .reactionPopupMenuModal > div > div {
+    padding-inline: var(--cpd-space-6x) !important;
+    padding-block: var(--cpd-space-6x) var(--cpd-space-8x) !important;
+  }
 }
 
 .reactionPopupMenu menu {
@@ -24,6 +26,7 @@
   padding: 0;
   display: flex;
   flex-wrap: wrap;
+  gap: var(--cpd-separator-spacing);
 }
 
 .reactionPopupMenu section {
@@ -34,19 +37,14 @@
 
 .reactionPopupMenuItem {
   list-style: none;
-  margin-left: var(--cpd-separator-spacing);
-}
-
-.reactionPopupMenuItem:first-child {
-  margin-left: 0;
 }
 
 .reactionButton {
   padding: 1em;
-  font-size: 2em;
-  width: 2em;
-  height: 2em;
-  border-radius: 2em;
+  font-size: 1.8em;
+  width: 1.8em;
+  height: 1.8em;
+  border-radius: 1.8em;
 }
 
 .verticalSeperator {

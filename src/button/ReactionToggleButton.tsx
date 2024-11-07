@@ -126,12 +126,10 @@ export function ReactionPopupMenu({
             kind={isHandRaised ? "primary" : "secondary"}
             aria-pressed={isHandRaised}
             aria-label="Toggle hand raised"
-            className={styles.reactionButton}
-            key="raise-hand"
             onClick={() => toggleRaisedHand()}
-          >
-            🖐️
-          </CpdButton>
+            iconOnly
+            Icon={RaisedHandSolidIcon}
+          />
         </Tooltip>
       </section>
       <div className={styles.verticalSeperator} />
@@ -177,21 +175,23 @@ export function ReactionPopupMenu({
               </Tooltip>
             </li>
           ))}
-          {!isSearching ? (
-            <li key="search" className={styles.reactionPopupMenuItem}>
-              <Tooltip label="Search">
-                <CpdButton
-                  iconOnly
-                  aria-label="Open reactions search"
-                  Icon={SearchIcon}
-                  kind="tertiary"
-                  onClick={() => setIsSearching(true)}
-                />
-              </Tooltip>
-            </li>
-          ) : null}
         </menu>
       </section>
+      {!isSearching ? (
+        <section>
+          <li key="search" className={styles.reactionPopupMenuItem}>
+            <Tooltip label="Search">
+              <CpdButton
+                iconOnly
+                aria-label="Open reactions search"
+                Icon={SearchIcon}
+                kind="tertiary"
+                onClick={() => setIsSearching(true)}
+              />
+            </Tooltip>
+          </li>
+        </section>
+      ) : null}
     </div>
   );
 }
@@ -302,7 +302,7 @@ export function ReactionToggleButton({
       <InnerButton
         disabled={busy}
         onClick={() => setShowReactionsMenu((show) => !show)}
-        raised={isHandRaised || showReactionsMenu}
+        raised={isHandRaised}
         open={showReactionsMenu}
       />
       <Modal
