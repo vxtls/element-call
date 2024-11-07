@@ -215,9 +215,6 @@ abstract class BaseMediaViewModel extends ViewModel {
    */
   public readonly unencryptedWarning: Observable<boolean>;
 
-  public readonly isLiveKitParticipantAvailable: Observable<boolean> =
-    this.participant.pipe(map((p) => !!p));
-
   public readonly encryptionStatus: Observable<EncryptionStatus>;
 
   public constructor(
@@ -231,7 +228,7 @@ abstract class BaseMediaViewModel extends ViewModel {
     // TODO: Fully separate the data layer from the UI layer by keeping the
     // member object internal
     public readonly member: RoomMember | undefined,
-    // We dont necessarily have a participant if a user connects via MatrixRTC but not (not yet) through
+    // We don't necessarily have a participant if a user connects via MatrixRTC but not (yet) through
     // livekit.
     protected readonly participant: Observable<
       LocalParticipant | RemoteParticipant | undefined
@@ -259,8 +256,9 @@ abstract class BaseMediaViewModel extends ViewModel {
 
     this.encryptionStatus = this.participant.pipe(
       switchMap((participant): Observable<EncryptionStatus> => {
-        if (
-          !participant ||
+        if (!participant) {
+          return of(EncryptionStatus.Connecting);
+        } else if (
           participant.isLocal ||
           encryptionSystem.kind === E2eeType.NONE
         ) {

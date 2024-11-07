@@ -86,9 +86,6 @@ const UserMediaTile = forwardRef<HTMLDivElement, UserMediaTileProps>(
     const videoEnabled = useObservableEagerState(vm.videoEnabled);
     const speaking = useObservableEagerState(vm.speaking);
     const cropVideo = useObservableEagerState(vm.cropVideo);
-    const isLiveKitParticipantAvailable = useObservableEagerState(
-      vm.isLiveKitParticipantAvailable,
-    );
     const onSelectFitContain = useCallback(
       (e: Event) => {
         e.preventDefault();
@@ -142,12 +139,7 @@ const UserMediaTile = forwardRef<HTMLDivElement, UserMediaTileProps>(
             className={styles.muteIcon}
           />
         }
-        displayName={
-          displayName +
-          (isLiveKitParticipantAvailable
-            ? ""
-            : " missing Livekit Participant...")
-        }
+        displayName={displayName}
         primaryButton={
           <Menu
             open={menuOpen}
@@ -263,9 +255,6 @@ const RemoteUserMediaTile = forwardRef<
       mirror={false}
       menuStart={
         <>
-          {/* {isLiveKitParticipantAvailable
-            ? "is available"
-            : "Loading RTC participant"} */}
           <ToggleMenuItem
             Icon={MicOffIcon}
             label={t("video_tile.mute_for_me")}
