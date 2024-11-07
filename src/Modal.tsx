@@ -91,6 +91,7 @@ export const Modal: FC<Props> = ({
             )}
             // Suppress the warning about there being no description; the modal
             // has an accessible title
+            role="dialog"
             aria-describedby={undefined}
             {...rest}
           >
@@ -116,7 +117,12 @@ export const Modal: FC<Props> = ({
           />
           {/* Suppress the warning about there being no description; the modal
           has an accessible title */}
-          <DialogContent asChild aria-describedby={undefined} {...rest}>
+          <DialogContent
+            asChild
+            aria-describedby={undefined}
+            role="dialog"
+            {...rest}
+          >
             <Glass
               className={classNames(
                 className,
