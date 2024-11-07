@@ -37,8 +37,8 @@ import {
 interface ReactionsContextType {
   raisedHands: Record<string, Date>;
   supportsReactions: boolean;
-  myReactionId: string | null;
   reactions: Record<string, ReactionOption>;
+  lowerHand: () => Promise<void>;
 }
 
 const ReactionsContext = createContext<ReactionsContextType | undefined>(
@@ -92,13 +92,6 @@ export const ReactionsProvider = ({
 
   const [reactions, setReactions] = useState<Record<string, ReactionOption>>(
     {},
-  );
-
-  // Calculate our own reaction event.
-  const myReactionId = useMemo(
-    (): string | null =>
-      (myUserId && raisedHands[myUserId]?.reactionEventId) ?? null,
-    [raisedHands, myUserId],
   );
 
   // Reduce the data down for the consumers.
@@ -295,13 +288,38 @@ export const ReactionsProvider = ({
     };
   }, [room, addRaisedHand, removeRaisedHand, memberships, raisedHands]);
 
+  const lowerHand = useCallback(async () => {
+    if (
+      !myUserId ||
+      clientState?.state !== "valid" ||
+      !clientState.authenticated ||
+      !raisedHands[myUserId]
+    ) {
+      return;
+    }
+    const myReactionId = raisedHands[myUserId].reactionEventId;
+    if (!myReactionId) {
+      logger.warn(`Hand raised but no reaction event to redact!`);
+      return;
+    }
+    try {
+      await clientState.authenticated.client.redactEvent(
+        rtcSession.room.roomId,
+        myReactionId,
+      );
+      logger.debug("Redacted raise hand event");
+    } catch (ex) {
+      logger.error("Failed to redact reaction event", myReactionId, ex);
+    }
+  }, [myUserId, raisedHands, clientState, rtcSession]);
+
   return (
     <ReactionsContext.Provider
       value={{
         raisedHands: resultRaisedHands,
         supportsReactions,
-        myReactionId,
         reactions,
+        lowerHand,
       }}
     >
       {children}

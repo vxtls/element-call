@@ -5,7 +5,13 @@ SPDX-License-Identifier: AGPL-3.0-only
 Please see LICENSE in the repository root for full details.
 */
 
-import { ReactNode, useEffect, useState } from "react";
+import {
+  MouseEventHandler,
+  ReactNode,
+  useCallback,
+  useEffect,
+  useState,
+} from "react";
 import "@formatjs/intl-durationformat/polyfill";
 import { DurationFormat } from "@formatjs/intl-durationformat";
 
@@ -22,12 +28,25 @@ export function RaisedHandIndicator({
   raisedHandTime,
   miniature,
   showTimer,
+  onClick,
 }: {
   raisedHandTime?: Date;
   miniature?: boolean;
   showTimer?: boolean;
+  onClick?: () => void;
 }): ReactNode {
   const [raisedHandDuration, setRaisedHandDuration] = useState("");
+
+  const clickCallback = useCallback<MouseEventHandler<HTMLButtonElement>>(
+    (event) => {
+      if (!onClick) {
+        return;
+      }
+      event.preventDefault();
+      onClick();
+    },
+    [onClick],
+  );
 
   // This effect creates a simple timer effect.
   useEffect(() => {
@@ -51,13 +70,30 @@ export function RaisedHandIndicator({
     return (): void => clearInterval(to);
   }, [setRaisedHandDuration, raisedHandTime, showTimer]);
 
-  if (raisedHandTime) {
+  if (!raisedHandTime) {
+    return;
+  }
+
+  const content = (
+    <ReactionIndicator emoji="✋" miniature={miniature}>
+      {showTimer && <p>{raisedHandDuration}</p>}
+    </ReactionIndicator>
+  );
+
+  if (onClick) {
     return (
-      <ReactionIndicator emoji="✋" miniature={miniature}>
-        {showTimer && <p>{raisedHandDuration}</p>}
-      </ReactionIndicator>
+      <button
+        aria-label="lower raised hand"
+        style={{
+          display: "contents",
+          background: "none",
+        }}
+        onClick={clickCallback}
+      >
+        {content}
+      </button>
     );
   }
 
-  return null;
+  return content;
 }

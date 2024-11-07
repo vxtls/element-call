@@ -22,7 +22,7 @@ import {
 } from "@vector-im/compound-design-tokens/assets/web/icons";
 import { animated } from "@react-spring/web";
 import { Observable, map } from "rxjs";
-import { useObservableEagerState } from "observable-hooks";
+import { useObservableEagerState, useObservableRef } from "observable-hooks";
 import { useTranslation } from "react-i18next";
 import classNames from "classnames";
 import { TrackReferenceOrPlaceholder } from "@livekit/components-core";
@@ -31,6 +31,7 @@ import { RoomMember } from "matrix-js-sdk/src/matrix";
 import { MediaView } from "./MediaView";
 import styles from "./SpotlightTile.module.css";
 import {
+  EncryptionStatus,
   LocalUserMediaViewModel,
   MediaViewModel,
   ScreenShareViewModel,
@@ -39,9 +40,9 @@ import {
 } from "../state/MediaViewModel";
 import { useInitial } from "../useInitial";
 import { useMergedRefs } from "../useMergedRefs";
-import { useObservableRef } from "../state/useObservable";
 import { useReactiveState } from "../useReactiveState";
 import { useLatest } from "../useLatest";
+import { SpotlightTileViewModel } from "../state/TileViewModel";
 
 interface SpotlightItemBaseProps {
   className?: string;
@@ -51,6 +52,7 @@ interface SpotlightItemBaseProps {
   video: TrackReferenceOrPlaceholder;
   member: RoomMember | undefined;
   unencryptedWarning: boolean;
+  encryptionStatus: EncryptionStatus;
   displayName: string;
   "aria-hidden"?: boolean;
 }
@@ -86,14 +88,16 @@ const SpotlightUserMediaItem = forwardRef<
   const videoEnabled = useObservableEagerState(vm.videoEnabled);
   const cropVideo = useObservableEagerState(vm.cropVideo);
 
-  const baseProps: SpotlightUserMediaItemBaseProps = {
+  const baseProps: SpotlightUserMediaItemBaseProps &
+    RefAttributes<HTMLDivElement> = {
+    ref,
     videoEnabled,
     videoFit: cropVideo ? "cover" : "contain",
     ...props,
   };
 
   return vm instanceof LocalUserMediaViewModel ? (
-    <SpotlightLocalUserMediaItem ref={ref} vm={vm} {...baseProps} />
+    <SpotlightLocalUserMediaItem vm={vm} {...baseProps} />
   ) : (
     <MediaView mirror={false} {...baseProps} />
   );
@@ -130,6 +134,7 @@ const SpotlightItem = forwardRef<HTMLDivElement, SpotlightItemProps>(
     const displayName = useDisplayName(vm);
     const video = useObservableEagerState(vm.video);
     const unencryptedWarning = useObservableEagerState(vm.unencryptedWarning);
+    const encryptionStatus = useObservableEagerState(vm.encryptionStatus);
 
     // Hook this item up to the intersection observer
     useEffect(() => {
@@ -156,6 +161,7 @@ const SpotlightItem = forwardRef<HTMLDivElement, SpotlightItemProps>(
       member: vm.member,
       unencryptedWarning,
       displayName,
+      encryptionStatus,
       "aria-hidden": ariaHidden,
     };
 
@@ -175,8 +181,7 @@ const SpotlightItem = forwardRef<HTMLDivElement, SpotlightItemProps>(
 SpotlightItem.displayName = "SpotlightItem";
 
 interface Props {
-  vms: MediaViewModel[];
-  maximised: boolean;
+  vm: SpotlightTileViewModel;
   expanded: boolean;
   onToggleExpanded: (() => void) | null;
   targetWidth: number;
@@ -189,8 +194,7 @@ interface Props {
 export const SpotlightTile = forwardRef<HTMLDivElement, Props>(
   (
     {
-      vms,
-      maximised,
+      vm,
       expanded,
       onToggleExpanded,
       targetWidth,
@@ -202,14 +206,16 @@ export const SpotlightTile = forwardRef<HTMLDivElement, Props>(
     theirRef,
   ) => {
     const { t } = useTranslation();
-    const [root, ourRef] = useObservableRef<HTMLDivElement | null>(null);
+    const [ourRef, root] = useObservableRef<HTMLDivElement | null>(null);
     const ref = useMergedRefs(ourRef, theirRef);
-    const [visibleId, setVisibleId] = useState(vms[0].id);
-    const latestVms = useLatest(vms);
+    const maximised = useObservableEagerState(vm.maximised);
+    const media = useObservableEagerState(vm.media);
+    const [visibleId, setVisibleId] = useState(media[0].id);
+    const latestMedia = useLatest(media);
     const latestVisibleId = useLatest(visibleId);
-    const visibleIndex = vms.findIndex((vm) => vm.id === visibleId);
+    const visibleIndex = media.findIndex((vm) => vm.id === visibleId);
     const canGoBack = visibleIndex > 0;
-    const canGoToNext = visibleIndex !== -1 && visibleIndex < vms.length - 1;
+    const canGoToNext = visibleIndex !== -1 && visibleIndex < media.length - 1;
 
     // To keep track of which item is visible, we need an intersection observer
     // hooked up to the root element and the items. Because the items will run
@@ -234,28 +240,30 @@ export const SpotlightTile = forwardRef<HTMLDivElement, Props>(
 
     const [scrollToId, setScrollToId] = useReactiveState<string | null>(
       (prev) =>
-        prev == null || prev === visibleId || vms.every((vm) => vm.id !== prev)
+        prev == null ||
+        prev === visibleId ||
+        media.every((vm) => vm.id !== prev)
           ? null
           : prev,
       [visibleId],
     );
 
     const onBackClick = useCallback(() => {
-      const vms = latestVms.current;
-      const visibleIndex = vms.findIndex(
+      const media = latestMedia.current;
+      const visibleIndex = media.findIndex(
         (vm) => vm.id === latestVisibleId.current,
       );
-      if (visibleIndex > 0) setScrollToId(vms[visibleIndex - 1].id);
-    }, [latestVisibleId, latestVms, setScrollToId]);
+      if (visibleIndex > 0) setScrollToId(media[visibleIndex - 1].id);
+    }, [latestVisibleId, latestMedia, setScrollToId]);
 
     const onNextClick = useCallback(() => {
-      const vms = latestVms.current;
-      const visibleIndex = vms.findIndex(
+      const media = latestMedia.current;
+      const visibleIndex = media.findIndex(
         (vm) => vm.id === latestVisibleId.current,
       );
-      if (visibleIndex !== -1 && visibleIndex !== vms.length - 1)
-        setScrollToId(vms[visibleIndex + 1].id);
-    }, [latestVisibleId, latestVms, setScrollToId]);
+      if (visibleIndex !== -1 && visibleIndex !== media.length - 1)
+        setScrollToId(media[visibleIndex + 1].id);
+    }, [latestVisibleId, latestMedia, setScrollToId]);
 
     const ToggleExpandIcon = expanded ? CollapseIcon : ExpandIcon;
 
@@ -277,7 +285,7 @@ export const SpotlightTile = forwardRef<HTMLDivElement, Props>(
           </button>
         )}
         <div className={styles.contents}>
-          {vms.map((vm) => (
+          {media.map((vm) => (
             <SpotlightItem
               key={vm.id}
               vm={vm}
@@ -316,10 +324,10 @@ export const SpotlightTile = forwardRef<HTMLDivElement, Props>(
         {!expanded && (
           <div
             className={classNames(styles.indicators, {
-              [styles.show]: showIndicators && vms.length > 1,
+              [styles.show]: showIndicators && media.length > 1,
             })}
           >
-            {vms.map((vm) => (
+            {media.map((vm) => (
               <div
                 key={vm.id}
                 className={styles.item}
