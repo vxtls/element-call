@@ -503,20 +503,22 @@ export class CallViewModel extends ViewModel {
                       this.livekitRoom,
                     ),
                 ];
-              }
-              if (participant && participant.isScreenShareEnabled) {
-                const screenShareId = `${mediaId}:screen-share`;
-                yield [
-                  screenShareId,
-                  prevItems.get(screenShareId) ??
-                    new ScreenShare(
-                      screenShareId,
-                      member,
-                      participant,
-                      this.encryptionSystem,
-                      this.livekitRoom,
-                    ),
-                ];
+
+                if (participant?.isScreenShareEnabled) {
+                  const screenShareId = `${indexedMediaId}:screen-share`;
+                  yield [
+                    screenShareId,
+                    prevItems.get(screenShareId) ??
+                      new ScreenShare(
+                        screenShareId,
+                        member,
+                        participant,
+                        this.encryptionSystem,
+                        this.livekitRoom,
+                      ),
+                  ];
+                }
+  
               }
             }
           }.bind(this)(),
