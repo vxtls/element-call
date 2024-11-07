@@ -49,21 +49,21 @@ import { MockRoom, MockRTCSession } from "../useReactions.test";
 
 vi.mock("@livekit/components-core");
 
-const alice = mockRoomMember({ userId: "@alice:example.org" });
-const bob = mockRoomMember({ userId: "@bob:example.org" });
-const carol = mockRoomMember({ userId: "@carol:example.org" });
-const dave = mockRoomMember({ userId: "@dave:example.org" });
+const localRtcMember = mockMembership("@carol:example.org", "CCCC");
+const aliceRtcMember = mockMembership("@alice:example.org", "AAAA");
+const bobRtcMember = mockMembership("@bob:example.org", "BBBB");
+const daveRtcMember = mockMembership("@dave:example.org", "DDDD");
 
-const aliceDev = "AAAA";
-const bobDev = "BBBB";
-const carolDev = "CCCC";
-const daveDev = "DDDD";
-const aliceId = `${alice.userId}:${aliceDev}`;
-const bobId = `${bob.userId}:${bobDev}`;
-const carolId = `${carol.userId}:${carolDev}`;
-const daveId = `${dave.userId}:${daveDev}`;
+const alice = mockRoomMember(aliceRtcMember);
+const bob = mockRoomMember(bobRtcMember);
+const carol = mockRoomMember(localRtcMember);
+const dave = mockRoomMember(daveRtcMember);
 
-const localParticipant = mockLocalParticipant({ identity: carolId });
+const aliceId = `${alice.userId}:${aliceRtcMember.deviceId}`;
+const bobId = `${bob.userId}:${bobRtcMember.deviceId}`;
+const daveId = `${dave.userId}:${daveRtcMember.deviceId}`;
+
+const localParticipant = mockLocalParticipant({ identity: "" });
 
 const aliceParticipant = mockRemoteParticipant({ identity: aliceId });
 const aliceSharingScreen = mockRemoteParticipant({
@@ -77,12 +77,9 @@ const bobSharingScreen = mockRemoteParticipant({
 });
 const daveParticipant = mockRemoteParticipant({ identity: daveId });
 
-const members = new Map([alice, bob, carol, dave].map((p) => [p.userId, p]));
-
-const aliceRtcMember = mockMembership(alice, aliceDev);
-const bobRtcMember = mockMembership(bob, bobDev);
-const localRtcMember = mockMembership(carol, carolDev);
-const daveRtcMember = mockMembership(dave, daveDev);
+const roomMembers = new Map(
+  [alice, bob, carol, dave].map((p) => [p.userId, p]),
+);
 
 export interface GridLayoutSummary {
   type: "grid";
@@ -197,10 +194,10 @@ function withCallViewModel(
 ): void {
   const room = mockMatrixRoom({
     client: {
-      getUserId: () => carol.userId,
-      getDeviceId: () => carolDev,
+      getUserId: () => localRtcMember.sender,
+      getDeviceId: () => localRtcMember.deviceId,
     } as Partial<MatrixClient> as MatrixClient,
-    getMember: (userId) => members.get(userId) ?? null,
+    getMember: (userId) => roomMembers.get(userId) ?? null,
   });
   const rtcSession = new MockRTCSession(room as unknown as MockRoom);
   rtcMembers.subscribe((m) => {
