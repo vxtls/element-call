@@ -609,12 +609,6 @@ export class CallViewModel extends ViewModel {
       this.scope.state(),
     );
 
-  private readonly hasRemoteScreenShares: Observable<boolean> =
-    this.screenShares.pipe(
-      map((ms) => ms.some((m) => !m.vm.local)),
-      distinctUntilChanged(),
-    );
-
   private readonly spotlightSpeaker: Observable<
     UserMediaViewModel | undefined
   > = this.userMedia.pipe(
@@ -727,6 +721,12 @@ export class CallViewModel extends ViewModel {
     this.spotlightAndPip.pipe(
       switchMap(([spotlight]) => spotlight),
       this.scope.state(),
+    );
+
+  private readonly hasRemoteScreenShares: Observable<boolean> =
+    this.screenShares.pipe(
+      map((ms) => ms.some((m) => !m.vm.local)),
+      distinctUntilChanged(),
     );
 
   private readonly pip: Observable<UserMediaViewModel | null> =
