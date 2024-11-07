@@ -518,7 +518,6 @@ export class CallViewModel extends ViewModel {
                       ),
                   ];
                 }
-  
               }
             }
           }.bind(this)(),
