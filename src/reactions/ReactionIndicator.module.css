@@ -43,10 +43,14 @@
   display: inline-block;
   text-align: center;
   font-size: 1.3em;
+  /* Centralise */
+  line-height: 1.2;
 }
 
 .reactionLarge > span {
   width: var(--cpd-space-8x);
   height: var(--cpd-space-8x);
   font-size: 1.9em;
+  /* Centralise */
+  line-height: 1.1;
 }
