@@ -27,6 +27,11 @@ import { useMediaQuery } from "./useMediaQuery";
 
 export interface Props {
   title: string;
+  /**
+   * Hide the modal header. Used for smaller popups where the context is readily apparent.
+   * A title should still be specified for users using assistive technology.
+   */
+  hideHeader?: boolean;
   children: ReactNode;
   className?: string;
   /**
@@ -54,6 +59,7 @@ export interface Props {
  */
 export const Modal: FC<Props> = ({
   title,
+  hideHeader,
   children,
   className,
   open,
@@ -108,6 +114,28 @@ export const Modal: FC<Props> = ({
       </Drawer.Root>
     );
   } else {
+    const titleNode = (
+      <DialogTitle asChild>
+        <Heading as="h2" weight="semibold" size="md">
+          {title}
+        </Heading>
+      </DialogTitle>
+    );
+    const header = (
+      <div className={styles.header}>
+        {titleNode}
+        {onDismiss !== undefined && (
+          <DialogClose
+            className={styles.close}
+            data-testid="modal_close"
+            aria-label={t("action.close")}
+          >
+            <CloseIcon width={20} height={20} />
+          </DialogClose>
+        )}
+      </div>
+    );
+
     return (
       <DialogRoot open={open} onOpenChange={onOpenChange}>
         <DialogPortal>
@@ -119,31 +147,19 @@ export const Modal: FC<Props> = ({
           <DialogContent asChild aria-describedby={undefined} {...rest}>
             <Glass
               className={classNames(
-                className,
                 overlayStyles.overlay,
                 overlayStyles.animate,
                 styles.modal,
                 styles.dialog,
                 { [styles.tabbed]: tabbed },
+                className,
               )}
             >
               <div className={styles.content}>
-                <div className={styles.header}>
-                  <DialogTitle asChild>
-                    <Heading as="h2" weight="semibold" size="md">
-                      {title}
-                    </Heading>
-                  </DialogTitle>
-                  {onDismiss !== undefined && (
-                    <DialogClose
-                      className={styles.close}
-                      data-testid="modal_close"
-                      aria-label={t("action.close")}
-                    >
-                      <CloseIcon width={20} height={20} />
-                    </DialogClose>
-                  )}
-                </div>
+                {!hideHeader ? header : null}
+                {hideHeader ? (
+                  <VisuallyHidden asChild>{titleNode}</VisuallyHidden>
+                ) : null}
                 <div className={styles.body}>{children}</div>
               </div>
             </Glass>

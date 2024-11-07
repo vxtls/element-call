@@ -22,14 +22,10 @@ import {
   ChangeEventHandler,
   ComponentPropsWithoutRef,
   FC,
-  forwardRef,
   KeyboardEventHandler,
-  PropsWithRef,
   ReactNode,
   useCallback,
-  useEffect,
   useMemo,
-  useRef,
   useState,
 } from "react";
 import { useTranslation } from "react-i18next";
@@ -47,6 +43,7 @@ import {
   ReactionSet,
   ElementCallReactionEventType,
 } from "../reactions";
+import { Modal } from "../Modal";
 
 interface InnerButtonProps extends ComponentPropsWithoutRef<"button"> {
   raised: boolean;
@@ -70,17 +67,17 @@ const InnerButton: FC<InnerButtonProps> = ({ raised, open, ...props }) => {
   );
 };
 
-interface ReactionsPopupMenuProps {
+export function ReactionPopupMenu({
+  sendReaction,
+  toggleRaisedHand,
+  isHandRaised,
+  canReact,
+}: {
   sendReaction: (reaction: ReactionOption) => void;
   toggleRaisedHand: () => void;
   isHandRaised: boolean;
   canReact: boolean;
-}
-
-export const ReactionPopupMenu = forwardRef<
-  HTMLDialogElement,
-  ReactionsPopupMenuProps
->(({ sendReaction, toggleRaisedHand, isHandRaised, canReact }, ref) => {
+}): ReactNode {
   const { t } = useTranslation();
   const [searchText, setSearchText] = useState("");
   const [isSearching, setIsSearching] = useState(false);
@@ -122,84 +119,82 @@ export const ReactionPopupMenu = forwardRef<
   );
 
   return (
-    <dialog ref={ref} className={styles.reactionPopupMenu} open={false}>
-      <div style={{ display: "flex" }}>
-        <section className={styles.handRaiseSection}>
-          <Tooltip label={t("common.raise_hand")}>
-            <CpdButton
-              kind={isHandRaised ? "primary" : "secondary"}
-              aria-pressed={isHandRaised}
-              aria-label="Toggle hand raised"
-              className={styles.reactionButton}
-              key="raise-hand"
-              onClick={() => toggleRaisedHand()}
-            >
-              🖐️
-            </CpdButton>
-          </Tooltip>
-        </section>
-        <div className={styles.verticalSeperator} />
-        <section>
-          {isSearching ? (
-            <>
-              <Form.Root className={styles.searchForm}>
-                <Search
-                  required
-                  value={searchText}
-                  name="reactionSearch"
-                  placeholder="Search reactions…"
-                  onChange={onSearch}
-                  onKeyDown={onSearchKeyDown}
-                  // This is a reasonable use of autofocus, we are focusing when
-                  // the search button is clicked (which matches the Element Web reaction picker)
-                  // eslint-disable-next-line jsx-a11y/no-autofocus
-                  autoFocus
-                />
+    <div className={styles.reactionPopupMenu}>
+      <section className={styles.handRaiseSection}>
+        <Tooltip label={t("common.raise_hand")}>
+          <CpdButton
+            kind={isHandRaised ? "primary" : "secondary"}
+            aria-pressed={isHandRaised}
+            aria-label="Toggle hand raised"
+            className={styles.reactionButton}
+            key="raise-hand"
+            onClick={() => toggleRaisedHand()}
+          >
+            🖐️
+          </CpdButton>
+        </Tooltip>
+      </section>
+      <div className={styles.verticalSeperator} />
+      <section>
+        {isSearching ? (
+          <>
+            <Form.Root className={styles.searchForm}>
+              <Search
+                required
+                value={searchText}
+                name="reactionSearch"
+                placeholder="Search reactions…"
+                onChange={onSearch}
+                onKeyDown={onSearchKeyDown}
+                // This is a reasonable use of autofocus, we are focusing when
+                // the search button is clicked (which matches the Element Web reaction picker)
+                // eslint-disable-next-line jsx-a11y/no-autofocus
+                autoFocus
+              />
+              <CpdButton
+                Icon={CloseIcon}
+                aria-label="close search"
+                size="sm"
+                kind="destructive"
+                onClick={() => setIsSearching(false)}
+              />
+            </Form.Root>
+            <Separator />
+          </>
+        ) : null}
+        <menu>
+          {filteredReactionSet.map((reaction) => (
+            <li className={styles.reactionPopupMenuItem} key={reaction.name}>
+              <Tooltip label={reaction.name}>
                 <CpdButton
-                  Icon={CloseIcon}
-                  aria-label="close search"
-                  size="sm"
-                  kind="destructive"
-                  onClick={() => setIsSearching(false)}
+                  kind="secondary"
+                  className={styles.reactionButton}
+                  disabled={!canReact}
+                  onClick={() => sendReaction(reaction)}
+                >
+                  {reaction.emoji}
+                </CpdButton>
+              </Tooltip>
+            </li>
+          ))}
+          {!isSearching ? (
+            <li key="search" className={styles.reactionPopupMenuItem}>
+              <Tooltip label="Search">
+                <CpdButton
+                  iconOnly
+                  aria-label="Open reactions search"
+                  Icon={SearchIcon}
+                  kind="tertiary"
+                  onClick={() => setIsSearching(true)}
                 />
-              </Form.Root>
-              <Separator />
-            </>
+              </Tooltip>
+            </li>
           ) : null}
-          <menu>
-            {filteredReactionSet.map((reaction) => (
-              <li className={styles.reactionPopupMenuItem} key={reaction.name}>
-                <Tooltip label={reaction.name}>
-                  <CpdButton
-                    kind="secondary"
-                    className={styles.reactionButton}
-                    disabled={!canReact}
-                    onClick={() => sendReaction(reaction)}
-                  >
-                    {reaction.emoji}
-                  </CpdButton>
-                </Tooltip>
-              </li>
-            ))}
-            {!isSearching ? (
-              <li key="search" className={styles.reactionPopupMenuItem}>
-                <Tooltip label="Search">
-                  <CpdButton
-                    iconOnly
-                    aria-label="Open reactions search"
-                    Icon={SearchIcon}
-                    kind="tertiary"
-                    onClick={() => setIsSearching(true)}
-                  />
-                </Tooltip>
-              </li>
-            ) : null}
-          </menu>
-        </section>
-      </div>
-    </dialog>
+        </menu>
+      </section>
+    </div>
   );
-});
+}
 
 interface ReactionToggleButtonProps {
   rtcSession: MatrixRTCSession;
@@ -215,36 +210,9 @@ export function ReactionToggleButton({
   const userId = client.getUserId()!;
   const isHandRaised = !!raisedHands[userId];
   const memberships = useMatrixRTCSessionMemberships(rtcSession);
-  const ref = useRef<HTMLDialogElement>(null);
+  const [showReactionsMenu, setShowReactionsMenu] = useState(false);
 
   const canReact = !reactions[userId];
-
-  const showReactionsMenu = useCallback(() => {
-    if (ref.current) {
-      ref.current.showModal();
-    }
-  }, [ref]);
-
-  const hideReactionsMenu = useCallback(() => {
-    if (ref.current) {
-      ref.current.close();
-    }
-  }, [ref]);
-
-  useEffect(() => {
-    if (!ref.current) {
-      return;
-    }
-    function onClick(evt: MouseEvent) {
-      if (evt.target === ref.current) {
-        hideReactionsMenu();
-      }
-    }
-    ref.current.addEventListener("click", onClick);
-    return () => {
-      ref.current?.removeEventListener("click", onClick);
-    };
-  }, [ref]);
 
   const sendRelation = useCallback(
     async (reaction: ReactionOption) => {
@@ -273,7 +241,7 @@ export function ReactionToggleButton({
         logger.error("Failed to send reaction", ex);
       } finally {
         setBusy(false);
-        hideReactionsMenu();
+        setShowReactionsMenu(false);
       }
     },
     [memberships, client, userId, rtcSession],
@@ -285,6 +253,7 @@ export function ReactionToggleButton({
         try {
           setBusy(true);
           await lowerHand();
+          setShowReactionsMenu(false);
         } finally {
           setBusy(false);
         }
@@ -313,7 +282,7 @@ export function ReactionToggleButton({
           logger.error("Failed to send reaction event", ex);
         } finally {
           setBusy(false);
-          hideReactionsMenu();
+          setShowReactionsMenu(false);
         }
       }
     };
@@ -332,17 +301,24 @@ export function ReactionToggleButton({
     <>
       <InnerButton
         disabled={busy}
-        onClick={showReactionsMenu}
-        raised={isHandRaised}
-        open={!!ref.current?.open}
+        onClick={() => setShowReactionsMenu((show) => !show)}
+        raised={isHandRaised || showReactionsMenu}
+        open={showReactionsMenu}
       />
-      <ReactionPopupMenu
-        ref={ref}
-        isHandRaised={isHandRaised}
-        canReact={canReact}
-        sendReaction={(reaction) => void sendRelation(reaction)}
-        toggleRaisedHand={toggleRaisedHand}
-      />
+      <Modal
+        open={showReactionsMenu}
+        title="Pick reaction"
+        hideHeader
+        className={styles.reactionPopupMenuModal}
+        onDismiss={() => setShowReactionsMenu(false)}
+      >
+        <ReactionPopupMenu
+          isHandRaised={isHandRaised}
+          canReact={canReact}
+          sendReaction={(reaction) => void sendRelation(reaction)}
+          toggleRaisedHand={toggleRaisedHand}
+        />
+      </Modal>
     </>
   );
 }

@@ -3,13 +3,20 @@
 }
 
 .reactionPopupMenu {
-  background: var(--cpd-color-bg-canvas-default);
-  border-radius: var(--cpd-space-4x);
-  width: fit-content;
-  top: 70vh;
-  padding: 1em;
-  position: absolute;
-  border: none;
+  display: flex;
+}
+
+/* These styles override the Modal styles to ensure our emoji
+   picker appears near the toolbar */
+
+.reactionPopupMenuModal {
+  width: fit-content !important;
+  top: 82vh !important;
+}
+
+.reactionPopupMenuModal > div > div {
+  padding-inline: var(--cpd-space-6x) !important;
+  padding-block: var(--cpd-space-6x) var(--cpd-space-8x) !important;
 }
 
 .reactionPopupMenu menu {
@@ -35,6 +42,8 @@
 }
 
 .reactionButton {
+  padding: 1em;
+  font-size: 2em;
   width: 2em;
   height: 2em;
   border-radius: 2em;
