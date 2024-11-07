@@ -17,7 +17,7 @@ test("that nothing is rendered when the modal is closed", () => {
       <p>This is the content.</p>
     </Modal>,
   );
-  expect(queryByRole("dialog")).to.be.null();
+  expect(queryByRole("dialog")).toBeNull();
 });
 
 test("the content is rendered when the modal is open", () => {
@@ -42,7 +42,7 @@ test("the modal can be closed by clicking the close button", () => {
   act(() => {
     getByLabelText("action.close").click();
   });
-  expect(queryByRole("dialog")).to.be.null();
+  expect(queryByRole("dialog")).toBeNull();
 });
 
 const originalMatchMedia = window.matchMedia;
