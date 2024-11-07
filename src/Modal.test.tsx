@@ -5,11 +5,18 @@ SPDX-License-Identifier: AGPL-3.0-only
 Please see LICENSE in the repository root for full details.
 */
 
-import { afterAll, expect, test } from "vitest";
+import { expect, test } from "vitest";
 import { render } from "@testing-library/react";
 import { act, ReactNode, useState } from "react";
 
 import { Modal } from "./Modal";
+import { afterEach } from "node:test";
+import userEvent from "@testing-library/user-event";
+
+const originalMatchMedia = window.matchMedia;
+afterEach(() => {
+  window.matchMedia = originalMatchMedia;
+});
 
 test("that nothing is rendered when the modal is closed", () => {
   const { queryByRole } = render(
@@ -29,7 +36,7 @@ test("the content is rendered when the modal is open", () => {
   expect(queryByRole("dialog")).toMatchSnapshot();
 });
 
-test("the modal can be closed by clicking the close button", () => {
+test("the modal can be closed by clicking the close button", async () => {
   function ModalFn(): ReactNode {
     const [isOpen, setOpen] = useState(true);
     return (
@@ -38,17 +45,12 @@ test("the modal can be closed by clicking the close button", () => {
       </Modal>
     );
   }
-  const { queryByRole, getByLabelText } = render(<ModalFn />);
-  act(() => {
-    getByLabelText("action.close").click();
+  const user = userEvent.setup();
+  const { queryByRole, getByRole } = render(<ModalFn />);
+  await act(async () => {
+    await user.click(getByRole("button", { name: "action.close" }));
   });
   expect(queryByRole("dialog")).toBeNull();
-});
-
-const originalMatchMedia = window.matchMedia;
-
-afterAll(() => {
-  window.matchMedia = originalMatchMedia;
 });
 
 test("the modal renders as a drawer in mobile viewports", () => {
