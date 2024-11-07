@@ -262,7 +262,7 @@ class UserMedia {
           timer(s ? 1000 : 60000),
           // If the speaking flag resets to its original value during this time,
           // end the silencing window to stick with that original value
-          this.vm!.speaking.pipe(filter((s1) => s1 !== s)),
+          this.vm.speaking.pipe(filter((s1) => s1 !== s)),
         ),
       ),
       startWith(false),
@@ -313,7 +313,7 @@ class ScreenShare {
     this.vm = new ScreenShareViewModel(
       id,
       member,
-      this.participant.asObservable(),
+      this.participant,
       encryptionSystem,
       liveKitRoom,
       participant.isLocal,
