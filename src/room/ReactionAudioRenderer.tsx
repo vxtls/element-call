@@ -5,35 +5,56 @@ SPDX-License-Identifier: AGPL-3.0-only
 Please see LICENSE in the repository root for full details.
 */
 
-import { ReactNode, useMemo } from "react";
+import { ReactNode, useEffect, useRef } from "react";
 
 import { useReactions } from "../useReactions";
 import { playReactionsSound, useSetting } from "../settings/settings";
+import { ReactionSet } from "../reactions";
 
 export function ReactionsAudioRenderer(): ReactNode {
   const { reactions } = useReactions();
   const [shouldPlay] = useSetting(playReactionsSound);
+  const audioElements = useRef<Record<string, HTMLAudioElement | null>>({});
 
-  const expectedReactions = useMemo(() => {
-    if (!shouldPlay) {
-      return [];
+  useEffect(() => {
+    if (!audioElements.current) {
+      return;
     }
-    const reactionsToPlayNames = new Set();
-    return Object.values(reactions).filter((r) => {
-      if (reactionsToPlayNames.has(r.name)) {
-        return false;
-      }
-      reactionsToPlayNames.add(r.name);
-      return true;
-    });
-  }, [shouldPlay, reactions]);
 
+    if (!shouldPlay) {
+      return;
+    }
+    for (const reactionName of new Set(
+      Object.values(reactions).map((r) => r.name),
+    )) {
+      const audioElement = audioElements.current[reactionName];
+      if (audioElement?.paused) {
+        void audioElement.play();
+      }
+    }
+  }, [audioElements, shouldPlay, reactions]);
+
+  // Do not render any audio elements if playback is disabled. Will save
+  // audio file fetches.
+  if (!shouldPlay) {
+    return null;
+  }
+
+  // NOTE: We load all audio elements ahead of time to allow the cache
+  // to be populated, rather than risk a cache miss and have the audio
+  // be delayed.
   return (
     <>
-      {expectedReactions.map(
+      {ReactionSet.map(
         (r) =>
           r.sound && (
-            <audio key={r.name} autoPlay hidden>
+            <audio
+              ref={(el) => (audioElements.current[r.name] = el)}
+              data-testid={r.name}
+              key={r.name}
+              preload="auto"
+              hidden
+            >
               <source src={r.sound.ogg} type="audio/ogg; codecs=vorbis" />
               {r.sound.mp3 ? (
                 <source src={r.sound.mp3} type="audio/mpeg" />

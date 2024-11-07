@@ -6,7 +6,7 @@ Please see LICENSE in the repository root for full details.
 */
 
 import { act, render } from "@testing-library/react";
-import { expect, test } from "vitest";
+import { afterAll, expect, test } from "vitest";
 import { TooltipProvider } from "@vector-im/compound-web";
 import { ReactNode } from "react";
 
@@ -17,6 +17,7 @@ import {
 } from "../utils/testReactions";
 import { ReactionsAudioRenderer } from "./ReactionAudioRenderer";
 import { ReactionSet } from "../reactions";
+import { playReactionsSound } from "../settings/settings";
 
 const memberUserIdAlice = "@alice:example.org";
 const memberUserIdBob = "@bob:example.org";
@@ -45,7 +46,26 @@ function TestComponent({
   );
 }
 
-test("defaults to no audio elements", () => {
+const originalPlayFn = window.HTMLMediaElement.prototype.play;
+afterAll(() => {
+  playReactionsSound.setValue(playReactionsSound.defaultValue);
+  window.HTMLMediaElement.prototype.play = originalPlayFn;
+});
+
+test("preloads all audio elements", () => {
+  playReactionsSound.setValue(true);
+  const rtcSession = new MockRTCSession(
+    new MockRoom(memberUserIdAlice),
+    membership,
+  );
+  const { container } = render(<TestComponent rtcSession={rtcSession} />);
+  expect(container.getElementsByTagName("audio")).toHaveLength(
+    ReactionSet.filter((r) => r.sound).length,
+  );
+});
+
+test("loads no audio elements when disabled in settings", () => {
+  playReactionsSound.setValue(false);
   const rtcSession = new MockRTCSession(
     new MockRoom(memberUserIdAlice),
     membership,
@@ -55,9 +75,15 @@ test("defaults to no audio elements", () => {
 });
 
 test("will play an audio sound when there is a reaction", () => {
+  const audioIsPlaying: string[] = [];
+  window.HTMLMediaElement.prototype.play = async function (): Promise<void> {
+    audioIsPlaying.push((this.children[0] as HTMLSourceElement).src);
+    return Promise.resolve();
+  };
+  playReactionsSound.setValue(true);
   const room = new MockRoom(memberUserIdAlice);
   const rtcSession = new MockRTCSession(room, membership);
-  const { container } = render(<TestComponent rtcSession={rtcSession} />);
+  render(<TestComponent rtcSession={rtcSession} />);
 
   // Find the first reaction with a sound effect
   const chosenReaction = ReactionSet.find((r) => !!r.sound);
@@ -69,24 +95,21 @@ test("will play an audio sound when there is a reaction", () => {
   act(() => {
     room.testSendReaction(memberEventAlice, chosenReaction, membership);
   });
-  const elements = container.getElementsByTagName("audio");
-  expect(elements).toHaveLength(1);
-  const audioElement = elements[0];
-
-  expect(audioElement.autoplay).toBe(true);
-
-  const sources = audioElement.getElementsByTagName("source");
-  expect(sources).toHaveLength(2);
-
-  // The element will be the full URL, whereas the chosenReaction will have the path.
-  expect(sources[0].src).toContain(chosenReaction.sound?.ogg);
-  expect(sources[1].src).toContain(chosenReaction.sound?.mp3);
+  expect(audioIsPlaying).toHaveLength(1);
+  expect(audioIsPlaying[0]).toContain(chosenReaction.sound?.ogg);
 });
 
 test("will play multiple audio sounds when there are multiple different reactions", () => {
+  const audioIsPlaying: string[] = [];
+  window.HTMLMediaElement.prototype.play = async function (): Promise<void> {
+    audioIsPlaying.push((this.children[0] as HTMLSourceElement).src);
+    return Promise.resolve();
+  };
+  playReactionsSound.setValue(true);
+
   const room = new MockRoom(memberUserIdAlice);
   const rtcSession = new MockRTCSession(room, membership);
-  const { container } = render(<TestComponent rtcSession={rtcSession} />);
+  render(<TestComponent rtcSession={rtcSession} />);
 
   // Find the first reaction with a sound effect
   const [reaction1, reaction2] = ReactionSet.filter((r) => !!r.sound);
@@ -100,7 +123,7 @@ test("will play multiple audio sounds when there are multiple different reaction
     room.testSendReaction(memberEventBob, reaction2, membership);
     room.testSendReaction(memberEventCharlie, reaction1, membership);
   });
-  const elements = container.getElementsByTagName("audio");
-  // Do not play the same reaction twice.
-  expect(elements).toHaveLength(2);
+  expect(audioIsPlaying).toHaveLength(2);
+  expect(audioIsPlaying[0]).toContain(reaction1.sound?.ogg);
+  expect(audioIsPlaying[1]).toContain(reaction2.sound?.ogg);
 });

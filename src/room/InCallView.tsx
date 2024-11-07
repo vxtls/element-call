@@ -659,7 +659,7 @@ export const InCallView: FC<InCallViewProps> = ({
         ))}
       <RoomAudioRenderer />
       {renderContent()}
-      <audio ref={handRaisePlayer} hidden>
+      <audio ref={handRaisePlayer} preload="auto" hidden>
         <source src={handSoundOgg} type="audio/ogg; codecs=vorbis" />
         <source src={handSoundMp3} type="audio/mpeg" />
       </audio>
