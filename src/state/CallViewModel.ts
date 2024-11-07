@@ -598,11 +598,6 @@ export class CallViewModel extends ViewModel {
     ),
   );
 
-  private readonly localUserMedia: Observable<LocalUserMediaViewModel> =
-    this.mediaItems.pipe(
-      map((ms) => ms.find((m) => m.vm.local)!.vm as LocalUserMediaViewModel),
-    );
-
   private readonly screenShares: Observable<ScreenShare[]> =
     this.mediaItems.pipe(
       map((mediaItems) =>
@@ -699,12 +694,19 @@ export class CallViewModel extends ViewModel {
                 speaker
                   ? speaker.local
                     ? of(undefined)
-                    : this.localUserMedia.pipe(
-                        switchMap((vm) =>
-                          vm.alwaysShow.pipe(
-                            map((alwaysShow) => (alwaysShow ? vm : undefined)),
-                          ),
-                        ),
+                    : this.mediaItems.pipe(
+                        switchMap((mediaItems) => {
+                          const localUserMedia = mediaItems.find(
+                            (m) => m.vm instanceof LocalUserMediaViewModel,
+                          ) as LocalUserMediaViewModel | undefined;
+                          return (
+                            localUserMedia?.alwaysShow?.pipe(
+                              map((alwaysShow) =>
+                                alwaysShow ? localUserMedia : undefined,
+                              ),
+                            ) ?? of(undefined)
+                          );
+                        }),
                       )
                   : of(undefined),
               ),
@@ -850,9 +852,17 @@ export class CallViewModel extends ViewModel {
           | RemoteUserMediaViewModel
           | undefined;
         if (!local || !remote) {
-          throw new Error(
-            "Invalid state: there should be local and remote media for one-on-one layout",
+          logger.warn(
+            `Falling back to grid layout for one-on-one layout with missing media: local=${!!local} remote=${!!remote}`,
           );
+          return {
+            type: "grid",
+            grid: grid.filter(
+              (m) =>
+                m instanceof LocalUserMediaViewModel ||
+                m instanceof RemoteUserMediaViewModel,
+            ),
+          };
         }
         return {
           type: "one-on-one",
