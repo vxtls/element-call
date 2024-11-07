@@ -57,7 +57,7 @@ const InnerButton: FC<InnerButtonProps> = ({ raised, open, ...props }) => {
     <Tooltip label={t("action.raise_hand_or_send_reaction")}>
       <CpdButton
         className={classNames(raised && styles.raisedButton)}
-        aria-expanded={raised}
+        aria-expanded={open}
         kind={raised || open ? "primary" : "secondary"}
         iconOnly
         Icon={raised ? RaisedHandSolidIcon : ReactionIcon}

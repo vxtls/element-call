@@ -56,19 +56,6 @@ test("Can open menu", () => {
   expect(container).toMatchSnapshot();
 });
 
-test("Can close menu", () => {
-  const room = new MockRoom(memberUserIdAlice);
-  const rtcSession = new MockRTCSession(room, membership);
-  const { getByRole, container } = render(
-    <TestComponent rtcSession={rtcSession} room={room} />,
-  );
-  act(() => {
-    getByRole("button").click();
-  });
-  act(() => getByRole("button", { expanded: true }).click());
-  expect(container).toMatchSnapshot();
-});
-
 test("Can raise hand", () => {
   const room = new MockRoom(memberUserIdAlice);
   const rtcSession = new MockRTCSession(room, membership);

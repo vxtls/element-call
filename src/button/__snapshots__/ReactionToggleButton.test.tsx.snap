@@ -8,7 +8,7 @@ exports[`Can close search 1`] = `
   <button
     aria-disabled="false"
     aria-expanded="true"
-    aria-labelledby=":rg5:"
+    aria-labelledby=":rec:"
     class="_button_i91xf_17 raisedButton _has-icon_i91xf_66 _icon-only_i91xf_59"
     data-kind="primary"
     data-size="lg"
@@ -36,7 +36,7 @@ exports[`Can close search with the escape key 1`] = `
   <button
     aria-disabled="false"
     aria-expanded="false"
-    aria-labelledby=":rja:"
+    aria-labelledby=":rhh:"
     class="_button_i91xf_17 _has-icon_i91xf_66 _icon-only_i91xf_59"
     data-kind="secondary"
     data-size="lg"
@@ -70,7 +70,7 @@ exports[`Can lower hand 1`] = `
   <button
     aria-disabled="true"
     aria-expanded="true"
-    aria-labelledby=":r5b:"
+    aria-labelledby=":r3i:"
     class="_button_i91xf_17 raisedButton _has-icon_i91xf_66 _icon-only_i91xf_59"
     data-kind="primary"
     data-size="lg"
@@ -132,7 +132,7 @@ exports[`Can raise hand 1`] = `
   <button
     aria-disabled="true"
     aria-expanded="true"
-    aria-labelledby=":r3i:"
+    aria-labelledby=":r1p:"
     class="_button_i91xf_17 raisedButton _has-icon_i91xf_66 _icon-only_i91xf_59"
     data-kind="primary"
     data-size="lg"
@@ -163,7 +163,7 @@ exports[`Can search for and send emoji 1`] = `
   <button
     aria-disabled="false"
     aria-expanded="true"
-    aria-labelledby=":r8t:"
+    aria-labelledby=":r74:"
     class="_button_i91xf_17 raisedButton _has-icon_i91xf_66 _icon-only_i91xf_59"
     data-kind="primary"
     data-size="lg"
@@ -194,7 +194,7 @@ exports[`Can search for and send emoji with the keyboard 1`] = `
   <button
     aria-disabled="false"
     aria-expanded="true"
-    aria-labelledby=":rbs:"
+    aria-labelledby=":ra3:"
     class="_button_i91xf_17 raisedButton _has-icon_i91xf_66 _icon-only_i91xf_59"
     data-kind="primary"
     data-size="lg"
