@@ -13,6 +13,7 @@ import {
   ConfigOptions,
   ResolvedConfigOptions,
 } from "./ConfigOptions";
+import { showNonMemberTiles } from "../settings/settings";
 
 export class Config {
   private static internalInstance: Config | undefined;
@@ -32,6 +33,7 @@ export class Config {
         "../config.json",
       ).then((config) => {
         internalInstance.config = merge({}, DEFAULT_CONFIG, config);
+        internalInstance.applyConfigToSettings();
       });
     }
     return Config.internalInstance.initPromise;
@@ -64,6 +66,14 @@ export class Config {
       return url.hostname;
     }
     return Config.get().default_server_config?.["m.homeserver"].server_name;
+  }
+
+  private applyConfigToSettings(): void {
+    if (!this.config) return;
+    // only the value from config if it hasn't been overridden
+    if (showNonMemberTiles.value === undefined) {
+      showNonMemberTiles.setValue(this.config.show_non_member_tiles);
+    }
   }
 
   public config?: ResolvedConfigOptions;

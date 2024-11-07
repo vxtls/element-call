@@ -27,7 +27,7 @@ import {
   useSetting,
   developerSettingsTab as developerSettingsTabSetting,
   duplicateTiles as duplicateTilesSetting,
-  nonMemberTiles as nonMemberTilesSetting,
+  showNonMemberTiles as showNonMemberTilesSetting,
   useOptInAnalytics,
 } from "./settings";
 import { isFirefox } from "../Platform";
@@ -69,7 +69,9 @@ export const SettingsModal: FC<Props> = ({
   );
   const [duplicateTiles, setDuplicateTiles] = useSetting(duplicateTilesSetting);
 
-  const [nonMemberTiles, setNonMemberTiles] = useSetting(nonMemberTilesSetting);
+  const [showNonMemberTiles, setShowNonMemberTiles] = useSetting(
+    showNonMemberTilesSetting,
+  );
 
   // Generate a `SelectInput` with a list of devices for a given device kind.
   const generateDeviceSelection = (
@@ -241,15 +243,15 @@ export const SettingsModal: FC<Props> = ({
         </FieldRow>
         <FieldRow>
           <InputField
-            id="nonMemberTiles"
+            id="showNonMemberTiles"
             type="checkbox"
-            label={t("settings.non_member_tiles")}
-            checked={nonMemberTiles}
+            label={t("settings.show_non_member_tiles")}
+            checked={showNonMemberTiles}
             onChange={useCallback(
               (event: ChangeEvent<HTMLInputElement>): void => {
-                setNonMemberTiles(event.target.checked);
+                setShowNonMemberTiles(event.target.checked);
               },
-              [setNonMemberTiles],
+              [setShowNonMemberTiles],
             )}
           />
         </FieldRow>

@@ -67,7 +67,7 @@ import {
 } from "./MediaViewModel";
 import { accumulate, finalizeValue } from "../utils/observable";
 import { ObservableScope } from "./ObservableScope";
-import { duplicateTiles, nonMemberTiles } from "../settings/settings";
+import { duplicateTiles, showNonMemberTiles } from "../settings/settings";
 import { isFirefox } from "../Platform";
 import { setPipEnabled } from "../controls";
 import { GridTileViewModel, SpotlightTileViewModel } from "./TileViewModel";
@@ -434,7 +434,7 @@ export class CallViewModel extends ViewModel {
       this.matrixRTCSession,
       MatrixRTCSessionEvent.MembershipsChanged,
     ).pipe(startWith(null)),
-    nonMemberTiles.value,
+    showNonMemberTiles.value,
   ]).pipe(
     scan(
       (
@@ -444,7 +444,7 @@ export class CallViewModel extends ViewModel {
           { participant: localParticipant },
           duplicateTiles,
           _membershipsChanged,
-          nonMemberTiles,
+          showNonMemberTiles,
         ],
       ) => {
         const newItems = new Map(
@@ -534,7 +534,7 @@ export class CallViewModel extends ViewModel {
         //  - If one wants to test scalability using the livekit cli.
         //  - If an experimental project does not yet do the matrixRTC bits.
         //  - If someone wants to debug if the LK connection works but matrixRTC room state failed to arrive.
-        const debugShowNonMember = nonMemberTiles; //Config.get().show_non_member_tiles;
+        const debugShowNonMember = showNonMemberTiles; //Config.get().show_non_member_tiles;
         const newNonMemberItems = debugShowNonMember
           ? new Map(
               function* (this: CallViewModel): Iterable<[string, MediaItem]> {
@@ -689,7 +689,7 @@ export class CallViewModel extends ViewModel {
         ? ([of(screenShares.map((m) => m.vm)), this.spotlightSpeaker] as const)
         : ([
             this.spotlightSpeaker.pipe(
-              map((speaker) => (speaker && [speaker]) ?? []),
+              map((speaker) => (speaker ? [speaker] : [])),
             ),
             this.spotlightSpeaker.pipe(
               switchMap((speaker) =>
@@ -722,7 +722,7 @@ export class CallViewModel extends ViewModel {
       distinctUntilChanged(),
     );
 
-  private readonly pip: Observable<UserMediaViewModel | null> =
+  private readonly pip: Observable<UserMediaViewModel | undefined> =
     this.spotlightAndPip.pipe(switchMap(([, pip]) => pip));
 
   private readonly pipEnabled: Observable<boolean> = setPipEnabled.pipe(
