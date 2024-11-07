@@ -76,7 +76,7 @@ test("loads no audio elements when disabled in settings", () => {
 
 test("will play an audio sound when there is a reaction", () => {
   const audioIsPlaying: string[] = [];
-  window.HTMLMediaElement.prototype.play = function (): Promise<void> {
+  window.HTMLMediaElement.prototype.play = async function (): Promise<void> {
     audioIsPlaying.push((this.children[0] as HTMLSourceElement).src);
     return Promise.resolve();
   };
@@ -101,7 +101,7 @@ test("will play an audio sound when there is a reaction", () => {
 
 test("will play multiple audio sounds when there are multiple different reactions", () => {
   const audioIsPlaying: string[] = [];
-  window.HTMLMediaElement.prototype.play = function (): Promise<void> {
+  window.HTMLMediaElement.prototype.play = async function (): Promise<void> {
     audioIsPlaying.push((this.children[0] as HTMLSourceElement).src);
     return Promise.resolve();
   };
