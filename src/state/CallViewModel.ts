@@ -802,6 +802,7 @@ export class CallViewModel extends ViewModel {
       // There might not be a remote tile if only the local user is in the call
       // and they're using the duplicate tiles option
       grid.some((vm) => !vm.local) &&
+      grid.some((vm) => vm.local) &&
       screenShares.length === 0,
   );
 
@@ -816,12 +817,14 @@ export class CallViewModel extends ViewModel {
     }),
   );
 
-  private readonly spotlightLandscapeLayout: Observable<LayoutMedia> =
-    combineLatest([this.grid, this.spotlight], (grid, spotlight) => ({
+  private spotlightLandscapeLayout: Observable<LayoutMedia> = combineLatest(
+    [this.grid, this.spotlight],
+    (grid, spotlight) => ({
       type: "spotlight-landscape",
       spotlight,
       grid,
-    }));
+    }),
+  );
 
   private readonly spotlightPortraitLayout: Observable<LayoutMedia> =
     combineLatest([this.grid, this.spotlight], (grid, spotlight) => ({
@@ -839,11 +842,24 @@ export class CallViewModel extends ViewModel {
 
   private readonly oneOnOneLayout: Observable<LayoutMedia> =
     this.mediaItems.pipe(
-      map((grid) => ({
-        type: "one-on-one",
-        local: grid.find((vm) => vm.vm.local)!.vm as LocalUserMediaViewModel,
-        remote: grid.find((vm) => !vm.vm.local)!.vm as RemoteUserMediaViewModel,
-      })),
+      map((grid) => {
+        const local = grid.find((vm) => vm.vm.local)?.vm as
+          | LocalUserMediaViewModel
+          | undefined;
+        const remote = grid.find((vm) => !vm.vm.local)?.vm as
+          | RemoteUserMediaViewModel
+          | undefined;
+        if (!local || !remote) {
+          throw new Error(
+            "Invalid state: there should be local and remote media for one-on-one layout",
+          );
+        }
+        return {
+          type: "one-on-one",
+          local,
+          remote,
+        };
+      }),
     );
 
   private readonly pipLayout: Observable<LayoutMedia> = this.spotlight.pipe(
