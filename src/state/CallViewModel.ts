@@ -231,10 +231,11 @@ class UserMedia {
     participant: LocalParticipant | RemoteParticipant | undefined,
     encryptionSystem: EncryptionSystem,
     livekitRoom: LivekitRoom,
+    local: boolean,
   ) {
     this.participant = new BehaviorSubject(participant);
 
-    if (participant && participant.isLocal) {
+    if (participant?.isLocal || local) {
       this.vm = new LocalUserMediaViewModel(
         this.id,
         member,
@@ -500,6 +501,7 @@ export class CallViewModel extends ViewModel {
                       participant,
                       this.encryptionSystem,
                       this.livekitRoom,
+                      mediaId === "local",
                     ),
                 ];
 
@@ -556,6 +558,7 @@ export class CallViewModel extends ViewModel {
                             participant,
                             this.encryptionSystem,
                             this.livekitRoom,
+                            false,
                           ),
                       ];
                     }
