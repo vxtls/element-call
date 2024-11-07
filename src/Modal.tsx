@@ -35,6 +35,14 @@ export interface Props {
   children: ReactNode;
   className?: string;
   /**
+   * Class name to be used when in drawer mode (touchscreen). If `className` is given, this is ignored.
+   */
+  classNameDrawer?: string;
+  /**
+   * Class name to be used when in modal mode (desktop). If `className` is given, this is ignored.
+   */
+  classNameModal?: string;
+  /**
    * The controlled open state of the modal.
    */
   // An option to leave the open state uncontrolled is intentionally not
@@ -62,6 +70,8 @@ export const Modal: FC<Props> = ({
   hideHeader,
   children,
   className,
+  classNameDrawer,
+  classNameModal,
   open,
   onDismiss,
   tabbed,
@@ -89,7 +99,7 @@ export const Modal: FC<Props> = ({
           <Drawer.Overlay className={classNames(overlayStyles.bg)} />
           <Drawer.Content
             className={classNames(
-              className,
+              className ?? classNameDrawer,
               overlayStyles.overlay,
               styles.modal,
               styles.drawer,
@@ -147,12 +157,12 @@ export const Modal: FC<Props> = ({
           <DialogContent asChild aria-describedby={undefined} {...rest}>
             <Glass
               className={classNames(
+                className ?? classNameModal,
                 overlayStyles.overlay,
                 overlayStyles.animate,
                 styles.modal,
                 styles.dialog,
                 { [styles.tabbed]: tabbed },
-                className,
               )}
             >
               <div className={styles.content}>

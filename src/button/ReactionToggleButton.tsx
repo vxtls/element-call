@@ -309,7 +309,7 @@ export function ReactionToggleButton({
         open={showReactionsMenu}
         title="Pick reaction"
         hideHeader
-        className={styles.reactionPopupMenuModal}
+        classNameModal={styles.reactionPopupMenuModal}
         onDismiss={() => setShowReactionsMenu(false)}
       >
         <ReactionPopupMenu
