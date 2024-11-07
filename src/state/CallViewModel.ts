@@ -43,7 +43,6 @@ import {
   switchMap,
   switchScan,
   take,
-  throttleTime,
   timer,
   withLatestFrom,
 } from "rxjs";
@@ -644,7 +643,6 @@ export class CallViewModel extends ViewModel {
     ),
     map((speaker) => speaker?.vm),
     this.scope.state(),
-    throttleTime(1600, undefined, { leading: true, trailing: true }),
   );
 
   private readonly grid: Observable<UserMediaViewModel[]> = this.userMedia.pipe(
