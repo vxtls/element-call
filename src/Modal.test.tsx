@@ -7,7 +7,7 @@ Please see LICENSE in the repository root for full details.
 
 import { expect, test } from "vitest";
 import { render } from "@testing-library/react";
-import { act, ReactNode, useState } from "react";
+import { ReactNode, useState } from "react";
 import { afterEach } from "node:test";
 import userEvent from "@testing-library/user-event";
 
@@ -47,9 +47,7 @@ test("the modal can be closed by clicking the close button", async () => {
   }
   const user = userEvent.setup();
   const { queryByRole, getByRole } = render(<ModalFn />);
-  await act(async () => {
-    await user.click(getByRole("button", { name: "action.close" }));
-  });
+  await user.click(getByRole("button", { name: "action.close" }));
   expect(queryByRole("dialog")).toBeNull();
 });
 
