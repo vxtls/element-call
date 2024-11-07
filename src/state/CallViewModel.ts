@@ -443,7 +443,7 @@ export class CallViewModel extends ViewModel {
           remoteParticipants,
           { participant: localParticipant },
           duplicateTiles,
-          _participantChange,
+          _membershipsChanged,
           nonMemberTiles,
         ],
       ) => {
@@ -682,16 +682,11 @@ export class CallViewModel extends ViewModel {
   );
 
   private readonly spotlightAndPip: Observable<
-    [Observable<MediaViewModel[]>, Observable<UserMediaViewModel | null>]
+    [Observable<MediaViewModel[]>, Observable<UserMediaViewModel | undefined>]
   > = this.screenShares.pipe(
     map((screenShares) =>
       screenShares.length > 0
-        ? ([
-            of(screenShares.map((m) => m.vm)),
-            this.spotlightSpeaker.pipe(
-              map((speaker) => (speaker && speaker) ?? null),
-            ),
-          ] as const)
+        ? ([of(screenShares.map((m) => m.vm)), this.spotlightSpeaker] as const)
         : ([
             this.spotlightSpeaker.pipe(
               map((speaker) => (speaker && [speaker]) ?? []),
@@ -700,15 +695,15 @@ export class CallViewModel extends ViewModel {
               switchMap((speaker) =>
                 speaker
                   ? speaker.local
-                    ? of(null)
+                    ? of(undefined)
                     : this.localUserMedia.pipe(
                         switchMap((vm) =>
                           vm.alwaysShow.pipe(
-                            map((alwaysShow) => (alwaysShow ? vm : null)),
+                            map((alwaysShow) => (alwaysShow ? vm : undefined)),
                           ),
                         ),
                       )
-                  : of(null),
+                  : of(undefined),
               ),
             ),
           ] as const),

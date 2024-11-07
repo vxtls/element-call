@@ -78,7 +78,7 @@ export function observeTrackReference(
   participant: Observable<Participant | undefined>,
   source: Track.Source,
 ): Observable<TrackReferenceOrPlaceholder | undefined> {
-  const obs = participant.pipe(
+  return participant.pipe(
     switchMap((p) => {
       if (p) {
         return observeParticipantMedia(p).pipe(
@@ -94,7 +94,6 @@ export function observeTrackReference(
       }
     }),
   );
-  return obs;
 }
 
 function observeRemoteTrackReceivingOkay(
@@ -232,7 +231,7 @@ abstract class BaseMediaViewModel extends ViewModel {
     // TODO: Fully separate the data layer from the UI layer by keeping the
     // member object internal
     public readonly member: RoomMember | undefined,
-    // We dont necassarly have a participant if a user connects via MatrixRTC but not (not yet) through
+    // We dont necessarily have a participant if a user connects via MatrixRTC but not (not yet) through
     // livekit.
     protected readonly participant: Observable<
       LocalParticipant | RemoteParticipant | undefined
