@@ -8,10 +8,10 @@ Please see LICENSE in the repository root for full details.
 import { expect, test } from "vitest";
 import { render } from "@testing-library/react";
 import { act, ReactNode, useState } from "react";
-
-import { Modal } from "./Modal";
 import { afterEach } from "node:test";
 import userEvent from "@testing-library/user-event";
+
+import { Modal } from "./Modal";
 
 const originalMatchMedia = window.matchMedia;
 afterEach(() => {
