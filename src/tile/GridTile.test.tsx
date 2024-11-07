@@ -13,7 +13,7 @@ import { of } from "rxjs";
 import { MatrixRTCSession } from "matrix-js-sdk/src/matrixrtc/MatrixRTCSession";
 
 import { GridTile } from "./GridTile";
-import { withRemoteMedia } from "../utils/test";
+import { mockMembership, withRemoteMedia } from "../utils/test";
 import { GridTileViewModel } from "../state/TileViewModel";
 import { ReactionsProvider } from "../useReactions";
 
@@ -25,6 +25,7 @@ global.IntersectionObserver = class MockIntersectionObserver {
 
 test("GridTile is accessible", async () => {
   await withRemoteMedia(
+    mockMembership("@alice:example.org", "AAAA"),
     {
       rawDisplayName: "Alice",
       getMxcAvatarUrl: () => "mxc://adfsg",

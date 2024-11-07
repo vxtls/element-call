@@ -12,7 +12,7 @@ import userEvent from "@testing-library/user-event";
 import { of } from "rxjs";
 
 import { SpotlightTile } from "./SpotlightTile";
-import { withLocalMedia, withRemoteMedia } from "../utils/test";
+import { mockMembership, withLocalMedia, withRemoteMedia } from "../utils/test";
 import { SpotlightTileViewModel } from "../state/TileViewModel";
 
 global.IntersectionObserver = class MockIntersectionObserver {
@@ -22,6 +22,7 @@ global.IntersectionObserver = class MockIntersectionObserver {
 
 test("SpotlightTile is accessible", async () => {
   await withRemoteMedia(
+    mockMembership("@alice:example.org", "AAAA"),
     {
       rawDisplayName: "Alice",
       getMxcAvatarUrl: () => "mxc://adfsg",
@@ -29,6 +30,7 @@ test("SpotlightTile is accessible", async () => {
     {},
     async (vm1) => {
       await withLocalMedia(
+        mockMembership("@bob:example.org", "BBBB"),
         {
           rawDisplayName: "Bob",
           getMxcAvatarUrl: () => "mxc://dlskf",

@@ -173,13 +173,14 @@ export function mockLocalParticipant(
 }
 
 export async function withLocalMedia(
-  member: Partial<RoomMember>,
+  localRtcMember: CallMembership,
+  roomMember: Partial<RoomMember>,
   continuation: (vm: LocalUserMediaViewModel) => void | Promise<void>,
 ): Promise<void> {
   const localParticipant = mockLocalParticipant({});
   const vm = new LocalUserMediaViewModel(
     "local",
-    mockRoomMember(member),
+    mockRoomMember(localRtcMember, roomMember),
     of(localParticipant),
     {
       kind: E2eeType.PER_PARTICIPANT,
@@ -207,14 +208,15 @@ export function mockRemoteParticipant(
 }
 
 export async function withRemoteMedia(
-  member: Partial<RoomMember>,
+  localRtcMember: CallMembership,
+  roomMember: Partial<RoomMember>,
   participant: Partial<RemoteParticipant>,
   continuation: (vm: RemoteUserMediaViewModel) => void | Promise<void>,
 ): Promise<void> {
   const remoteParticipant = mockRemoteParticipant(participant);
   const vm = new RemoteUserMediaViewModel(
     "remote",
-    mockRoomMember(member),
+    mockRoomMember(localRtcMember, roomMember),
     of(remoteParticipant),
     {
       kind: E2eeType.PER_PARTICIPANT,
