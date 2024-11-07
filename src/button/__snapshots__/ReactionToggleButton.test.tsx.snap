@@ -1,176 +1,5 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Can can lower hand 1`] = `
-<div>
-  <button
-    aria-disabled="true"
-    aria-expanded="true"
-    aria-labelledby=":r52:"
-    class="_button_i91xf_17 raisedButton _has-icon_i91xf_66 _icon-only_i91xf_59"
-    data-kind="primary"
-    data-size="lg"
-    role="button"
-    tabindex="0"
-  >
-    <svg
-      aria-hidden="true"
-      fill="currentColor"
-      height="24"
-      viewBox="0 0 24 24"
-      width="24"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <path
-        d="M11 3a1 1 0 1 1 2 0v8.5a.5.5 0 0 0 1 0V4a1 1 0 1 1 2 0v10.2l3.284-2.597a1.081 1.081 0 0 1 1.47 1.577c-.613.673-1.214 1.367-1.818 2.064-1.267 1.463-2.541 2.934-3.944 4.235A6 6 0 0 1 5 15V7a1 1 0 0 1 2 0v5.5a.5.5 0 0 0 1 0V4a1 1 0 0 1 2 0v7.5a.5.5 0 0 0 1 0V3Z"
-      />
-    </svg>
-  </button>
-  <div
-    class="reactionPopupMenu"
-  >
-    <section
-      class="handRaiseSection"
-    >
-      <button
-        aria-label="Toggle hand raised"
-        aria-labelledby=":r58:"
-        aria-pressed="true"
-        class="_button_i91xf_17 reactionButton"
-        data-kind="primary"
-        data-size="lg"
-        role="button"
-        tabindex="0"
-      >
-        🖐️
-      </button>
-    </section>
-    <div
-      class="verticalSeperator"
-    />
-    <section>
-      <menu>
-        <li
-          class="reactionPopupMenuItem"
-        >
-          <button
-            aria-disabled="false"
-            aria-labelledby=":r5d:"
-            class="_button_i91xf_17 reactionButton"
-            data-kind="secondary"
-            data-size="lg"
-            role="button"
-            tabindex="0"
-          >
-            👍
-          </button>
-        </li>
-        <li
-          class="reactionPopupMenuItem"
-        >
-          <button
-            aria-disabled="false"
-            aria-labelledby=":r5i:"
-            class="_button_i91xf_17 reactionButton"
-            data-kind="secondary"
-            data-size="lg"
-            role="button"
-            tabindex="0"
-          >
-            🎉
-          </button>
-        </li>
-        <li
-          class="reactionPopupMenuItem"
-        >
-          <button
-            aria-disabled="false"
-            aria-labelledby=":r5n:"
-            class="_button_i91xf_17 reactionButton"
-            data-kind="secondary"
-            data-size="lg"
-            role="button"
-            tabindex="0"
-          >
-            👏
-          </button>
-        </li>
-        <li
-          class="reactionPopupMenuItem"
-        >
-          <button
-            aria-disabled="false"
-            aria-labelledby=":r5s:"
-            class="_button_i91xf_17 reactionButton"
-            data-kind="secondary"
-            data-size="lg"
-            role="button"
-            tabindex="0"
-          >
-            🐶
-          </button>
-        </li>
-        <li
-          class="reactionPopupMenuItem"
-        >
-          <button
-            aria-disabled="false"
-            aria-labelledby=":r61:"
-            class="_button_i91xf_17 reactionButton"
-            data-kind="secondary"
-            data-size="lg"
-            role="button"
-            tabindex="0"
-          >
-            🐱
-          </button>
-        </li>
-        <li
-          class="reactionPopupMenuItem"
-        >
-          <button
-            aria-disabled="false"
-            aria-labelledby=":r66:"
-            class="_button_i91xf_17 reactionButton"
-            data-kind="secondary"
-            data-size="lg"
-            role="button"
-            tabindex="0"
-          >
-            💡
-          </button>
-        </li>
-        <li
-          class="reactionPopupMenuItem"
-        >
-          <button
-            aria-label="Open reactions search"
-            aria-labelledby=":r6b:"
-            class="_button_i91xf_17 _has-icon_i91xf_66 _icon-only_i91xf_59"
-            data-kind="tertiary"
-            data-size="lg"
-            role="button"
-            tabindex="0"
-          >
-            <svg
-              aria-hidden="true"
-              fill="currentColor"
-              height="24"
-              viewBox="0 0 24 24"
-              width="24"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M15.05 16.463a7.5 7.5 0 1 1 1.414-1.414l3.243 3.244a1 1 0 0 1-1.414 1.414l-3.244-3.244ZM16 10.5a5.5 5.5 0 1 0-11 0 5.5 5.5 0 0 0 11 0Z"
-              />
-            </svg>
-          </button>
-        </li>
-      </menu>
-    </section>
-  </div>
-</div>
-`;
-
 exports[`Can close menu 1`] = `
 <div>
   <button
@@ -515,6 +344,177 @@ exports[`Can close search with the escape key 1`] = `
           <button
             aria-label="Open reactions search"
             aria-labelledby=":rl8:"
+            class="_button_i91xf_17 _has-icon_i91xf_66 _icon-only_i91xf_59"
+            data-kind="tertiary"
+            data-size="lg"
+            role="button"
+            tabindex="0"
+          >
+            <svg
+              aria-hidden="true"
+              fill="currentColor"
+              height="24"
+              viewBox="0 0 24 24"
+              width="24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M15.05 16.463a7.5 7.5 0 1 1 1.414-1.414l3.243 3.244a1 1 0 0 1-1.414 1.414l-3.244-3.244ZM16 10.5a5.5 5.5 0 1 0-11 0 5.5 5.5 0 0 0 11 0Z"
+              />
+            </svg>
+          </button>
+        </li>
+      </menu>
+    </section>
+  </div>
+</div>
+`;
+
+exports[`Can lower hand 1`] = `
+<div>
+  <button
+    aria-disabled="true"
+    aria-expanded="true"
+    aria-labelledby=":r52:"
+    class="_button_i91xf_17 raisedButton _has-icon_i91xf_66 _icon-only_i91xf_59"
+    data-kind="primary"
+    data-size="lg"
+    role="button"
+    tabindex="0"
+  >
+    <svg
+      aria-hidden="true"
+      fill="currentColor"
+      height="24"
+      viewBox="0 0 24 24"
+      width="24"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="M11 3a1 1 0 1 1 2 0v8.5a.5.5 0 0 0 1 0V4a1 1 0 1 1 2 0v10.2l3.284-2.597a1.081 1.081 0 0 1 1.47 1.577c-.613.673-1.214 1.367-1.818 2.064-1.267 1.463-2.541 2.934-3.944 4.235A6 6 0 0 1 5 15V7a1 1 0 0 1 2 0v5.5a.5.5 0 0 0 1 0V4a1 1 0 0 1 2 0v7.5a.5.5 0 0 0 1 0V3Z"
+      />
+    </svg>
+  </button>
+  <div
+    class="reactionPopupMenu"
+  >
+    <section
+      class="handRaiseSection"
+    >
+      <button
+        aria-label="Toggle hand raised"
+        aria-labelledby=":r58:"
+        aria-pressed="true"
+        class="_button_i91xf_17 reactionButton"
+        data-kind="primary"
+        data-size="lg"
+        role="button"
+        tabindex="0"
+      >
+        🖐️
+      </button>
+    </section>
+    <div
+      class="verticalSeperator"
+    />
+    <section>
+      <menu>
+        <li
+          class="reactionPopupMenuItem"
+        >
+          <button
+            aria-disabled="false"
+            aria-labelledby=":r5d:"
+            class="_button_i91xf_17 reactionButton"
+            data-kind="secondary"
+            data-size="lg"
+            role="button"
+            tabindex="0"
+          >
+            👍
+          </button>
+        </li>
+        <li
+          class="reactionPopupMenuItem"
+        >
+          <button
+            aria-disabled="false"
+            aria-labelledby=":r5i:"
+            class="_button_i91xf_17 reactionButton"
+            data-kind="secondary"
+            data-size="lg"
+            role="button"
+            tabindex="0"
+          >
+            🎉
+          </button>
+        </li>
+        <li
+          class="reactionPopupMenuItem"
+        >
+          <button
+            aria-disabled="false"
+            aria-labelledby=":r5n:"
+            class="_button_i91xf_17 reactionButton"
+            data-kind="secondary"
+            data-size="lg"
+            role="button"
+            tabindex="0"
+          >
+            👏
+          </button>
+        </li>
+        <li
+          class="reactionPopupMenuItem"
+        >
+          <button
+            aria-disabled="false"
+            aria-labelledby=":r5s:"
+            class="_button_i91xf_17 reactionButton"
+            data-kind="secondary"
+            data-size="lg"
+            role="button"
+            tabindex="0"
+          >
+            🐶
+          </button>
+        </li>
+        <li
+          class="reactionPopupMenuItem"
+        >
+          <button
+            aria-disabled="false"
+            aria-labelledby=":r61:"
+            class="_button_i91xf_17 reactionButton"
+            data-kind="secondary"
+            data-size="lg"
+            role="button"
+            tabindex="0"
+          >
+            🐱
+          </button>
+        </li>
+        <li
+          class="reactionPopupMenuItem"
+        >
+          <button
+            aria-disabled="false"
+            aria-labelledby=":r66:"
+            class="_button_i91xf_17 reactionButton"
+            data-kind="secondary"
+            data-size="lg"
+            role="button"
+            tabindex="0"
+          >
+            💡
+          </button>
+        </li>
+        <li
+          class="reactionPopupMenuItem"
+        >
+          <button
+            aria-label="Open reactions search"
+            aria-labelledby=":r6b:"
             class="_button_i91xf_17 _has-icon_i91xf_66 _icon-only_i91xf_59"
             data-kind="tertiary"
             data-size="lg"

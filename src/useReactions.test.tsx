@@ -5,8 +5,8 @@ SPDX-License-Identifier: AGPL-3.0-only
 Please see LICENSE in the repository root for full details.
 */
 
-import { act, render } from "@testing-library/react";
-import { FC } from "react";
+import { render } from "@testing-library/react";
+import { act, FC } from "react";
 import { describe, expect, test } from "vitest";
 import { RoomEvent } from "matrix-js-sdk/src/matrix";
 

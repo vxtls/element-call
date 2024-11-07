@@ -97,7 +97,7 @@ test("Can raise hand", () => {
   expect(container).toMatchSnapshot();
 });
 
-test("Can can lower hand", () => {
+test("Can lower hand", () => {
   const room = new MockRoom(memberUserIdAlice);
   const rtcSession = new MockRTCSession(room, membership);
   const { getByRole, getByText, container } = render(

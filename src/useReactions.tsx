@@ -289,12 +289,14 @@ export const ReactionsProvider = ({
   }, [room, addRaisedHand, removeRaisedHand, memberships, raisedHands]);
 
   const lowerHand = useCallback(async () => {
-    if (
-      !myUserId ||
-      clientState?.state !== "valid" ||
-      !clientState.authenticated ||
-      !raisedHands[myUserId]
-    ) {
+    console.log("lower hand!");
+    if (!myUserId || !raisedHands[myUserId]) {
+      console.log(
+        "something is missing!",
+        myUserId,
+        clientState,
+        raisedHands[myUserId ?? ""],
+      );
       return;
     }
     const myReactionId = raisedHands[myUserId].reactionEventId;
@@ -303,10 +305,7 @@ export const ReactionsProvider = ({
       return;
     }
     try {
-      await clientState.authenticated.client.redactEvent(
-        rtcSession.room.roomId,
-        myReactionId,
-      );
+      await room.client.redactEvent(rtcSession.room.roomId, myReactionId);
       logger.debug("Redacted raise hand event");
     } catch (ex) {
       logger.error("Failed to redact reaction event", myReactionId, ex);

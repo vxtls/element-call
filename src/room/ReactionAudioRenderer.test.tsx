@@ -5,10 +5,10 @@ SPDX-License-Identifier: AGPL-3.0-only
 Please see LICENSE in the repository root for full details.
 */
 
-import { act, render } from "@testing-library/react";
+import { render } from "@testing-library/react";
 import { afterAll, expect, test } from "vitest";
 import { TooltipProvider } from "@vector-im/compound-web";
-import { ReactNode } from "react";
+import { act, ReactNode } from "react";
 
 import {
   MockRoom,
@@ -76,7 +76,7 @@ test("loads no audio elements when disabled in settings", () => {
 
 test("will play an audio sound when there is a reaction", () => {
   const audioIsPlaying: string[] = [];
-  window.HTMLMediaElement.prototype.play = async function (): Promise<void> {
+  window.HTMLMediaElement.prototype.play = function (): Promise<void> {
     audioIsPlaying.push((this.children[0] as HTMLSourceElement).src);
     return Promise.resolve();
   };
@@ -101,7 +101,7 @@ test("will play an audio sound when there is a reaction", () => {
 
 test("will play multiple audio sounds when there are multiple different reactions", () => {
   const audioIsPlaying: string[] = [];
-  window.HTMLMediaElement.prototype.play = async function (): Promise<void> {
+  window.HTMLMediaElement.prototype.play = function (): Promise<void> {
     audioIsPlaying.push((this.children[0] as HTMLSourceElement).src);
     return Promise.resolve();
   };
