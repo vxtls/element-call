@@ -37,9 +37,11 @@ export class Setting<T> {
   private readonly _value: BehaviorSubject<T>;
   public readonly value: Observable<T>;
 
-  public readonly setValue = (value: T): void => {
+  public readonly setValue = (value: T, persist = true): void => {
     this._value.next(value);
-    localStorage.setItem(this.key, JSON.stringify(value));
+    if (persist) {
+      localStorage.setItem(this.key, JSON.stringify(value));
+    }
   };
 }
 

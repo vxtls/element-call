@@ -70,10 +70,17 @@ export class Config {
 
   private applyConfigToSettings(): void {
     if (!this.config) return;
-    // only the value from config if it hasn't been overridden
-    if (showNonMemberTiles.value === undefined) {
-      showNonMemberTiles.setValue(this.config.show_non_member_tiles);
-    }
+    // use the value from config if it hasn't been overridden
+    const showNonMemberTilesSubscription = showNonMemberTiles.value.subscribe(
+      (val) => {
+        if (val === undefined && this.config) {
+          // we don't persist the value to local storage so that it is set from the config
+          // file on every startup
+          showNonMemberTiles.setValue(this.config.show_non_member_tiles, false);
+          showNonMemberTilesSubscription.unsubscribe();
+        }
+      },
+    );
   }
 
   public config?: ResolvedConfigOptions;

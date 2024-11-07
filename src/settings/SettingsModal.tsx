@@ -246,7 +246,7 @@ export const SettingsModal: FC<Props> = ({
             id="showNonMemberTiles"
             type="checkbox"
             label={t("settings.show_non_member_tiles")}
-            checked={showNonMemberTiles}
+            checked={!!showNonMemberTiles}
             onChange={useCallback(
               (event: ChangeEvent<HTMLInputElement>): void => {
                 setShowNonMemberTiles(event.target.checked);
