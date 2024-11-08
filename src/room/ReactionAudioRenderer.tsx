@@ -9,7 +9,7 @@ import { ReactNode, useEffect, useRef } from "react";
 
 import { useReactions } from "../useReactions";
 import { playReactionsSound, useSetting } from "../settings/settings";
-import { ReactionSet } from "../reactions";
+import { GenericReaction, ReactionSet } from "../reactions";
 
 export function ReactionsAudioRenderer(): ReactNode {
   const { reactions } = useReactions();
@@ -27,7 +27,8 @@ export function ReactionsAudioRenderer(): ReactNode {
     for (const reactionName of new Set(
       Object.values(reactions).map((r) => r.name),
     )) {
-      const audioElement = audioElements.current[reactionName];
+      const audioElement =
+        audioElements.current[reactionName] ?? audioElements.current.generic;
       if (audioElement?.paused) {
         void audioElement.play();
       }
@@ -45,7 +46,7 @@ export function ReactionsAudioRenderer(): ReactNode {
   // be delayed.
   return (
     <>
-      {ReactionSet.map(
+      {[GenericReaction, ...ReactionSet].map(
         (r) =>
           r.sound && (
             <audio
