@@ -18,8 +18,8 @@
 
 .reactionLarge {
   margin: var(--cpd-space-2x);
-  padding: var(--cpd-space-2x);
-  padding-block: var(--cpd-space-2x);
+  padding: var(--cpd-space-4x);
+  padding-block: var(--cpd-space-4x);
 }
 
 .reaction {
@@ -35,6 +35,8 @@
   box-sizing: border-box;
   max-inline-size: 100%;
   max-width: fit-content;
+  padding: var(--cpd-space-1x);
+  padding-block: var(--cpd-space-1x);
 }
 
 .reaction > span {
@@ -42,15 +44,13 @@
   height: var(--cpd-space-6x);
   display: inline-block;
   text-align: center;
-  font-size: 1.3em;
+  font-size: 1.2em;
   /* Centralise */
   line-height: 1.2;
 }
 
 .reactionLarge > span {
-  width: var(--cpd-space-8x);
-  height: var(--cpd-space-8x);
-  font-size: 1.9em;
-  /* Centralise */
-  line-height: 1.1;
+  width: 30px;
+  height: 30px;
+  font-size: 25px;
 }
