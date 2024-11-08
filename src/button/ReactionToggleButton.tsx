@@ -171,10 +171,9 @@ export function ReactionPopupMenu({
                   onClick={() => setIsSearching(false)}
                 />
               </Form.Root>
-              <Separator />
             </>
           ) : null}
-          <menu>
+          <menu className={styles.reactionsMenu}>
             {filteredReactionSet.map((reaction) => (
               <li className={styles.reactionPopupMenuItem} key={reaction.name}>
                 <Tooltip label={reaction.name}>
@@ -192,7 +191,7 @@ export function ReactionPopupMenu({
           </menu>
         </section>
         {!isSearching ? (
-          <section>
+          <section style={{ marginLeft: "var(--cpd-separator-spacing)" }}>
             <li key="search" className={styles.reactionPopupMenuItem}>
               <Tooltip label={t("common.search")}>
                 <CpdButton
