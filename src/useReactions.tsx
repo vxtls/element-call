@@ -48,9 +48,9 @@ const ReactionsContext = createContext<ReactionsContextType | undefined>(
 
 interface RaisedHandInfo {
   /**
-   * Call membership event that was reacted to.
+   * The sender who sent the raised hand.
    */
-  membershipEventId: string;
+  sender: string;
   /**
    * Event ID of the reaction itself.
    */
@@ -71,6 +71,8 @@ export const useReactions = (): ReactionsContextType => {
   return context;
 };
 
+type MembershipEventId = string;
+
 /**
  * Provider that handles raised hand reactions for a given `rtcSession`.
  */
@@ -82,7 +84,7 @@ export const ReactionsProvider = ({
   rtcSession: MatrixRTCSession;
 }): JSX.Element => {
   const [raisedHands, setRaisedHands] = useState<
-    Record<string, RaisedHandInfo>
+    Record<MembershipEventId, RaisedHandInfo>
   >({});
   const memberships = useMatrixRTCSessionMemberships(rtcSession);
   const clientState = useClientState();
@@ -91,29 +93,36 @@ export const ReactionsProvider = ({
   const room = rtcSession.room;
   const myUserId = room.client.getUserId();
 
-  const [reactions, setReactions] = useState<Record<string, ReactionOption>>(
-    {},
-  );
+  const [reactions, setReactions] = useState<
+    Record<MembershipEventId, ReactionOption>
+  >({});
 
   // Reduce the data down for the consumers.
   const resultRaisedHands = useMemo(
     () =>
       Object.fromEntries(
-        Object.entries(raisedHands).map(([uid, data]) => [uid, data.time]),
+        Object.entries(raisedHands).map(([membershipEventId, data]) => [
+          membershipEventId,
+          data.time,
+        ]),
       ),
     [raisedHands],
   );
 
-  const addRaisedHand = useCallback((userId: string, info: RaisedHandInfo) => {
-    setRaisedHands((prevRaisedHands) => ({
-      ...prevRaisedHands,
-      [userId]: info,
-    }));
-  }, []);
+  const addRaisedHand = useCallback(
+    (membershipEventId: string, info: RaisedHandInfo) => {
+      setRaisedHands((prevRaisedHands) => ({
+        ...prevRaisedHands,
+        [membershipEventId]: info,
+      }));
+    },
+    [],
+  );
 
-  const removeRaisedHand = useCallback((userId: string) => {
+  const removeRaisedHand = useCallback((membershipEventId: string) => {
     setRaisedHands(
-      ({ [userId]: _removed, ...remainingRaisedHands }) => remainingRaisedHands,
+      ({ [membershipEventId]: _removed, ...remainingRaisedHands }) =>
+        remainingRaisedHands,
     );
   }, []);
 
@@ -138,11 +147,10 @@ export const ReactionsProvider = ({
       );
     };
 
-    // Remove any raised hands for users no longer joined to the call.
-    for (const userId of Object.keys(raisedHands).filter(
-      (rhId) => !memberships.find((u) => u.sender == rhId),
+    for (const previousMemberEventId of Object.keys(raisedHands).filter(
+      (eventId) => !memberships.some((m) => m.eventId === eventId),
     )) {
-      removeRaisedHand(userId);
+      removeRaisedHand(previousMemberEventId);
     }
 
     // For each member in the call, check to see if a reaction has
@@ -151,22 +159,14 @@ export const ReactionsProvider = ({
       if (!m.sender || !m.eventId) {
         continue;
       }
-      if (
-        raisedHands[m.sender] &&
-        raisedHands[m.sender].membershipEventId !== m.eventId
-      ) {
-        // Membership event for sender has changed since the hand
-        // was raised, reset.
-        removeRaisedHand(m.sender);
-      }
       const reaction = getLastReactionEvent(m.eventId, m.sender);
       if (reaction) {
         const eventId = reaction?.getId();
         if (!eventId) {
           continue;
         }
-        addRaisedHand(m.sender, {
-          membershipEventId: m.eventId,
+        addRaisedHand(m.eventId, {
+          sender: m.sender,
           reactionEventId: eventId,
           time: new Date(reaction.localTimestamp),
         });
@@ -241,19 +241,21 @@ export const ReactionsProvider = ({
         };
 
         setReactions((reactions) => {
-          if (reactions[sender]) {
+          if (reactions[membershipEventId]) {
             // We've still got a reaction from this user, ignore it to prevent spamming
             return reactions;
           }
           const timeout = setTimeout(() => {
             // Clear the reaction after some time.
-            setReactions(({ [sender]: _unused, ...remaining }) => remaining);
+            setReactions(
+              ({ [membershipEventId]: _unused, ...remaining }) => remaining,
+            );
             reactionTimeouts.delete(timeout);
           }, REACTION_ACTIVE_TIME_MS);
           reactionTimeouts.add(timeout);
           return {
             ...reactions,
-            [sender]: reaction,
+            [membershipEventId]: reaction,
           };
         });
       } else if (event.getType() === EventType.Reaction) {
@@ -274,9 +276,9 @@ export const ReactionsProvider = ({
         }
 
         if (content?.["m.relates_to"].key === "🖐️") {
-          addRaisedHand(sender, {
+          addRaisedHand(membershipEventId, {
             reactionEventId,
-            membershipEventId,
+            sender,
             time: new Date(event.localTimestamp),
           });
         }
@@ -316,11 +318,22 @@ export const ReactionsProvider = ({
     latestRaisedHands,
   ]);
 
+  const myMembershipEventId = useMemo(
+    () =>
+      memberships.find(
+        (m) =>
+          clientState?.state === "valid" &&
+          m.sender === clientState.authenticated?.client.getUserId() &&
+          m.deviceId === clientState.authenticated?.client.getDeviceId(),
+      ),
+    [memberships],
+  )?.eventId;
+
   const lowerHand = useCallback(async () => {
-    if (!myUserId || !raisedHands[myUserId]) {
+    if (!myMembershipEventId || !raisedHands[myMembershipEventId]) {
       return;
     }
-    const myReactionId = raisedHands[myUserId].reactionEventId;
+    const myReactionId = raisedHands[myMembershipEventId].reactionEventId;
     if (!myReactionId) {
       logger.warn(`Hand raised but no reaction event to redact!`);
       return;
@@ -331,7 +344,7 @@ export const ReactionsProvider = ({
     } catch (ex) {
       logger.error("Failed to redact reaction event", myReactionId, ex);
     }
-  }, [myUserId, raisedHands, rtcSession, room]);
+  }, [myMembershipEventId, raisedHands, rtcSession, room]);
 
   return (
     <ReactionsContext.Provider

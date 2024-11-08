@@ -21,6 +21,7 @@ import {
 
 const memberUserIdAlice = "@alice:example.org";
 const memberEventAlice = "$membership-alice:example.org";
+const memberEventAlice2 = "$membership-alice2:example.org";
 const memberUserIdBob = "@bob:example.org";
 const memberEventBob = "$membership-bob:example.org";
 
@@ -28,6 +29,8 @@ const membership: Record<string, string> = {
   [memberEventAlice]: memberUserIdAlice,
   [memberEventBob]: memberUserIdBob,
   "$membership-charlie:example.org": "@charlie:example.org",
+  // Second device
+  [memberEventAlice2]: memberEventAlice,
 };
 
 /**
@@ -42,9 +45,9 @@ const TestComponent: FC = () => {
   return (
     <div>
       <ul>
-        {Object.entries(raisedHands).map(([userId, date]) => (
-          <li key={userId}>
-            <span>{userId}</span>
+        {Object.entries(raisedHands).map(([membershipEventId, date]) => (
+          <li key={membershipEventId}>
+            <span>{membershipEventId}</span>
             <time>{date.getTime()}</time>
           </li>
         ))}
@@ -169,5 +172,18 @@ describe("useReactions", () => {
     );
     await act(() => room.testSendHandRaise(memberEventAlice, memberUserIdBob));
     expect(queryByRole("list")?.children).to.have.lengthOf(0);
+  });
+  test("handles multiple membership event reactions for the same sender", () => {
+    const room = new MockRoom(memberUserIdAlice, [
+      createHandRaisedReaction(memberEventAlice, membership),
+      createHandRaisedReaction(memberEventAlice2, membership),
+    ]);
+    const rtcSession = new MockRTCSession(room, membership);
+    const { queryByRole } = render(
+      <TestReactionsWrapper rtcSession={rtcSession}>
+        <TestComponent />
+      </TestReactionsWrapper>,
+    );
+    expect(queryByRole("list")?.children).to.have.lengthOf(2);
   });
 });

@@ -224,26 +224,34 @@ export function ReactionToggleButton({
   const { raisedHands, lowerHand, reactions } = useReactions();
   const [busy, setBusy] = useState(false);
   const userId = client.getUserId()!;
-  const isHandRaised = !!raisedHands[userId];
   const memberships = useMatrixRTCSessionMemberships(rtcSession);
   const [showReactionsMenu, setShowReactionsMenu] = useState(false);
   const [errorText, setErrorText] = useState<string>();
+
+  const myMembershipEventId = useMemo(
+    () =>
+      memberships.find(
+        (m) =>
+          m.sender === client.getUserId() &&
+          m.deviceId === client.getDeviceId(),
+      ),
+    [memberships],
+  )?.eventId;
 
   useEffect(() => {
     // Clear whenever the reactions menu state changes.
     setErrorText(undefined);
   }, [showReactionsMenu]);
 
-  const canReact = !reactions[userId];
+  const canReact = !reactions[myMembershipEventId ?? ""];
+  const isHandRaised = !!raisedHands[myMembershipEventId ?? ""];
 
   const sendRelation = useCallback(
     async (reaction: ReactionOption) => {
       try {
-        const myMembership = memberships.find((m) => m.sender === userId);
-        if (!myMembership?.eventId) {
-          throw new Error("Cannot find own membership event");
+        if (!myMembershipEventId) {
+          throw Error("Could not find own membership event");
         }
-        const parentEventId = myMembership.eventId;
         setBusy(true);
         await client.sendEvent(
           rtcSession.room.roomId,
@@ -251,7 +259,7 @@ export function ReactionToggleButton({
           {
             "m.relates_to": {
               rel_type: RelationType.Reference,
-              event_id: parentEventId,
+              event_id: myMembershipEventId,
             },
             emoji: reaction.emoji,
             name: reaction.name,
@@ -266,7 +274,7 @@ export function ReactionToggleButton({
         setBusy(false);
       }
     },
-    [memberships, client, userId, rtcSession],
+    [myMembershipEventId, client, rtcSession],
   );
 
   const toggleRaisedHand = useCallback(() => {
@@ -281,11 +289,9 @@ export function ReactionToggleButton({
         }
       } else {
         try {
-          const myMembership = memberships.find((m) => m.sender === userId);
-          if (!myMembership?.eventId) {
-            throw new Error("Cannot find own membership event");
+          if (!myMembershipEventId) {
+            throw Error("Could not find own membership event");
           }
-          const parentEventId = myMembership.eventId;
           setBusy(true);
           const reaction = await client.sendEvent(
             rtcSession.room.roomId,
@@ -293,7 +299,7 @@ export function ReactionToggleButton({
             {
               "m.relates_to": {
                 rel_type: RelationType.Annotation,
-                event_id: parentEventId,
+                event_id: myMembershipEventId,
                 key: "🖐️",
               },
             },
@@ -314,10 +320,9 @@ export function ReactionToggleButton({
   }, [
     client,
     isHandRaised,
-    memberships,
+    myMembershipEventId,
     lowerHand,
     rtcSession.room.roomId,
-    userId,
   ]);
 
   return (

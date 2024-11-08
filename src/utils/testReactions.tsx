@@ -45,6 +45,7 @@ export class MockRTCSession extends EventEmitter {
   public memberships: {
     sender: string;
     eventId: string;
+    deviceId: string;
     createdTs: () => Date;
   }[];
 
@@ -56,6 +57,7 @@ export class MockRTCSession extends EventEmitter {
     this.memberships = Object.entries(membership).map(([eventId, sender]) => ({
       sender,
       eventId,
+      deviceId: randomUUID(),
       createdTs: (): Date => new Date(),
     }));
   }
@@ -69,6 +71,7 @@ export class MockRTCSession extends EventEmitter {
     this.memberships.push({
       sender,
       eventId: `!fake-${randomUUID()}:event`,
+      deviceId: randomUUID(),
       createdTs: (): Date => new Date(),
     });
     this.emit(MatrixRTCSessionEvent.MembershipsChanged);
@@ -118,6 +121,7 @@ export class MockRoom extends EventEmitter {
 
   public constructor(
     private readonly ownUserId: string,
+    private readonly ownDeviceId: string,
     private readonly existingRelations: MatrixEvent[] = [],
   ) {
     super();
@@ -126,6 +130,7 @@ export class MockRoom extends EventEmitter {
   public get client(): MatrixClient {
     return {
       getUserId: (): string => this.ownUserId,
+      getDeviceId: (): string => this.ownDeviceId,
       sendEvent: async (
         ...props: Parameters<MatrixClient["sendEvent"]>
       ): ReturnType<MatrixClient["sendEvent"]> => {
