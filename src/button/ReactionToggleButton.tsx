@@ -128,7 +128,7 @@ export function ReactionPopupMenu({
         <Alert
           className={styles.alert}
           type="critical"
-          title="Something went wrong"
+          title={t("common.something_went_wrong")}
         >
           {errorText}
         </Alert>
