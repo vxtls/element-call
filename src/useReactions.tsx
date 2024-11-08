@@ -33,6 +33,7 @@ import {
   ReactionOption,
   ReactionSet,
 } from "./reactions";
+import { useLatest } from "./useLatest";
 
 interface ReactionsContextType {
   raisedHands: Record<string, Date>;
@@ -176,6 +177,9 @@ export const ReactionsProvider = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [room, memberships, myUserId, addRaisedHand, removeRaisedHand]);
 
+  const latestMemberships = useLatest(memberships);
+  const latestRaisedHands = useLatest(raisedHands);
+
   // This effect handles any *live* reaction/redactions in the room.
   useEffect(() => {
     const reactionTimeouts = new Set<NodeJS.Timeout>();
@@ -199,7 +203,7 @@ export const ReactionsProvider = ({
         // Check to see if this reaction was made to a membership event (and the
         // sender of the reaction matches the membership)
         if (
-          !memberships.some(
+          !latestMemberships.current.some(
             (e) => e.eventId === membershipEventId && e.sender === sender,
           )
         ) {
@@ -259,7 +263,7 @@ export const ReactionsProvider = ({
         // Check to see if this reaction was made to a membership event (and the
         // sender of the reaction matches the membership)
         if (
-          !memberships.some(
+          !latestMemberships.current.some(
             (e) => e.eventId === membershipEventId && e.sender === sender,
           )
         ) {
@@ -278,7 +282,7 @@ export const ReactionsProvider = ({
         }
       } else if (event.getType() === EventType.RoomRedaction) {
         const targetEvent = event.event.redacts;
-        const targetUser = Object.entries(raisedHands).find(
+        const targetUser = Object.entries(latestRaisedHands.current).find(
           ([_u, r]) => r.reactionEventId === targetEvent,
         )?.[0];
         if (!targetUser) {
@@ -304,7 +308,13 @@ export const ReactionsProvider = ({
       // If we're clearing timeouts, we also clear all reactions.
       setReactions({});
     };
-  }, [room, addRaisedHand, removeRaisedHand, memberships, raisedHands]);
+  }, [
+    room,
+    addRaisedHand,
+    removeRaisedHand,
+    latestMemberships,
+    latestRaisedHands,
+  ]);
 
   const lowerHand = useCallback(async () => {
     if (!myUserId || !raisedHands[myUserId]) {
