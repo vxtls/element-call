@@ -40,10 +40,10 @@
 
 .reactionButton {
   padding: 1em;
-  font-size: 1.4em;
+  font-size: 1.6em;
   width: 1.4em;
   height: 1.4em;
-  border-radius: 1.4em;
+  border-radius: var(--cpd-radius-pill-effect);
 }
 
 .verticalSeperator {
