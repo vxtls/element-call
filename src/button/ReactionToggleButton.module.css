@@ -64,3 +64,19 @@
 .searchForm > label {
   flex: auto;
 }
+
+.alert {
+  margin-bottom: var(--cpd-space-3x);
+  animation: grow-in 200ms;
+  height: 2.5em;
+}
+
+@keyframes grow-in {
+  from {
+    height: 0;
+  }
+
+  to {
+    height: 2.5em;
+  }
+}
