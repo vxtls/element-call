@@ -7,9 +7,9 @@ Please see LICENSE in the repository root for full details.
 
 import { PropsWithChildren, ReactNode } from "react";
 import classNames from "classnames";
-import "@formatjs/intl-durationformat/polyfill";
 
 import styles from "./ReactionIndicator.module.css";
+import { useTranslation } from "react-i18next";
 
 export function ReactionIndicator({
   emoji,
@@ -19,6 +19,7 @@ export function ReactionIndicator({
   miniature?: boolean;
   emoji: string;
 }>): ReactNode {
+  const { t } = useTranslation();
   return (
     <div
       className={classNames(styles.reactionIndicatorWidget, {
@@ -30,7 +31,7 @@ export function ReactionIndicator({
           [styles.reactionLarge]: !miniature,
         })}
       >
-        <span role="img" aria-label="reaction indicator">
+        <span role="img" aria-label={t("common.reaction")}>
           {emoji}
         </span>
       </div>
