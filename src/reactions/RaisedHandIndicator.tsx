@@ -16,6 +16,7 @@ import "@formatjs/intl-durationformat/polyfill";
 import { DurationFormat } from "@formatjs/intl-durationformat";
 
 import { ReactionIndicator } from "./ReactionIndicator";
+import { useTranslation } from "react-i18next";
 
 const durationFormatter = new DurationFormat(undefined, {
   minutesDisplay: "always",
@@ -35,6 +36,7 @@ export function RaisedHandIndicator({
   showTimer?: boolean;
   onClick?: () => void;
 }): ReactNode {
+  const { t } = useTranslation();
   const [raisedHandDuration, setRaisedHandDuration] = useState("");
 
   const clickCallback = useCallback<MouseEventHandler<HTMLButtonElement>>(
@@ -83,7 +85,7 @@ export function RaisedHandIndicator({
   if (onClick) {
     return (
       <button
-        aria-label="lower raised hand"
+        aria-label={t("action.lower_hand")}
         style={{
           display: "contents",
           background: "none",

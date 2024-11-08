@@ -5,7 +5,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 Please see LICENSE in the repository root for full details.
 */
 
-import { fireEvent, getByLabelText, render } from "@testing-library/react";
+import { fireEvent, render } from "@testing-library/react";
 import { act } from "react";
 import { expect, test } from "vitest";
 import { MatrixRTCSession } from "matrix-js-sdk/src/matrixrtc";
@@ -66,7 +66,7 @@ test("Can raise hand", async () => {
     <TestComponent rtcSession={rtcSession} room={room} />,
   );
   await user.click(getByLabelText("action.raise_hand_or_send_reaction"));
-  await user.click(getByLabelText("common.raise_hand"));
+  await user.click(getByLabelText("action.raise_hand"));
   expect(room.testSentEvents).toEqual([
     [
       undefined,
@@ -92,7 +92,7 @@ test("Can lower hand", async () => {
   );
   const reactionEvent = room.testSendHandRaise(memberEventAlice, membership);
   await user.click(getByLabelText("action.raise_hand_or_send_reaction"));
-  await user.click(getByLabelText("common.lower_hand"));
+  await user.click(getByLabelText("action.lower_hand"));
   expect(room.testRedactedEvents).toEqual([[undefined, reactionEvent]]);
   expect(container).toMatchSnapshot();
 });
