@@ -6,19 +6,14 @@
   display: flex;
 }
 
-/* These styles override the Modal styles to ensure our emoji
-   picker appears near the toolbar */
-
 .reactionPopupMenuModal {
   width: fit-content !important;
   top: 82vh !important;
 }
 
-@media not ((hover: none) or (pointer: coarse)) {
-  .reactionPopupMenuModal > div > div {
-    padding-inline: var(--cpd-space-6x) !important;
-    padding-block: var(--cpd-space-6x) var(--cpd-space-8x) !important;
-  }
+.reactionPopupMenuModal > div > div {
+  padding-inline: var(--cpd-space-6x) !important;
+  padding-block: var(--cpd-space-6x) var(--cpd-space-8x) !important;
 }
 
 .reactionPopupMenu menu {
