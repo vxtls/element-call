@@ -1,11 +1,11 @@
 /*
-Copyright 2022-2024 New Vector Ltd.
+Copyright 2024 New Vector Ltd.
 
 SPDX-License-Identifier: AGPL-3.0-only
 Please see LICENSE in the repository root for full details.
 */
 
-import { ChangeEvent, FC, useCallback } from "react";
+import { ChangeEvent, FC } from "react";
 import { useTranslation } from "react-i18next";
 import { Text } from "@vector-im/compound-web";
 
@@ -29,12 +29,12 @@ export const PreferencesSettingsTab: FC = () => {
     playReactionsSoundSetting,
   );
 
-  const onChangeSetting = useCallback(
-    (e: ChangeEvent<HTMLInputElement>, fn: (value: boolean) => void) => {
-      fn(e.target.checked);
-    },
-    [],
-  );
+  const onChangeSetting = (
+    e: ChangeEvent<HTMLInputElement>,
+    fn: (value: boolean) => void,
+  ) => {
+    fn(e.target.checked);
+  };
 
   return (
     <div>
