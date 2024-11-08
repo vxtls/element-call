@@ -116,5 +116,8 @@
   },
   "resolutions": {
     "strip-ansi": "6.0.1"
+  },
+  "dependencies": {
+    "@formatjs/intl-segmenter": "^11.7.3"
   }
 }

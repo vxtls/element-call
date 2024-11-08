@@ -208,10 +208,22 @@ export const ReactionsProvider = ({
           return;
         }
 
-        const emoji = content.emoji?.split(/(?:)/u)?.[0];
+        if (!content.emoji) {
+          logger.warn(`Reaction had no emoji from ${reactionEventId}`);
+          return;
+        }
+
+        const segment = new Intl.Segmenter(undefined, {
+          granularity: "grapheme",
+        })
+          .segment(content.emoji)
+          [Symbol.iterator]();
+        const emoji = segment.next().value?.segment;
 
         if (!emoji) {
-          logger.warn(`Reaction had no emoji from ${reactionEventId}`);
+          logger.warn(
+            `Reaction had no emoji from ${reactionEventId} after splitting`,
+          );
           return;
         }
 
