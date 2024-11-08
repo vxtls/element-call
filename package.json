@@ -25,6 +25,7 @@
     "@babel/preset-react": "^7.22.15",
     "@babel/preset-typescript": "^7.23.0",
     "@formatjs/intl-durationformat": "^0.6.1",
+    "@formatjs/intl-segmenter": "^11.7.3",
     "@livekit/components-core": "^0.11.0",
     "@livekit/components-react": "^2.0.0",
     "@opentelemetry/api": "^1.4.0",
@@ -116,8 +117,5 @@
   },
   "resolutions": {
     "strip-ansi": "6.0.1"
-  },
-  "dependencies": {
-    "@formatjs/intl-segmenter": "^11.7.3"
   }
 }

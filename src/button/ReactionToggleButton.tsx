@@ -259,7 +259,6 @@ export function ReactionToggleButton({
         );
         setErrorText(undefined);
         setShowReactionsMenu(false);
-        // Do NOT close the menu after this.
       } catch (ex) {
         setErrorText(ex instanceof Error ? ex.message : "Unknown error");
         logger.error("Failed to send reaction", ex);
