@@ -35,11 +35,11 @@ export interface Props {
   children: ReactNode;
   className?: string;
   /**
-   * Class name to be used when in drawer mode (touchscreen). If `className` is given, this is ignored.
+   * Class name to be used when in drawer mode (touchscreen).
    */
   classNameDrawer?: string;
   /**
-   * Class name to be used when in modal mode (desktop). If `className` is given, this is ignored.
+   * Class name to be used when in modal mode (desktop).
    */
   classNameModal?: string;
   /**
@@ -99,7 +99,8 @@ export const Modal: FC<Props> = ({
           <Drawer.Overlay className={classNames(overlayStyles.bg)} />
           <Drawer.Content
             className={classNames(
-              className ?? classNameDrawer,
+              className,
+              classNameDrawer,
               overlayStyles.overlay,
               styles.modal,
               styles.drawer,
@@ -163,7 +164,8 @@ export const Modal: FC<Props> = ({
           >
             <Glass
               className={classNames(
-                className ?? classNameModal,
+                className,
+                classNameModal,
                 overlayStyles.overlay,
                 overlayStyles.animate,
                 styles.modal,
