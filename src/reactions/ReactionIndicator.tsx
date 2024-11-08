@@ -7,9 +7,9 @@ Please see LICENSE in the repository root for full details.
 
 import { PropsWithChildren, ReactNode } from "react";
 import classNames from "classnames";
+import { useTranslation } from "react-i18next";
 
 import styles from "./ReactionIndicator.module.css";
-import { useTranslation } from "react-i18next";
 
 export function ReactionIndicator({
   emoji,

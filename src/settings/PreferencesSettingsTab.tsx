@@ -32,7 +32,7 @@ export const PreferencesSettingsTab: FC = () => {
   const onChangeSetting = (
     e: ChangeEvent<HTMLInputElement>,
     fn: (value: boolean) => void,
-  ) => {
+  ): void => {
     fn(e.target.checked);
   };
 

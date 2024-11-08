@@ -8,7 +8,6 @@ Please see LICENSE in the repository root for full details.
 import {
   Button as CpdButton,
   Tooltip,
-  Separator,
   Search,
   Form,
   Alert,
