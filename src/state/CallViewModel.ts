@@ -797,16 +797,26 @@ export class CallViewModel extends ViewModel {
     this.gridModeUserSelection.next(value);
   }
 
-  private readonly oneOnOne: Observable<boolean> = combineLatest(
-    [this.grid, this.screenShares],
-    (grid, screenShares) =>
-      grid.length == 2 &&
-      // There might not be a remote tile if only the local user is in the call
-      // and they're using the duplicate tiles option
-      grid.some((vm) => !vm.local) &&
-      grid.some((vm) => vm.local) &&
-      screenShares.length === 0,
-  );
+  private readonly oneOnOne: Observable<
+    | { local: LocalUserMediaViewModel; remote: RemoteUserMediaViewModel }
+    | undefined
+  > = combineLatest([this.grid, this.screenShares], (grid, screenShares) => {
+    if (grid.length !== 2 || screenShares.length !== 0) {
+      return undefined;
+    }
+
+    const local = grid.find((vm) => vm.local);
+    const remote = grid.find((vm) => !vm.local);
+
+    if (!local || !remote) {
+      return undefined;
+    }
+
+    return {
+      local,
+      remote,
+    };
+  });
 
   private readonly gridLayout: Observable<LayoutMedia> = combineLatest(
     [this.grid, this.spotlight],
@@ -842,36 +852,6 @@ export class CallViewModel extends ViewModel {
       pip: pip ?? undefined,
     }));
 
-  private readonly oneOnOneLayout: Observable<LayoutMedia> =
-    this.mediaItems.pipe(
-      map((grid) => {
-        const local = grid.find((vm) => vm.vm.local)?.vm as
-          | LocalUserMediaViewModel
-          | undefined;
-        const remote = grid.find((vm) => !vm.vm.local)?.vm as
-          | RemoteUserMediaViewModel
-          | undefined;
-        if (!local || !remote) {
-          logger.warn(
-            `Falling back to grid layout for one-on-one layout with missing media: local=${!!local} remote=${!!remote}`,
-          );
-          return {
-            type: "grid",
-            grid: grid.filter(
-              (m) =>
-                m instanceof LocalUserMediaViewModel ||
-                m instanceof RemoteUserMediaViewModel,
-            ),
-          };
-        }
-        return {
-          type: "one-on-one",
-          local,
-          remote,
-        };
-      }),
-    );
-
   private readonly pipLayout: Observable<LayoutMedia> = this.spotlight.pipe(
     map((spotlight) => ({ type: "pip", spotlight })),
   );
@@ -888,8 +868,15 @@ export class CallViewModel extends ViewModel {
               switch (gridMode) {
                 case "grid":
                   return this.oneOnOne.pipe(
-                    switchMap((oneOnOne) =>
-                      oneOnOne ? this.oneOnOneLayout : this.gridLayout,
+                    switchMap(
+                      (oneOnOne): Observable<LayoutMedia> =>
+                        oneOnOne
+                          ? of({
+                              type: "one-on-one",
+                              local: oneOnOne.local,
+                              remote: oneOnOne.remote,
+                            })
+                          : this.gridLayout,
                     ),
                   );
                 case "spotlight":
