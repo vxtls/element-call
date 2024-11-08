@@ -301,6 +301,8 @@ export const ReactionsProvider = ({
       room.off(MatrixRoomEvent.Redaction, handleReactionEvent);
       room.off(MatrixRoomEvent.LocalEchoUpdated, handleReactionEvent);
       reactionTimeouts.forEach((t) => clearTimeout(t));
+      // If we're clearing timeouts, we also clear all reactions.
+      setReactions({});
     };
   }, [room, addRaisedHand, removeRaisedHand, memberships, raisedHands]);
 
