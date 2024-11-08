@@ -223,7 +223,6 @@ export function ReactionToggleButton({
   const { t } = useTranslation();
   const { raisedHands, lowerHand, reactions } = useReactions();
   const [busy, setBusy] = useState(false);
-  const userId = client.getUserId()!;
   const memberships = useMatrixRTCSessionMemberships(rtcSession);
   const [showReactionsMenu, setShowReactionsMenu] = useState(false);
   const [errorText, setErrorText] = useState<string>();
@@ -237,6 +236,8 @@ export function ReactionToggleButton({
       ),
     [memberships],
   )?.eventId;
+
+  console.log(memberships);
 
   useEffect(() => {
     // Clear whenever the reactions menu state changes.

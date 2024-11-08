@@ -83,7 +83,7 @@ test("Can raise hand", async () => {
   expect(container).toMatchSnapshot();
 });
 
-test("Can lower hand", async () => {
+test.only("Can lower hand", async () => {
   const user = userEvent.setup();
   const room = new MockRoom(memberUserIdAlice);
   const rtcSession = new MockRTCSession(room, membership);

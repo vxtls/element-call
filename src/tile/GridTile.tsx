@@ -112,9 +112,14 @@ const UserMediaTile = forwardRef<HTMLDivElement, UserMediaTileProps>(
       </>
     );
 
-    const handRaised: Date | undefined = raisedHands[vm.member?.userId ?? ""];
+    console.log(vm.member);
+
+    console.log(vm.member?.events.member?.getId(), raisedHands, reactions);
+
+    const handRaised: Date | undefined =
+      raisedHands[vm.member?.events.member?.getId() ?? ""];
     const currentReaction: ReactionOption | undefined =
-      reactions[vm.member?.userId ?? ""];
+      reactions[vm.member?.events.member?.getId() ?? ""];
     const raisedHandOnClick =
       vm.local && handRaised ? (): void => void lowerHand() : undefined;
 

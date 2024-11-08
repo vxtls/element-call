@@ -199,6 +199,8 @@ export const ReactionsProvider = ({
       if (event.getType() === ElementCallReactionEventType) {
         const content: ECallReactionEventContent = event.getContent();
 
+        console.log(latestMemberships, content);
+
         const membershipEventId = content?.["m.relates_to"]?.event_id;
         // Check to see if this reaction was made to a membership event (and the
         // sender of the reaction matches the membership)
@@ -318,19 +320,22 @@ export const ReactionsProvider = ({
     latestRaisedHands,
   ]);
 
-  const myMembershipEventId = useMemo(
-    () =>
-      memberships.find(
-        (m) =>
-          clientState?.state === "valid" &&
-          m.sender === clientState.authenticated?.client.getUserId() &&
-          m.deviceId === clientState.authenticated?.client.getDeviceId(),
-      ),
-    [memberships],
-  )?.eventId;
+  const myMembershipEventId = useMemo(() => {
+    console.log(
+      room.client.getUserId(),
+      room.client.getDeviceId(),
+      memberships,
+    );
+    return memberships.find(
+      (m) =>
+        m.sender === room.client.getUserId() &&
+        m.deviceId === room.client.getDeviceId(),
+    );
+  }, [memberships, room])?.eventId;
 
   const lowerHand = useCallback(async () => {
     if (!myMembershipEventId || !raisedHands[myMembershipEventId]) {
+      logger.warn(`No membership event for us!`, myMembershipEventId);
       return;
     }
     const myReactionId = raisedHands[myMembershipEventId].reactionEventId;
