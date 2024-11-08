@@ -117,15 +117,15 @@ export function ReactionPopupMenu({
     },
     [sendReaction, filteredReactionSet, canReact, setIsSearching],
   );
-
+  const label = isHandRaised ? t("common.raise_hand") : t("common.lower_hand");
   return (
     <div className={styles.reactionPopupMenu}>
       <section className={styles.handRaiseSection}>
-        <Tooltip label={t("common.raise_hand")}>
+        <Tooltip label={label}>
           <CpdButton
             kind={isHandRaised ? "primary" : "secondary"}
             aria-pressed={isHandRaised}
-            aria-label="Toggle hand raised"
+            aria-label={label}
             onClick={() => toggleRaisedHand()}
             iconOnly
             Icon={RaisedHandSolidIcon}
