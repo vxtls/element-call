@@ -21,6 +21,7 @@ import {
   setLogLevel as setLKLogLevel,
 } from "livekit-client";
 import "@formatjs/intl-segmenter/polyfill";
+import "@formatjs/intl-durationformat/polyfill";
 
 import { App } from "./App";
 import { init as initRageshake } from "./settings/rageshake";
