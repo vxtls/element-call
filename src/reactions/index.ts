@@ -29,9 +29,26 @@ import rockSoundMp3 from "../sound/reactions/rock.mp3?url";
 export const ElementCallReactionEventType = "io.element.call.reaction";
 
 export interface ReactionOption {
+  /**
+   * The emoji to display. This is always displayed even if no emoji is matched
+   * from `ReactionSet`.
+   *
+   * @note Any excess characters are trimmed from this string.
+   */
   emoji: string;
+  /**
+   * The name of the emoji. This is the unique key used when looking for a local
+   * effect in our `ReactionSet` array.
+   */
   name: string;
+  /**
+   * Optional aliases to look for when searching for an emoji in the interface.
+   */
   alias?: string[];
+  /**
+   * Optional sound to play. An ogg sound must always be provided.
+   * If this sound isn't given, `GenericReaction` is used.
+   */
   sound?: {
     mp3?: string;
     ogg: string;
@@ -61,6 +78,7 @@ export const ReactionSet: ReactionOption[] = [
   {
     emoji: "👍",
     name: "thumbsup",
+    // TODO: These need to be translated.
     alias: ["+1", "yes", "thumbs up"],
   },
   {
