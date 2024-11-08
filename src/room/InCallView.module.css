@@ -154,6 +154,7 @@ Please see LICENSE in the repository root for full details.
   animation-duration: 4s;
   animation-name: reaction-up;
   width: fit-content;
+  pointer-events: none;
 }
 
 @keyframes reaction-up {
@@ -171,7 +172,7 @@ Please see LICENSE in the repository root for full details.
 }
 
 @media (prefers-reduced-motion) {
-  @keyframes reaction-up {
+  @keyframes reaction-up-reduced {
     from {
       opacity: 1;
     }
@@ -179,5 +180,12 @@ Please see LICENSE in the repository root for full details.
     to {
       opacity: 0;
     }
+  }
+
+  .floatingReaction {
+    font-size: 48pt;
+    animation-name: reaction-up-reduced;
+    top: calc(-50vh + (48pt / 2));
+    left: calc(50vw - (48pt / 2)) !important;
   }
 }
