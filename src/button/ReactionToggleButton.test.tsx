@@ -5,7 +5,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 Please see LICENSE in the repository root for full details.
 */
 
-import { fireEvent, render } from "@testing-library/react";
+import { fireEvent, getByLabelText, render } from "@testing-library/react";
 import { act } from "react";
 import { expect, test } from "vitest";
 import { MatrixRTCSession } from "matrix-js-sdk/src/matrixrtc";
@@ -47,28 +47,26 @@ function TestComponent({
   );
 }
 
-test("Can open menu", () => {
+test("Can open menu", async () => {
+  const user = userEvent.setup();
   const room = new MockRoom(memberUserIdAlice);
   const rtcSession = new MockRTCSession(room, membership);
-  const { getByRole, container } = render(
+  const { getByLabelText, container } = render(
     <TestComponent rtcSession={rtcSession} room={room} />,
   );
-  act(() => getByRole("button").click());
+  await user.click(getByLabelText("action.raise_hand_or_send_reaction"));
   expect(container).toMatchSnapshot();
 });
 
-test("Can raise hand", () => {
+test("Can raise hand", async () => {
+  const user = userEvent.setup();
   const room = new MockRoom(memberUserIdAlice);
   const rtcSession = new MockRTCSession(room, membership);
-  const { getByRole, getByLabelText, container } = render(
+  const { getByLabelText, container } = render(
     <TestComponent rtcSession={rtcSession} room={room} />,
   );
-  act(() => {
-    getByRole("button").click();
-  });
-  act(() => {
-    getByLabelText("Toggle hand raised").click();
-  });
+  await user.click(getByLabelText("action.raise_hand_or_send_reaction"));
+  await user.click(getByLabelText("common.raise_hand"));
   expect(room.testSentEvents).toEqual([
     [
       undefined,
@@ -85,35 +83,29 @@ test("Can raise hand", () => {
   expect(container).toMatchSnapshot();
 });
 
-test("Can lower hand", () => {
+test("Can lower hand", async () => {
+  const user = userEvent.setup();
   const room = new MockRoom(memberUserIdAlice);
   const rtcSession = new MockRTCSession(room, membership);
-  const { getByRole, getByLabelText, container } = render(
+  const { getByLabelText, container } = render(
     <TestComponent rtcSession={rtcSession} room={room} />,
   );
   const reactionEvent = room.testSendHandRaise(memberEventAlice, membership);
-  act(() => {
-    getByRole("button").click();
-  });
-  act(() => {
-    getByLabelText("Toggle hand raised").click();
-  });
+  await user.click(getByLabelText("action.raise_hand_or_send_reaction"));
+  await user.click(getByLabelText("common.lower_hand"));
   expect(room.testRedactedEvents).toEqual([[undefined, reactionEvent]]);
   expect(container).toMatchSnapshot();
 });
 
-test("Can react with emoji", () => {
+test("Can react with emoji", async () => {
+  const user = userEvent.setup();
   const room = new MockRoom(memberUserIdAlice);
   const rtcSession = new MockRTCSession(room, membership);
-  const { getByRole, getByText } = render(
+  const { getByLabelText, getByText } = render(
     <TestComponent rtcSession={rtcSession} room={room} />,
   );
-  act(() => {
-    getByRole("button").click();
-  });
-  act(() => {
-    getByText("🐶").click();
-  });
+  await user.click(getByLabelText("action.raise_hand_or_send_reaction"));
+  await user.click(getByText("🐶"));
   expect(room.testSentEvents).toEqual([
     [
       undefined,
@@ -134,25 +126,16 @@ test("Can search for and send emoji", async () => {
   const user = userEvent.setup();
   const room = new MockRoom(memberUserIdAlice);
   const rtcSession = new MockRTCSession(room, membership);
-  const { getByText, getByRole, getByPlaceholderText, container } = render(
+  const { getByText, container, getByLabelText } = render(
     <TestComponent rtcSession={rtcSession} room={room} />,
   );
-  act(() => {
-    getByRole("button").click();
-  });
-  act(() => {
-    getByRole("button", {
-      name: "Search",
-    }).click();
-  });
-  await act(async () => {
-    getByPlaceholderText("Search reactions…").focus();
-    await user.keyboard("crickets");
-  });
+  await user.click(getByLabelText("action.raise_hand_or_send_reaction"));
+  await user.click(getByLabelText("action.open_search"));
+  // Search should autofocus.
+  await user.keyboard("crickets");
   expect(container).toMatchSnapshot();
-  act(() => {
-    getByText("🦗").click();
-  });
+  await user.click(getByText("🦗"));
+
   expect(room.testSentEvents).toEqual([
     [
       undefined,
@@ -173,22 +156,14 @@ test("Can search for and send emoji with the keyboard", async () => {
   const user = userEvent.setup();
   const room = new MockRoom(memberUserIdAlice);
   const rtcSession = new MockRTCSession(room, membership);
-  const { getByRole, getByPlaceholderText, container } = render(
+  const { getByLabelText, getByPlaceholderText, container } = render(
     <TestComponent rtcSession={rtcSession} room={room} />,
   );
-  act(() => {
-    getByRole("button").click();
-  });
-  act(() => {
-    getByRole("button", {
-      name: "Search",
-    }).click();
-  });
-  const searchField = getByPlaceholderText("Search reactions…");
-  await act(async () => {
-    searchField.focus();
-    await user.keyboard("crickets");
-  });
+  await user.click(getByLabelText("action.raise_hand_or_send_reaction"));
+  await user.click(getByLabelText("action.open_search"));
+  const searchField = getByPlaceholderText("reaction_search");
+  // Search should autofocus.
+  await user.keyboard("crickets");
   expect(container).toMatchSnapshot();
   act(() => {
     fireEvent.keyDown(searchField, { key: "Enter" });
@@ -209,43 +184,29 @@ test("Can search for and send emoji with the keyboard", async () => {
   ]);
 });
 
-test("Can close search", () => {
+test("Can close search", async () => {
+  const user = userEvent.setup();
   const room = new MockRoom(memberUserIdAlice);
   const rtcSession = new MockRTCSession(room, membership);
-  const { getByRole, container } = render(
+  const { getByLabelText, container } = render(
     <TestComponent rtcSession={rtcSession} room={room} />,
   );
-  act(() => {
-    getByRole("button").click();
-  });
-  act(() => {
-    getByRole("button", {
-      name: "Search",
-    }).click();
-  });
-  act(() => {
-    getByRole("button", {
-      name: "close search",
-    }).click();
-  });
+  await user.click(getByLabelText("action.raise_hand_or_send_reaction"));
+  await user.click(getByLabelText("action.open_search"));
+  await user.click(getByLabelText("action.close_search"));
   expect(container).toMatchSnapshot();
 });
 
-test("Can close search with the escape key", () => {
+test("Can close search with the escape key", async () => {
+  const user = userEvent.setup();
   const room = new MockRoom(memberUserIdAlice);
   const rtcSession = new MockRTCSession(room, membership);
-  const { getByRole, container, getByPlaceholderText } = render(
+  const { getByLabelText, container, getByPlaceholderText } = render(
     <TestComponent rtcSession={rtcSession} room={room} />,
   );
-  act(() => {
-    getByRole("button").click();
-  });
-  act(() => {
-    getByRole("button", {
-      name: "Search",
-    }).click();
-  });
-  const searchField = getByPlaceholderText("Search reactions…");
+  await user.click(getByLabelText("action.raise_hand_or_send_reaction"));
+  await user.click(getByLabelText("action.open_search"));
+  const searchField = getByPlaceholderText("reaction_search");
   act(() => {
     fireEvent.keyDown(searchField, { key: "Escape" });
   });

@@ -8,6 +8,7 @@ exports[`Can close search 1`] = `
   <button
     aria-disabled="false"
     aria-expanded="true"
+    aria-label="action.raise_hand_or_send_reaction"
     aria-labelledby=":rec:"
     class="_button_i91xf_17 _has-icon_i91xf_66 _icon-only_i91xf_59"
     data-kind="primary"
@@ -39,6 +40,7 @@ exports[`Can close search with the escape key 1`] = `
   <button
     aria-disabled="false"
     aria-expanded="false"
+    aria-label="action.raise_hand_or_send_reaction"
     aria-labelledby=":rhh:"
     class="_button_i91xf_17 _has-icon_i91xf_66 _icon-only_i91xf_59"
     data-kind="secondary"
@@ -66,13 +68,11 @@ exports[`Can close search with the escape key 1`] = `
 `;
 
 exports[`Can lower hand 1`] = `
-<div
-  aria-hidden="true"
-  data-aria-hidden="true"
->
+<div>
   <button
-    aria-disabled="true"
-    aria-expanded="true"
+    aria-disabled="false"
+    aria-expanded="false"
+    aria-label="action.raise_hand_or_send_reaction"
     aria-labelledby=":r3i:"
     class="_button_i91xf_17 raisedButton _has-icon_i91xf_66 _icon-only_i91xf_59"
     data-kind="primary"
@@ -104,6 +104,7 @@ exports[`Can open menu 1`] = `
   <button
     aria-disabled="false"
     aria-expanded="true"
+    aria-label="action.raise_hand_or_send_reaction"
     aria-labelledby=":r0:"
     class="_button_i91xf_17 _has-icon_i91xf_66 _icon-only_i91xf_59"
     data-kind="primary"
@@ -131,16 +132,14 @@ exports[`Can open menu 1`] = `
 `;
 
 exports[`Can raise hand 1`] = `
-<div
-  aria-hidden="true"
-  data-aria-hidden="true"
->
+<div>
   <button
-    aria-disabled="true"
-    aria-expanded="true"
+    aria-disabled="false"
+    aria-expanded="false"
+    aria-label="action.raise_hand_or_send_reaction"
     aria-labelledby=":r1p:"
     class="_button_i91xf_17 _has-icon_i91xf_66 _icon-only_i91xf_59"
-    data-kind="primary"
+    data-kind="secondary"
     data-size="lg"
     role="button"
     tabindex="0"
@@ -172,6 +171,7 @@ exports[`Can search for and send emoji 1`] = `
   <button
     aria-disabled="false"
     aria-expanded="true"
+    aria-label="action.raise_hand_or_send_reaction"
     aria-labelledby=":r74:"
     class="_button_i91xf_17 _has-icon_i91xf_66 _icon-only_i91xf_59"
     data-kind="primary"
@@ -206,6 +206,7 @@ exports[`Can search for and send emoji with the keyboard 1`] = `
   <button
     aria-disabled="false"
     aria-expanded="true"
+    aria-label="action.raise_hand_or_send_reaction"
     aria-labelledby=":ra3:"
     class="_button_i91xf_17 _has-icon_i91xf_66 _icon-only_i91xf_59"
     data-kind="primary"

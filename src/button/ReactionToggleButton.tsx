@@ -60,6 +60,7 @@ const InnerButton: FC<InnerButtonProps> = ({ raised, open, ...props }) => {
       <CpdButton
         className={classNames(raised && styles.raisedButton)}
         aria-expanded={open}
+        aria-label={t("action.raise_hand_or_send_reaction")}
         kind={raised || open ? "primary" : "secondary"}
         iconOnly
         Icon={raised ? RaisedHandSolidIcon : ReactionIcon}
@@ -121,7 +122,7 @@ export function ReactionPopupMenu({
     },
     [sendReaction, filteredReactionSet, canReact, setIsSearching],
   );
-  const label = isHandRaised ? t("common.raise_hand") : t("common.lower_hand");
+  const label = isHandRaised ? t("common.lower_hand") : t("common.raise_hand");
   return (
     <>
       {errorText && (
