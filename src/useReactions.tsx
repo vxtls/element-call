@@ -178,6 +178,7 @@ export const ReactionsProvider = ({
 
   // This effect handles any *live* reaction/redactions in the room.
   useEffect(() => {
+    const reactionTimeouts = new Set<NodeJS.Timeout>();
     const handleReactionEvent = (event: MatrixEvent): void => {
       if (event.isSending()) {
         // Skip any events that are still sending.
@@ -240,10 +241,12 @@ export const ReactionsProvider = ({
             // We've still got a reaction from this user, ignore it to prevent spamming
             return reactions;
           }
-          setTimeout(() => {
+          const timeout = setTimeout(() => {
             // Clear the reaction after some time.
             setReactions(({ [sender]: _unused, ...remaining }) => remaining);
+            reactionTimeouts.delete(timeout);
           }, REACTION_ACTIVE_TIME_MS);
+          reactionTimeouts.add(timeout);
           return {
             ...reactions,
             [sender]: reaction,
@@ -297,6 +300,7 @@ export const ReactionsProvider = ({
       room.off(MatrixRoomEvent.Timeline, handleReactionEvent);
       room.off(MatrixRoomEvent.Redaction, handleReactionEvent);
       room.off(MatrixRoomEvent.LocalEchoUpdated, handleReactionEvent);
+      reactionTimeouts.forEach((t) => clearTimeout(t));
     };
   }, [room, addRaisedHand, removeRaisedHand, memberships, raisedHands]);
 
