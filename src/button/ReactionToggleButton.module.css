@@ -49,7 +49,7 @@
 }
 
 @media (max-width: 800px) {
-  .reactionButton {
+  .reactionPopupMenuModal .reactionButton {
     padding: 1em;
     font-size: 1em;
     width: 1em;
