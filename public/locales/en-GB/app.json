@@ -81,7 +81,7 @@
     "call_ended_heading": "Call ended",
     "failed_heading": "Failed to join",
     "failed_text": "Call not found or is not accessible.",
-    "knock_reject_body": "Your request was declined.",
+    "knock_reject_body": "Your request to join was declined.",
     "knock_reject_heading": "Access denied",
     "reason": "Reason"
   },

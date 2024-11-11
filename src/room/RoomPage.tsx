@@ -112,7 +112,7 @@ export const RoomPage: FC = () => {
       case "canKnock": {
         wasInWaitForInviteState.current =
           wasInWaitForInviteState.current ||
-          "waitForInvite" === groupCallState.kind;
+          groupCallState.kind === "waitForInvite";
         const knock =
           groupCallState.kind === "canKnock" ? groupCallState.knock : null;
         const label: string | JSX.Element =
