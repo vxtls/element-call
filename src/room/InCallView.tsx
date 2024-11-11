@@ -41,7 +41,7 @@ import {
   VideoButton,
   ShareScreenButton,
   SettingsButton,
-  RaiseHandToggleButton,
+  ReactionToggleButton,
   SwitchCameraButton,
 } from "../button";
 import { Header, LeftNav, RightNav, RoomHeaderInfo } from "../Header";
@@ -83,7 +83,13 @@ import { GridTileViewModel, TileViewModel } from "../state/TileViewModel";
 import { ReactionsProvider, useReactions } from "../useReactions";
 import handSoundOgg from "../sound/raise_hand.ogg?url";
 import handSoundMp3 from "../sound/raise_hand.mp3?url";
+import { ReactionsAudioRenderer } from "./ReactionAudioRenderer";
 import { useSwitchCamera } from "./useSwitchCamera";
+import {
+  soundEffectVolumeSetting,
+  showReactions,
+  useSetting,
+} from "../settings/settings";
 
 const canScreenshare = "getDisplayMedia" in (navigator.mediaDevices ?? {});
 
@@ -174,12 +180,26 @@ export const InCallView: FC<InCallViewProps> = ({
   connState,
   onShareClick,
 }) => {
-  const { supportsReactions, raisedHands } = useReactions();
+  const [shouldShowReactions] = useSetting(showReactions);
+  const [soundEffectVolume] = useSetting(soundEffectVolumeSetting);
+  const { supportsReactions, raisedHands, reactions } = useReactions();
   const raisedHandCount = useMemo(
     () => Object.keys(raisedHands).length,
     [raisedHands],
   );
   const previousRaisedHandCount = useDeferredValue(raisedHandCount);
+
+  const reactionsIcons = useMemo(
+    () =>
+      shouldShowReactions
+        ? Object.entries(reactions).map(([sender, { emoji }]) => ({
+            sender,
+            emoji,
+            startX: -Math.ceil(Math.random() * 50) - 25,
+          }))
+        : [],
+    [shouldShowReactions, reactions],
+  );
 
   useWakeLock();
 
@@ -194,7 +214,6 @@ export const InCallView: FC<InCallViewProps> = ({
   const nonMemberItemCount = useObservableEagerState(vm.nonMemberItemCount);
   const containerRef1 = useRef<HTMLDivElement | null>(null);
   const [containerRef2, bounds] = useMeasure();
-  const boundsValid = bounds.height > 0;
   // Merge the refs so they can attach to the same element
   const containerRef = useMergedRefs(containerRef1, containerRef2);
 
@@ -222,10 +241,6 @@ export const InCallView: FC<InCallViewProps> = ({
     (muted) => muteStates.audio.setEnabled?.(!muted),
   );
 
-  const mobile = boundsValid && bounds.width <= 660;
-  const reducedControls = boundsValid && bounds.width <= 340;
-  const noControls = reducedControls && bounds.height <= 400;
-
   const windowMode = useObservableEagerState(vm.windowMode);
   const layout = useObservableEagerState(vm.layout);
   const gridMode = useObservableEagerState(vm.gridMode);
@@ -247,12 +262,22 @@ export const InCallView: FC<InCallViewProps> = ({
   }, [vm]);
   const onTouchCancel = useCallback(() => (touchStart.current = null), []);
 
-  // We also need to tell the layout toggle to prevent touch events from
-  // bubbling up, or else the controls will be dismissed before a change event
-  // can be registered on the toggle
-  const onLayoutToggleTouchEnd = useCallback(
-    (e: TouchEvent) => e.stopPropagation(),
-    [],
+  // We also need to tell the footer controls to prevent touch events from
+  // bubbling up, or else the footer will be dismissed before a click/change
+  // event can be registered on the control
+  const onControlsTouchEnd = useCallback(
+    (e: TouchEvent) => {
+      // Somehow applying pointer-events: none to the controls when the footer
+      // is hidden is not enough to stop clicks from happening as the footer
+      // becomes visible, so we check manually whether the footer is shown
+      if (showFooter) {
+        e.stopPropagation();
+        vm.tapControls();
+      } else {
+        e.preventDefault();
+      }
+    },
+    [vm, showFooter],
   );
 
   const onPointerMove = useCallback(
@@ -330,11 +355,17 @@ export const InCallView: FC<InCallViewProps> = ({
       return;
     }
     if (previousRaisedHandCount < raisedHandCount) {
+      handRaisePlayer.current.volume = soundEffectVolume;
       handRaisePlayer.current.play().catch((ex) => {
         logger.warn("Failed to play raise hand sound", ex);
       });
     }
-  }, [raisedHandCount, handRaisePlayer, previousRaisedHandCount]);
+  }, [
+    raisedHandCount,
+    handRaisePlayer,
+    previousRaisedHandCount,
+    soundEffectVolume,
+  ]);
 
   useEffect(() => {
     widget?.api.transport
@@ -507,95 +538,106 @@ export const InCallView: FC<InCallViewProps> = ({
       .catch(logger.error);
   }, [localParticipant, isScreenShareEnabled]);
 
-  let footer: JSX.Element | null;
+  const buttons: JSX.Element[] = [];
 
-  if (noControls) {
-    footer = null;
-  } else {
-    const buttons: JSX.Element[] = [];
-
+  buttons.push(
+    <MicButton
+      key="audio"
+      muted={!muteStates.audio.enabled}
+      onClick={toggleMicrophone}
+      onTouchEnd={onControlsTouchEnd}
+      disabled={muteStates.audio.setEnabled === null}
+      data-testid="incall_mute"
+    />,
+    <VideoButton
+      key="video"
+      muted={!muteStates.video.enabled}
+      onClick={toggleCamera}
+      onTouchEnd={onControlsTouchEnd}
+      disabled={muteStates.video.setEnabled === null}
+      data-testid="incall_videomute"
+    />,
+  );
+  if (switchCamera !== null)
     buttons.push(
-      <MicButton
-        key="audio"
-        muted={!muteStates.audio.enabled}
-        onClick={toggleMicrophone}
-        disabled={muteStates.audio.setEnabled === null}
-        data-testid="incall_mute"
-      />,
-      <VideoButton
-        key="video"
-        muted={!muteStates.video.enabled}
-        onClick={toggleCamera}
-        disabled={muteStates.video.setEnabled === null}
-        data-testid="incall_videomute"
+      <SwitchCameraButton
+        key="switch_camera"
+        className={styles.switchCamera}
+        onClick={switchCamera}
+        onTouchEnd={onControlsTouchEnd}
       />,
     );
-    if (!reducedControls) {
-      if (switchCamera !== null)
-        buttons.push(
-          <SwitchCameraButton key="switch_camera" onClick={switchCamera} />,
-        );
-      if (canScreenshare && !hideScreensharing) {
-        buttons.push(
-          <ShareScreenButton
-            key="share_screen"
-            enabled={isScreenShareEnabled}
-            onClick={toggleScreensharing}
-            data-testid="incall_screenshare"
-          />,
-        );
-      }
-      if (supportsReactions) {
-        buttons.push(
-          <RaiseHandToggleButton
-            client={client}
-            rtcSession={rtcSession}
-            key="4"
-          />,
-        );
-      }
-      buttons.push(<SettingsButton key="settings" onClick={openSettings} />);
-    }
-
+  if (canScreenshare && !hideScreensharing) {
     buttons.push(
-      <EndCallButton
-        key="end_call"
-        onClick={function (): void {
-          onLeave();
-        }}
-        data-testid="incall_leave"
+      <ShareScreenButton
+        key="share_screen"
+        className={styles.shareScreen}
+        enabled={isScreenShareEnabled}
+        onClick={toggleScreensharing}
+        onTouchEnd={onControlsTouchEnd}
+        data-testid="incall_screenshare"
       />,
-    );
-    footer = (
-      <div
-        ref={footerRef}
-        className={classNames(styles.footer, {
-          [styles.overlay]: windowMode === "flat",
-          [styles.hidden]: !showFooter || (!showControls && hideHeader),
-        })}
-      >
-        {!mobile && !hideHeader && (
-          <div className={styles.logo}>
-            <LogoMark width={24} height={24} aria-hidden />
-            <LogoType
-              width={80}
-              height={11}
-              aria-label={import.meta.env.VITE_PRODUCT_NAME || "Element Call"}
-            />
-          </div>
-        )}
-        {showControls && <div className={styles.buttons}>{buttons}</div>}
-        {!mobile && showControls && (
-          <LayoutToggle
-            className={styles.layout}
-            layout={gridMode}
-            setLayout={setGridMode}
-            onTouchEnd={onLayoutToggleTouchEnd}
-          />
-        )}
-      </div>
     );
   }
+  if (supportsReactions) {
+    buttons.push(
+      <ReactionToggleButton
+        key="raise_hand"
+        className={styles.raiseHand}
+        client={client}
+        rtcSession={rtcSession}
+        onTouchEnd={onControlsTouchEnd}
+      />,
+    );
+  }
+  if (layout.type !== "pip")
+    buttons.push(
+      <SettingsButton
+        key="settings"
+        onClick={openSettings}
+        onTouchEnd={onControlsTouchEnd}
+      />,
+    );
+
+  buttons.push(
+    <EndCallButton
+      key="end_call"
+      onClick={function (): void {
+        onLeave();
+      }}
+      onTouchEnd={onControlsTouchEnd}
+      data-testid="incall_leave"
+    />,
+  );
+  const footer = (
+    <div
+      ref={footerRef}
+      className={classNames(styles.footer, {
+        [styles.overlay]: windowMode === "flat",
+        [styles.hidden]: !showFooter || (!showControls && hideHeader),
+      })}
+    >
+      {!hideHeader && (
+        <div className={styles.logo}>
+          <LogoMark width={24} height={24} aria-hidden />
+          <LogoType
+            width={80}
+            height={11}
+            aria-label={import.meta.env.VITE_PRODUCT_NAME || "Element Call"}
+          />
+        </div>
+      )}
+      {showControls && <div className={styles.buttons}>{buttons}</div>}
+      {showControls && (
+        <LayoutToggle
+          className={styles.layout}
+          layout={gridMode}
+          setLayout={setGridMode}
+          onTouchEnd={onControlsTouchEnd}
+        />
+      )}
+    </div>
+  );
 
   return (
     <div
@@ -628,28 +670,45 @@ export const InCallView: FC<InCallViewProps> = ({
               />
             </LeftNav>
             <RightNav>
-              {!reducedControls && showControls && onShareClick !== null && (
-                <InviteButton onClick={onShareClick} />
+              {showControls && onShareClick !== null && (
+                <InviteButton
+                  className={styles.invite}
+                  onClick={onShareClick}
+                />
               )}
             </RightNav>
           </Header>
         ))}
       <RoomAudioRenderer />
       {renderContent()}
-      <audio ref={handRaisePlayer} hidden>
+      <audio ref={handRaisePlayer} preload="auto" hidden>
         <source src={handSoundOgg} type="audio/ogg; codecs=vorbis" />
         <source src={handSoundMp3} type="audio/mpeg" />
       </audio>
+      <ReactionsAudioRenderer />
+      {reactionsIcons.map(({ sender, emoji, startX }) => (
+        <span
+          style={{ left: `${startX}vw` }}
+          className={styles.floatingReaction}
+          key={sender}
+        >
+          {emoji}
+        </span>
+      ))}
       {footer}
-      {!noControls && <RageshakeRequestModal {...rageshakeRequestModalProps} />}
-      <SettingsModal
-        client={client}
-        roomId={rtcSession.room.roomId}
-        open={settingsModalOpen}
-        onDismiss={closeSettings}
-        tab={settingsTab}
-        onTabChange={setSettingsTab}
-      />
+      {layout.type !== "pip" && (
+        <>
+          <RageshakeRequestModal {...rageshakeRequestModalProps} />
+          <SettingsModal
+            client={client}
+            roomId={rtcSession.room.roomId}
+            open={settingsModalOpen}
+            onDismiss={closeSettings}
+            tab={settingsTab}
+            onTabChange={setSettingsTab}
+          />
+        </>
+      )}
     </div>
   );
 };

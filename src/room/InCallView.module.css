@@ -36,12 +36,14 @@ Please see LICENSE in the repository root for full details.
   inset-block-end: 0;
   z-index: 1;
   display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  grid-template-areas: "logo buttons layout";
+  grid-template-columns: minmax(0, var(--inline-content-inset)) 1fr auto 1fr minmax(
+      0,
+      var(--inline-content-inset)
+    );
+  grid-template-areas: ". logo buttons layout .";
   align-items: center;
   gap: var(--cpd-space-3x);
-  padding-block: var(--cpd-space-4x);
-  padding-inline: var(--inline-content-inset);
+  padding-block: var(--cpd-space-10x);
   background: linear-gradient(
     180deg,
     rgba(0, 0, 0, 0) 0%,
@@ -64,7 +66,6 @@ Please see LICENSE in the repository root for full details.
 .footer.overlay.hidden {
   display: grid;
   opacity: 0;
-  pointer-events: none;
 }
 
 .footer.overlay:has(:focus-visible) {
@@ -83,6 +84,7 @@ Please see LICENSE in the repository root for full details.
 
 .buttons {
   grid-area: buttons;
+  justify-self: center;
   display: flex;
   gap: var(--cpd-space-3x);
 }
@@ -92,15 +94,49 @@ Please see LICENSE in the repository root for full details.
   justify-self: end;
 }
 
-@media (min-height: 400px) {
+@media (max-width: 660px) {
   .footer {
-    padding-block: var(--cpd-space-8x);
+    grid-template-areas: ". buttons buttons buttons .";
+  }
+
+  .logo {
+    display: none;
+  }
+
+  .layout {
+    display: none !important;
   }
 }
 
-@media (min-height: 800px) {
+@media (max-width: 370px) {
+  .raiseHand {
+    display: none;
+  }
+}
+
+@media (max-width: 340px) {
+  .invite,
+  .switchCamera,
+  .shareScreen {
+    display: none;
+  }
+
+  @media (max-height: 400px) {
+    .footer {
+      display: none;
+    }
+  }
+}
+
+@media (max-height: 400px) {
   .footer {
-    padding-block: var(--cpd-space-10x);
+    padding-block: var(--cpd-space-4x);
+  }
+}
+
+@media (max-height: 800px) {
+  .footer {
+    padding-block: var(--cpd-space-8x);
   }
 }
 
@@ -143,4 +179,49 @@ Please see LICENSE in the repository root for full details.
 .tile.maximised {
   position: relative;
   flex-grow: 1;
+}
+
+.floatingReaction {
+  position: relative;
+  display: inline;
+  z-index: 2;
+  font-size: 32pt;
+  /* Reactions are "active" for 3 seconds (as per REACTION_ACTIVE_TIME_MS), give a bit more time for it to fade out. */
+  animation-duration: 4s;
+  animation-name: reaction-up;
+  width: fit-content;
+  pointer-events: none;
+}
+
+@keyframes reaction-up {
+  from {
+    opacity: 1;
+    translate: 100vw 0;
+    scale: 200%;
+  }
+
+  to {
+    opacity: 0;
+    translate: 100vw -100vh;
+    scale: 100%;
+  }
+}
+
+@media (prefers-reduced-motion) {
+  @keyframes reaction-up-reduced {
+    from {
+      opacity: 1;
+    }
+
+    to {
+      opacity: 0;
+    }
+  }
+
+  .floatingReaction {
+    font-size: 48pt;
+    animation-name: reaction-up-reduced;
+    top: calc(-50vh + (48pt / 2));
+    left: calc(50vw - (48pt / 2)) !important;
+  }
 }

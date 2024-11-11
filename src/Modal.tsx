@@ -27,8 +27,21 @@ import { useMediaQuery } from "./useMediaQuery";
 
 export interface Props {
   title: string;
+  /**
+   * Hide the modal header. Used for smaller popups where the context is readily apparent.
+   * A title should still be specified for users using assistive technology.
+   */
+  hideHeader?: boolean;
   children: ReactNode;
   className?: string;
+  /**
+   * Class name to be used when in drawer mode (touchscreen).
+   */
+  classNameDrawer?: string;
+  /**
+   * Class name to be used when in modal mode (desktop).
+   */
+  classNameModal?: string;
   /**
    * The controlled open state of the modal.
    */
@@ -54,8 +67,11 @@ export interface Props {
  */
 export const Modal: FC<Props> = ({
   title,
+  hideHeader,
   children,
   className,
+  classNameDrawer,
+  classNameModal,
   open,
   onDismiss,
   tabbed,
@@ -84,11 +100,13 @@ export const Modal: FC<Props> = ({
           <Drawer.Content
             className={classNames(
               className,
+              classNameDrawer,
               overlayStyles.overlay,
               styles.modal,
               styles.drawer,
               { [styles.tabbed]: tabbed },
             )}
+            role="dialog"
             // Suppress the warning about there being no description; the modal
             // has an accessible title
             aria-describedby={undefined}
@@ -108,18 +126,46 @@ export const Modal: FC<Props> = ({
       </Drawer.Root>
     );
   } else {
+    const titleNode = (
+      <DialogTitle asChild>
+        <Heading as="h2" weight="semibold" size="md">
+          {title}
+        </Heading>
+      </DialogTitle>
+    );
+    const header = (
+      <div className={styles.header}>
+        {titleNode}
+        {onDismiss !== undefined && (
+          <DialogClose
+            className={styles.close}
+            data-testid="modal_close"
+            aria-label={t("action.close")}
+          >
+            <CloseIcon width={20} height={20} />
+          </DialogClose>
+        )}
+      </div>
+    );
+
     return (
       <DialogRoot open={open} onOpenChange={onOpenChange}>
         <DialogPortal>
           <DialogOverlay
             className={classNames(overlayStyles.bg, overlayStyles.animate)}
           />
-          {/* Suppress the warning about there being no description; the modal
-          has an accessible title */}
-          <DialogContent asChild aria-describedby={undefined} {...rest}>
+          <DialogContent
+            asChild
+            // Suppress the warning about there being no description; the modal
+            // has an accessible title
+            aria-describedby={undefined}
+            role="dialog"
+            {...rest}
+          >
             <Glass
               className={classNames(
                 className,
+                classNameModal,
                 overlayStyles.overlay,
                 overlayStyles.animate,
                 styles.modal,
@@ -128,22 +174,10 @@ export const Modal: FC<Props> = ({
               )}
             >
               <div className={styles.content}>
-                <div className={styles.header}>
-                  <DialogTitle asChild>
-                    <Heading as="h2" weight="semibold" size="md">
-                      {title}
-                    </Heading>
-                  </DialogTitle>
-                  {onDismiss !== undefined && (
-                    <DialogClose
-                      className={styles.close}
-                      data-testid="modal_close"
-                      aria-label={t("action.close")}
-                    >
-                      <CloseIcon width={20} height={20} />
-                    </DialogClose>
-                  )}
-                </div>
+                {!hideHeader ? header : null}
+                {hideHeader ? (
+                  <VisuallyHidden asChild>{titleNode}</VisuallyHidden>
+                ) : null}
                 <div className={styles.body}>{children}</div>
               </div>
             </Glass>

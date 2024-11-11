@@ -20,6 +20,8 @@ import { Avatar } from "../Avatar";
 import { EncryptionStatus } from "../state/MediaViewModel";
 import { RaisedHandIndicator } from "../reactions/RaisedHandIndicator";
 import { showHandRaisedTimer, useSetting } from "../settings/settings";
+import { ReactionOption } from "../reactions";
+import { ReactionIndicator } from "../reactions/ReactionIndicator";
 
 interface Props extends ComponentProps<typeof animated.div> {
   className?: string;
@@ -37,6 +39,7 @@ interface Props extends ComponentProps<typeof animated.div> {
   displayName: string;
   primaryButton?: ReactNode;
   raisedHandTime?: Date;
+  currentReaction?: ReactionOption;
   raisedHandOnClick?: () => void;
 }
 
@@ -58,6 +61,7 @@ export const MediaView = forwardRef<HTMLDivElement, Props>(
       primaryButton,
       encryptionStatus,
       raisedHandTime,
+      currentReaction,
       raisedHandOnClick,
       ...props
     },
@@ -98,7 +102,22 @@ export const MediaView = forwardRef<HTMLDivElement, Props>(
           )}
         </div>
         <div className={styles.fg}>
-          {encryptionStatus !== EncryptionStatus.Okay && (
+          <div style={{ display: "flex" }}>
+            <RaisedHandIndicator
+              raisedHandTime={raisedHandTime}
+              miniature={avatarSize < 96}
+              showTimer={handRaiseTimerVisible}
+              onClick={raisedHandOnClick}
+            />
+            {currentReaction && (
+              <ReactionIndicator
+                miniature={avatarSize < 96}
+                emoji={currentReaction.emoji}
+              />
+            )}
+          </div>
+          {/* TODO: Bring this back once encryption status is less broken */}
+          {/*encryptionStatus !== EncryptionStatus.Okay && (
             <div className={styles.status}>
               <Text as="span" size="sm" weight="medium" className={styles.name}>
                 {encryptionStatus === EncryptionStatus.Connecting &&
@@ -111,13 +130,7 @@ export const MediaView = forwardRef<HTMLDivElement, Props>(
                   t("e2ee_encryption_status.password_invalid")}
               </Text>
             </div>
-          )}
-          <RaisedHandIndicator
-            raisedHandTime={raisedHandTime}
-            miniature={avatarSize < 96}
-            showTimer={handRaiseTimerVisible}
-            onClick={raisedHandOnClick}
-          />
+          )*/}
           <div className={styles.nameTag}>
             {nameTagLeadingIcon}
             <Text as="span" size="sm" weight="medium" className={styles.name}>

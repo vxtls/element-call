@@ -17,7 +17,7 @@
     "i18n:check": "i18next --fail-on-warnings --fail-on-update",
     "test": "vitest",
     "test:coverage": "vitest --coverage",
-    "backend": "docker-compose -f backend-docker-compose.yml up"
+    "backend": "docker-compose -f dev-backend-docker-compose.yml up"
   },
   "devDependencies": {
     "@babel/core": "^7.16.5",
@@ -25,6 +25,7 @@
     "@babel/preset-react": "^7.22.15",
     "@babel/preset-typescript": "^7.23.0",
     "@formatjs/intl-durationformat": "^0.6.1",
+    "@formatjs/intl-segmenter": "^11.7.3",
     "@livekit/components-core": "^0.11.0",
     "@livekit/components-react": "^2.0.0",
     "@opentelemetry/api": "^1.4.0",
@@ -57,8 +58,8 @@
     "@typescript-eslint/eslint-plugin": "^8.0.0",
     "@typescript-eslint/parser": "^8.0.0",
     "@use-gesture/react": "^10.2.11",
-    "@vector-im/compound-design-tokens": "^1.0.0",
-    "@vector-im/compound-web": "^6.0.0",
+    "@vector-im/compound-design-tokens": "^1.9.1",
+    "@vector-im/compound-web": "element-hq/compound-web#46cf2d94d9c9b6d25e80ef0e785f3a929ed040ea",
     "@vitejs/plugin-basic-ssl": "^1.0.1",
     "@vitejs/plugin-react": "^4.0.1",
     "@vitest/coverage-v8": "^2.0.5",
@@ -86,7 +87,7 @@
     "livekit-client": "^2.5.7",
     "lodash": "^4.17.21",
     "loglevel": "^1.9.1",
-    "matrix-js-sdk": "matrix-org/matrix-js-sdk#e11f9defb9b9603ee2d982a8fd2b0c9577fbf48c",
+    "matrix-js-sdk": "matrix-org/matrix-js-sdk#6971e7bebaad643c233e5057da7a0d42441c0789",
     "matrix-widget-api": "^1.8.2",
     "normalize.css": "^8.0.1",
     "observable-hooks": "^4.2.3",
