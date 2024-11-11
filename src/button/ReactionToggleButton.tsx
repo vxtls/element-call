@@ -5,13 +5,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 Please see LICENSE in the repository root for full details.
 */
 
-import {
-  Button as CpdButton,
-  Tooltip,
-  Search,
-  Form,
-  Alert,
-} from "@vector-im/compound-web";
+import { Button as CpdButton, Tooltip, Alert } from "@vector-im/compound-web";
 import {
   RaisedHandSolidIcon,
   ReactionIcon,
@@ -85,8 +79,7 @@ export function ReactionPopupMenu({
   const [isFullyExpanded, setExpanded] = useState(false);
 
   const filteredReactionSet = useMemo(
-    () =>
-      isFullyExpanded ? ReactionSet : ReactionSet.slice(0, 6),
+    () => (isFullyExpanded ? ReactionSet : ReactionSet.slice(0, 6)),
     [isFullyExpanded],
   );
 
@@ -134,19 +127,27 @@ export function ReactionPopupMenu({
             ))}
           </menu>
         </section>
-          <section style={{ marginLeft: "var(--cpd-separator-spacing)" }}>
-            <li key="search" className={styles.reactionPopupMenuItem}>
-              <Tooltip label={isFullyExpanded ? t("action.show_less") : t("action.show_more")}>
-                <CpdButton
-                  iconOnly
-                  aria-label={isFullyExpanded ? t("action.show_less") : t("action.show_more")}
-                  Icon={isFullyExpanded ? ChevronUpIcon : ChevronDownIcon}
-                  kind="tertiary"
-                  onClick={() => setExpanded(!isFullyExpanded)}
-                />
-              </Tooltip>
-            </li>
-          </section>
+        <section style={{ marginLeft: "var(--cpd-separator-spacing)" }}>
+          <li key="search" className={styles.reactionPopupMenuItem}>
+            <Tooltip
+              label={
+                isFullyExpanded ? t("action.show_less") : t("action.show_more")
+              }
+            >
+              <CpdButton
+                iconOnly
+                aria-label={
+                  isFullyExpanded
+                    ? t("action.show_less")
+                    : t("action.show_more")
+                }
+                Icon={isFullyExpanded ? ChevronUpIcon : ChevronDownIcon}
+                kind="tertiary"
+                onClick={() => setExpanded(!isFullyExpanded)}
+              />
+            </Tooltip>
+          </li>
+        </section>
       </div>
     </>
   );
