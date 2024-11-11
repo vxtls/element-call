@@ -128,25 +128,23 @@ export function ReactionPopupMenu({
           </menu>
         </section>
         <section style={{ marginLeft: "var(--cpd-separator-spacing)" }}>
-          <li key="search" className={styles.reactionPopupMenuItem}>
-            <Tooltip
-              label={
-                isFullyExpanded ? t("action.show_less") : t("action.show_more")
+          <Tooltip
+            label={
+              isFullyExpanded ? t("action.show_less") : t("action.show_more")
+            }
+          >
+            <CpdButton
+              iconOnly
+              aria-label={
+                isFullyExpanded
+                  ? t("action.show_less")
+                  : t("action.show_more")
               }
-            >
-              <CpdButton
-                iconOnly
-                aria-label={
-                  isFullyExpanded
-                    ? t("action.show_less")
-                    : t("action.show_more")
-                }
-                Icon={isFullyExpanded ? ChevronUpIcon : ChevronDownIcon}
-                kind="tertiary"
-                onClick={() => setExpanded(!isFullyExpanded)}
-              />
-            </Tooltip>
-          </li>
+              Icon={isFullyExpanded ? ChevronUpIcon : ChevronDownIcon}
+              kind="tertiary"
+              onClick={() => setExpanded(!isFullyExpanded)}
+            />
+          </Tooltip>
         </section>
       </div>
     </>
