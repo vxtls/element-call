@@ -183,7 +183,9 @@ export const GroupCallView: FC<Props> = ({
           // In preload mode without lobby we wait for a join action before entering
           const onJoin = (ev: CustomEvent<IWidgetApiRequest>): void => {
             (async (): Promise<void> => {
-              await defaultDeviceSetup(ev.detail.data as unknown as JoinCallData);
+              await defaultDeviceSetup(
+                ev.detail.data as unknown as JoinCallData,
+              );
               await enterRTCSession(rtcSession, perParticipantE2EE);
               widget!.api.transport.reply(ev.detail, {});
             })().catch((e) => {
