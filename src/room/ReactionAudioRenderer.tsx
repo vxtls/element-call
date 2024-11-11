@@ -13,10 +13,10 @@ import {
   soundEffectVolumeSetting as effectSoundVolumeSetting,
   useSetting,
 } from "../settings/settings";
-import { GenericReaction, ReactionSet } from "../reactions";
+import { GenericReaction } from "../reactions";
 
 export function ReactionsAudioRenderer(): ReactNode {
-  const { reactions } = useReactions();
+  const { reactions, allReactions } = useReactions();
   const [shouldPlay] = useSetting(playReactionsSound);
   const [effectSoundVolume] = useSetting(effectSoundVolumeSetting);
   const audioElements = useRef<Record<string, HTMLAudioElement | null>>({});
@@ -52,7 +52,7 @@ export function ReactionsAudioRenderer(): ReactNode {
   // be delayed.
   return (
     <>
-      {[GenericReaction, ...ReactionSet].map(
+      {[GenericReaction, ...allReactions].map(
         (r) =>
           r.sound && (
             <audio

@@ -64,6 +64,10 @@ export interface ECallReactionEventContent {
   name: string;
 }
 
+export interface ECallReactionSoundsEventContent {
+  reactions: ReactionOption[],
+}
+
 export const GenericReaction: ReactionOption = {
   name: "generic",
   emoji: "", // Filled in by user

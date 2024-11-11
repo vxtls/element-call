@@ -11,6 +11,7 @@ import {
   RelationType,
   RoomEvent as MatrixRoomEvent,
   MatrixEventEvent,
+  Direction,
 } from "matrix-js-sdk/src/matrix";
 import { ReactionEventContent } from "matrix-js-sdk/src/types";
 import {
@@ -29,7 +30,9 @@ import { useMatrixRTCSessionMemberships } from "./useMatrixRTCSessionMemberships
 import { useClientState } from "./ClientContext";
 import {
   ECallReactionEventContent,
+  ECallReactionSoundsEventContent,
   ElementCallReactionEventType,
+  ElementCallReactionsEventType,
   GenericReaction,
   ReactionOption,
   ReactionSet,
@@ -37,6 +40,7 @@ import {
 import { useLatest } from "./useLatest";
 
 interface ReactionsContextType {
+  allReactions: ReactionOption[],
   raisedHands: Record<string, Date>;
   supportsReactions: boolean;
   reactions: Record<string, ReactionOption>;
@@ -95,6 +99,19 @@ export const ReactionsProvider = ({
   const [reactions, setReactions] = useState<Record<string, ReactionOption>>(
     {},
   );
+
+  // TODO: Refetch if the timeline changes.
+  const allReactions = useMemo(() => {
+    const result = room.getLiveTimeline().getState(Direction.Forward)?.getStateEvents(ElementCallReactionsEventType, '');
+    if (!result) {
+      return ReactionSet;
+    }
+    const content = result.getContent() as ECallReactionSoundsEventContent;
+    if (!content.reactions || !Array.isArray(content.reactions)) {
+      logger.warn(`Reactions event ${result.event.event_id} was not correctly formatted, ignoring`);
+    }
+    return [...ReactionSet, ...content.reactions];
+  }, [room])
 
   // Reduce the data down for the consumers.
   const resultRaisedHands = useMemo(
@@ -345,6 +362,7 @@ export const ReactionsProvider = ({
         supportsReactions,
         reactions,
         lowerHand,
+        allReactions,
       }}
     >
       {children}

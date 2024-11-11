@@ -33,7 +33,6 @@ import { useMatrixRTCSessionMemberships } from "../useMatrixRTCSessionMembership
 import styles from "./ReactionToggleButton.module.css";
 import {
   ReactionOption,
-  ReactionSet,
   ElementCallReactionEventType,
 } from "../reactions";
 import { Modal } from "../Modal";
@@ -77,9 +76,10 @@ export function ReactionPopupMenu({
 }): ReactNode {
   const { t } = useTranslation();
   const [isFullyExpanded, setExpanded] = useState(false);
+  const { allReactions } = useReactions();
 
   const filteredReactionSet = useMemo(
-    () => (isFullyExpanded ? ReactionSet : ReactionSet.slice(0, 6)),
+    () => (isFullyExpanded ? allReactions : allReactions.slice(0, 6)),
     [isFullyExpanded],
   );
 
