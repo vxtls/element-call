@@ -117,9 +117,9 @@ export class CallTerminatedMessage extends Error {
 }
 
 export const useLoadGroupCall = (
+  client: MatrixClient | undefined,
   roomIdOrAlias: string | null,
   viaServers: string[],
-  client?: MatrixClient,
 ): GroupCallStatus => {
   const [state, setState] = useState<GroupCallStatus>({ kind: "loading" });
   const activeRoom = useRef<Room>();

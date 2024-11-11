@@ -5,7 +5,7 @@ SPDX-License-Identifier: AGPL-3.0-only
 Please see LICENSE in the repository root for full details.
 */
 
-import { FC, useEffect, useState, useCallback, ReactNode, useRef } from "react";
+import { FC, useEffect, useState, ReactNode, useRef } from "react";
 import { logger } from "matrix-js-sdk/src/logger";
 import { useTranslation } from "react-i18next";
 import { CheckIcon } from "@vector-im/compound-design-tokens/assets/web/icons";
@@ -55,7 +55,7 @@ export const RoomPage: FC = () => {
     useClientLegacy();
   const { avatarUrl, displayName: userDisplayName } = useProfile(client);
 
-  const groupCallState = useLoadGroupCall(roomIdOrAlias, viaServers, client);
+  const groupCallState = useLoadGroupCall(client, roomIdOrAlias, viaServers);
   const muteStates = useMuteStates();
 
   useEffect(() => {
@@ -88,12 +88,12 @@ export const RoomPage: FC = () => {
   const wasInWaitForInviteState = useRef<boolean>(false);
 
   useEffect(() => {
-    if (groupCallState.kind === "loaded" && wasInWaitForInviteState) {
+    if (groupCallState.kind === "loaded" && wasInWaitForInviteState.current) {
       logger.log("Play join sound 'Not yet implemented'");
     }
   }, [groupCallState.kind]);
 
-  const groupCallView = useCallback((): JSX.Element => {
+  const groupCallView = (): JSX.Element => {
     switch (groupCallState.kind) {
       case "loaded":
         return (
@@ -190,19 +190,7 @@ export const RoomPage: FC = () => {
       default:
         return <> </>;
     }
-  }, [
-    groupCallState,
-    client,
-    passwordlessUser,
-    confineToRoom,
-    preload,
-    skipLobby,
-    hideHeader,
-    muteStates,
-    t,
-    userDisplayName,
-    avatarUrl,
-  ]);
+  };
 
   let content: ReactNode;
   if (loading || isRegistering) {
