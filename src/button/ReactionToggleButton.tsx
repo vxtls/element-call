@@ -136,9 +136,7 @@ export function ReactionPopupMenu({
             <CpdButton
               iconOnly
               aria-label={
-                isFullyExpanded
-                  ? t("action.show_less")
-                  : t("action.show_more")
+                isFullyExpanded ? t("action.show_less") : t("action.show_more")
               }
               Icon={isFullyExpanded ? ChevronUpIcon : ChevronDownIcon}
               kind="tertiary"
