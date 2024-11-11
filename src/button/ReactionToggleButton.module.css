@@ -22,6 +22,8 @@
   display: flex;
   flex-wrap: wrap;
   gap: var(--cpd-separator-spacing);
+  max-height: 10em;
+  max-width: 22.5em;
 }
 
 .reactionPopupMenu section {
@@ -63,18 +65,6 @@
   margin-left: var(--cpd-separator-spacing);
   margin-right: var(--cpd-separator-spacing);
 }
-
-.searchForm {
-  display: flex;
-  flex-direction: row;
-  gap: var(--cpd-separator-spacing);
-  margin-bottom: var(--cpd-space-3x);
-}
-
-.searchForm > label {
-  flex: auto;
-}
-
 .alert {
   margin-bottom: var(--cpd-space-3x);
   animation: grow-in 200ms;
