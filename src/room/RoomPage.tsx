@@ -91,7 +91,7 @@ export const RoomPage: FC = () => {
     if (groupCallState.kind === "loaded" && wasInWaitForInviteState) {
       logger.log("Play join sound 'Not yet implemented'");
     }
-  });
+  }, [groupCallState.kind]);
 
   const groupCallView = useCallback((): JSX.Element => {
     switch (groupCallState.kind) {

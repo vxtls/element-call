@@ -135,6 +135,13 @@ export const GroupCallView: FC<Props> = ({
   latestMuteStates.current = muteStates;
 
   useEffect(() => {
+    // skip lobby if we are not in widget mode;
+    if (!widget && skipLobby) {
+      void enterRTCSession(rtcSession, perParticipantE2EE);
+    }
+  }, [perParticipantE2EE, rtcSession, skipLobby]);
+
+  useEffect(() => {
     const defaultDeviceSetup = async (
       requestedDeviceData: JoinCallData,
     ): Promise<void> => {
