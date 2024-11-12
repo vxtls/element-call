@@ -11,8 +11,6 @@ import {
   RelationType,
   RoomEvent as MatrixRoomEvent,
   MatrixEventEvent,
-  ClientEvent,
-  SyncState,
 } from "matrix-js-sdk/src/matrix";
 import { ReactionEventContent } from "matrix-js-sdk/src/types";
 import {
@@ -93,7 +91,6 @@ export const ReactionsProvider = ({
     clientState?.state === "valid" && clientState.supportedFeatures.reactions;
   const room = rtcSession.room;
   const myUserId = room.client.getUserId();
-  const [hasBackfilled, setHasBackfilled] = useState(false);
 
   const [reactions, setReactions] = useState<Record<string, ReactionOption>>(
     {},
@@ -124,19 +121,29 @@ export const ReactionsProvider = ({
   }, []);
 
   // This effect will check the state whenever the membership of the session changes.
-  // This function is safe to run multiple times.
-  const backfillHandRaised = useCallback(() => {
+  useEffect(() => {
     // Fetches the first reaction for a given event.
-    const getLastReactionEvent = (
+    const getLastReactionEvent = async (
       eventId: string,
       expectedSender: string,
-    ): MatrixEvent | undefined => {
+    ): Promise<MatrixEvent | undefined> => {
       const relations = room.relations.getChildEventsForEvent(
         eventId,
         RelationType.Annotation,
         EventType.Reaction,
       );
-      const allEvents = relations?.getRelations() ?? [];
+      let allEvents = relations?.getRelations() ?? [];
+      // We might not have synced this far.
+      if (allEvents.length === 0) {
+        const res = await room.client.fetchRelations(
+          room.roomId,
+          eventId,
+          RelationType.Annotation,
+          EventType.Reaction,
+        );
+        allEvents = res.chunk.map((e) => new MatrixEvent(e));
+      }
+
       return allEvents.find(
         (reaction) =>
           reaction.event.sender === expectedSender &&
@@ -166,46 +173,31 @@ export const ReactionsProvider = ({
         // was raised, reset.
         removeRaisedHand(m.sender);
       }
-      const reaction = getLastReactionEvent(m.eventId, m.sender);
-      if (reaction) {
-        const eventId = reaction?.getId();
-        if (!eventId) {
-          continue;
-        }
-        addRaisedHand(m.sender, {
-          membershipEventId: m.eventId,
-          reactionEventId: eventId,
-          time: new Date(reaction.localTimestamp),
+      getLastReactionEvent(m.eventId, m.sender)
+        .then((reaction) => {
+          if (reaction) {
+            const eventId = reaction.getId();
+            if (!eventId) {
+              return;
+            }
+            addRaisedHand(m.sender!, {
+              membershipEventId: m.eventId!,
+              reactionEventId: eventId,
+              time: new Date(reaction.localTimestamp),
+            });
+          }
+        })
+        .catch((ex) => {
+          logger.warn(
+            `Failed to fetch reaction for member ${m.sender} (${m.eventId})`,
+            ex,
+          );
         });
-      }
     }
     // Ignoring raisedHands here because we don't want to trigger each time the raised
     // hands set is updated.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [room, memberships, myUserId, addRaisedHand, removeRaisedHand]);
-
-  useEffect(() => {
-    // Run once on startup (and will rerun when membership changes above)
-    backfillHandRaised();
-
-    function onSync(state: SyncState | null): void {
-      if (state === SyncState.Prepared) {
-        logger.debug("Backfilling hand raised after successful sync.");
-        backfillHandRaised();
-        setHasBackfilled(true);
-      }
-    }
-    // The *first* time we successfully sync, fetch reactions as they may not
-    // be immediately available.
-    if (!hasBackfilled) {
-      room.client.on(ClientEvent.Sync, onSync);
-    }
-    return (): void => {
-      if (!hasBackfilled) {
-        room.client.off(ClientEvent.Sync, onSync);
-      }
-    };
-  }, [backfillHandRaised, room, hasBackfilled]);
 
   const latestMemberships = useLatest(memberships);
   const latestRaisedHands = useLatest(raisedHands);
@@ -348,8 +340,6 @@ export const ReactionsProvider = ({
     removeRaisedHand,
     latestMemberships,
     latestRaisedHands,
-    backfillHandRaised,
-    hasBackfilled,
   ]);
 
   const lowerHand = useCallback(async () => {
