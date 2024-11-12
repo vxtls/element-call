@@ -13,7 +13,7 @@
 
 .reactionPopupMenuModal > div > div {
   padding-inline: var(--cpd-space-6x) !important;
-  padding-block: var(--cpd-space-6x) var(--cpd-space-8x) !important;
+  padding-block: var(--cpd-space-6x) var(--cpd-space-6x) !important;
 }
 
 .reactionPopupMenu menu {
@@ -53,6 +53,7 @@
     width: 1em;
     height: 1em;
     min-block-size: unset;
+    border: none;
   }
 }
 
