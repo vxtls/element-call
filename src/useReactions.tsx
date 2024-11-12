@@ -143,7 +143,6 @@ export const ReactionsProvider = ({
         );
         allEvents = res.chunk.map((e) => new MatrixEvent(e));
       }
-
       return allEvents.find(
         (reaction) =>
           reaction.event.sender === expectedSender &&
