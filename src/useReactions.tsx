@@ -11,6 +11,8 @@ import {
   RelationType,
   RoomEvent as MatrixRoomEvent,
   MatrixEventEvent,
+  ClientEvent,
+  SyncState,
 } from "matrix-js-sdk/src/matrix";
 import { ReactionEventContent } from "matrix-js-sdk/src/types";
 import {
@@ -91,6 +93,7 @@ export const ReactionsProvider = ({
     clientState?.state === "valid" && clientState.supportedFeatures.reactions;
   const room = rtcSession.room;
   const myUserId = room.client.getUserId();
+  const [hasBackfilled, setHasBackfilled] = useState(false);
 
   const [reactions, setReactions] = useState<Record<string, ReactionOption>>(
     {},
@@ -106,6 +109,7 @@ export const ReactionsProvider = ({
   );
 
   const addRaisedHand = useCallback((userId: string, info: RaisedHandInfo) => {
+    logger.info(`Adding raised hand for ${userId}`);
     setRaisedHands((prevRaisedHands) => ({
       ...prevRaisedHands,
       [userId]: info,
@@ -113,13 +117,15 @@ export const ReactionsProvider = ({
   }, []);
 
   const removeRaisedHand = useCallback((userId: string) => {
+    logger.info(`Removing raised hand for ${userId}`);
     setRaisedHands(
       ({ [userId]: _removed, ...remainingRaisedHands }) => remainingRaisedHands,
     );
   }, []);
 
   // This effect will check the state whenever the membership of the session changes.
-  useEffect(() => {
+  // This function is safe to run multiple times.
+  const backfillHandRaised = useCallback(() => {
     // Fetches the first reaction for a given event.
     const getLastReactionEvent = (
       eventId: string,
@@ -177,6 +183,29 @@ export const ReactionsProvider = ({
     // hands set is updated.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [room, memberships, myUserId, addRaisedHand, removeRaisedHand]);
+
+  useEffect(() => {
+    // Run once on startup (and will rerun when membership changes above)
+    backfillHandRaised();
+
+    function onSync(state: SyncState | null): void {
+      if (state === SyncState.Prepared) {
+        logger.debug("Backfilling hand raised after successful sync.");
+        backfillHandRaised();
+        setHasBackfilled(true);
+      }
+    }
+    // The *first* time we successfully sync, fetch reactions as they may not
+    // be immediately available.
+    if (!hasBackfilled) {
+      room.client.on(ClientEvent.Sync, onSync);
+    }
+    return (): void => {
+      if (!hasBackfilled) {
+        room.client.off(ClientEvent.Sync, onSync);
+      }
+    };
+  }, [backfillHandRaised, room, hasBackfilled]);
 
   const latestMemberships = useLatest(memberships);
   const latestRaisedHands = useLatest(raisedHands);
@@ -307,8 +336,8 @@ export const ReactionsProvider = ({
     return (): void => {
       room.off(MatrixRoomEvent.Timeline, handleReactionEvent);
       room.off(MatrixRoomEvent.Redaction, handleReactionEvent);
-      room.client.off(MatrixEventEvent.Decrypted, handleReactionEvent);
       room.off(MatrixRoomEvent.LocalEchoUpdated, handleReactionEvent);
+      room.client.off(MatrixEventEvent.Decrypted, handleReactionEvent);
       reactionTimeouts.forEach((t) => clearTimeout(t));
       // If we're clearing timeouts, we also clear all reactions.
       setReactions({});
@@ -319,6 +348,8 @@ export const ReactionsProvider = ({
     removeRaisedHand,
     latestMemberships,
     latestRaisedHands,
+    backfillHandRaised,
+    hasBackfilled,
   ]);
 
   const lowerHand = useCallback(async () => {
