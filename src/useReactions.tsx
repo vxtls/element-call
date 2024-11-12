@@ -133,7 +133,7 @@ export const ReactionsProvider = ({
         EventType.Reaction,
       );
       let allEvents = relations?.getRelations() ?? [];
-      // We might not have synced this far.
+      // If we found no relations for this event, fetch via fetchRelations.
       if (allEvents.length === 0) {
         const res = await room.client.fetchRelations(
           room.roomId,
