@@ -12,7 +12,6 @@ import {
   Filter,
   ICreateClientOpts,
   Preset,
-  RoomEvent,
   Visibility,
 } from "matrix-js-sdk/src/matrix";
 import { ClientEvent } from "matrix-js-sdk/src/client";
