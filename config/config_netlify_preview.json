@@ -17,5 +17,7 @@
   },
   "rageshake": {
     "submit_url": "https://element.io/bugreports/submit"
-  }
+  },
+  "membership_keep_alive_period": 5000,
+  "membership_server_side_expiry_timeout": 15000
 }
