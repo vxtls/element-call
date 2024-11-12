@@ -10,6 +10,7 @@ import { Root, Track, Range, Thumb } from "@radix-ui/react-slider";
 import classNames from "classnames";
 
 import styles from "./Slider.module.css";
+import { Tooltip } from "@vector-im/compound-web";
 
 interface Props {
   className?: string;
@@ -66,7 +67,10 @@ export const Slider: FC<Props> = ({
       <Track className={styles.track}>
         <Range className={styles.highlight} />
       </Track>
-      <Thumb className={styles.handle} aria-label={label} />
+      {/* Note: This is expected not to be visible on mobile.*/}
+      <Tooltip placement="top" label={Math.round(value * 100).toString() + "%"}>
+        <Thumb className={styles.handle} aria-label={label} />
+      </Tooltip>
     </Root>
   );
 };
