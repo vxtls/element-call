@@ -8,9 +8,9 @@ Please see LICENSE in the repository root for full details.
 import { FC, useCallback } from "react";
 import { Root, Track, Range, Thumb } from "@radix-ui/react-slider";
 import classNames from "classnames";
+import { Tooltip } from "@vector-im/compound-web";
 
 import styles from "./Slider.module.css";
-import { Tooltip } from "@vector-im/compound-web";
 
 interface Props {
   className?: string;
