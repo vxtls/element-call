@@ -27,6 +27,7 @@ import {
   useSetting,
   developerSettingsTab as developerSettingsTabSetting,
   duplicateTiles as duplicateTilesSetting,
+  showNonMemberTiles as showNonMemberTilesSetting,
   useOptInAnalytics,
   soundEffectVolumeSetting,
 } from "./settings";
@@ -69,6 +70,10 @@ export const SettingsModal: FC<Props> = ({
     developerSettingsTabSetting,
   );
   const [duplicateTiles, setDuplicateTiles] = useSetting(duplicateTilesSetting);
+
+  const [showNonMemberTiles, setShowNonMemberTiles] = useSetting(
+    showNonMemberTilesSetting,
+  );
 
   // Generate a `SelectInput` with a list of devices for a given device kind.
   const generateDeviceSelection = (
@@ -250,6 +255,20 @@ export const SettingsModal: FC<Props> = ({
                 setDuplicateTiles(Number.isNaN(value) ? 0 : value);
               },
               [setDuplicateTiles],
+            )}
+          />
+        </FieldRow>
+        <FieldRow>
+          <InputField
+            id="showNonMemberTiles"
+            type="checkbox"
+            label={t("settings.show_non_member_tiles")}
+            checked={!!showNonMemberTiles}
+            onChange={useCallback(
+              (event: ChangeEvent<HTMLInputElement>): void => {
+                setShowNonMemberTiles(event.target.checked);
+              },
+              [setShowNonMemberTiles],
             )}
           />
         </FieldRow>
