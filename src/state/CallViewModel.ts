@@ -67,7 +67,7 @@ import {
 } from "./MediaViewModel";
 import { accumulate, finalizeValue } from "../utils/observable";
 import { ObservableScope } from "./ObservableScope";
-import { duplicateTiles, showNonMemberTiles } from "../settings/settings";
+import { duplicateTiles } from "../settings/settings";
 import { isFirefox } from "../Platform";
 import { setPipEnabled } from "../controls";
 import { GridTileViewModel, SpotlightTileViewModel } from "./TileViewModel";
@@ -439,7 +439,6 @@ export class CallViewModel extends ViewModel {
       this.matrixRTCSession,
       MatrixRTCSessionEvent.MembershipsChanged,
     ).pipe(startWith(null)),
-    showNonMemberTiles.value,
   ]).pipe(
     scan(
       (
@@ -449,7 +448,6 @@ export class CallViewModel extends ViewModel {
           { participant: localParticipant },
           duplicateTiles,
           _membershipsChanged,
-          showNonMemberTiles,
         ],
       ) => {
         const newItems = new Map(
@@ -478,19 +476,11 @@ export class CallViewModel extends ViewModel {
               }
               for (let i = 0; i < 1 + duplicateTiles; i++) {
                 const indexedMediaId = `${mediaId}:${i}`;
-                let prevMedia = prevItems.get(indexedMediaId);
+                const prevMedia = prevItems.get(indexedMediaId);
                 if (prevMedia && prevMedia instanceof UserMedia) {
                   if (prevMedia.participant.value !== participant) {
                     // Update the BahviourSubject in the UserMedia.
                     prevMedia.participant.next(participant);
-                  }
-                  if (prevMedia.vm.member === undefined) {
-                    // We have a previous media created because of the `debugShowNonMember` flag.
-                    // In this case we actually replace the media item.
-                    // This "hack" never occurs if we do not use the `debugShowNonMember` debugging
-                    // option and if we always find a room member for each rtc member (which also
-                    // only fails if we have a fundamental problem)
-                    prevMedia = undefined;
                   }
                 }
                 yield [
@@ -528,64 +518,7 @@ export class CallViewModel extends ViewModel {
           }.bind(this)(),
         );
 
-        // Generate non member items (items without a corresponding MatrixRTC member)
-        // Those items should not be rendered, they are participants in livekit that do not have a corresponding
-        // matrix rtc members. This cannot be any good:
-        //  - A malicious user impersonates someone
-        //  - Someone injects abusive content
-        //  - The user cannot have encryption keys so it makes no sense to participate
-        // We can only trust users that have a matrixRTC member event.
-        //
-        // This is still available as a debug option. This can be useful
-        //  - If one wants to test scalability using the livekit cli.
-        //  - If an experimental project does not yet do the matrixRTC bits.
-        //  - If someone wants to debug if the LK connection works but matrixRTC room state failed to arrive.
-        const debugShowNonMember = showNonMemberTiles; //Config.get().show_non_member_tiles;
-        const newNonMemberItems = debugShowNonMember
-          ? new Map(
-              function* (this: CallViewModel): Iterable<[string, MediaItem]> {
-                for (const participant of remoteParticipants) {
-                  for (let i = 0; i < 1 + duplicateTiles; i++) {
-                    const maybeNonMemberParticipantId =
-                      participant.identity + ":" + i;
-                    if (!newItems.has(maybeNonMemberParticipantId)) {
-                      const nonMemberId = maybeNonMemberParticipantId;
-                      yield [
-                        nonMemberId,
-                        // We create UserMedia with or without a participant.
-                        // This will be the initial value of a BehaviourSubject.
-                        // Once a participant appears we will update the BehaviourSubject. (see above)
-                        prevItems.get(nonMemberId) ??
-                          new UserMedia(
-                            nonMemberId,
-                            undefined,
-                            participant,
-                            this.encryptionSystem,
-                            this.livekitRoom,
-                            false,
-                          ),
-                      ];
-                    }
-                  }
-                }
-              }.bind(this)(),
-            )
-          : new Map();
-        if (newNonMemberItems.size > 0) {
-          logger.debug("Added NonMember items: ", newNonMemberItems);
-        }
-        const newNonMemberItemCount =
-          newNonMemberItems.size / (1 + duplicateTiles);
-        if (this.nonMemberItemCount.value !== newNonMemberItemCount)
-          this.nonMemberItemCount.next(newNonMemberItemCount);
-
-        const combinedNew = new Map([
-          ...newNonMemberItems.entries(),
-          ...newItems.entries(),
-        ]);
-
-        for (const [id, t] of prevItems) if (!combinedNew.has(id)) t.destroy();
-        return combinedNew;
+        return newItems;
       },
       new Map<string, MediaItem>(),
     ),
