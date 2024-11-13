@@ -24,11 +24,7 @@ import {
 } from "livekit-client";
 import * as ComponentsCore from "@livekit/components-core";
 import { isEqual } from "lodash";
-import {
-  CallMembership,
-  MatrixRTCSession,
-  MatrixRTCSessionEvent,
-} from "matrix-js-sdk/src/matrixrtc";
+import { CallMembership, MatrixRTCSession } from "matrix-js-sdk/src/matrixrtc";
 
 import { CallViewModel, Layout } from "./CallViewModel";
 import {
@@ -39,13 +35,13 @@ import {
   mockRemoteParticipant,
   withTestScheduler,
   mockMembership,
+  MockRTCSession,
 } from "../utils/test";
 import {
   ECAddonConnectionState,
   ECConnectionState,
 } from "../livekit/useECConnectionState";
 import { E2eeType } from "../e2ee/e2eeType";
-import { MockRoom, MockRTCSession } from "../useReactions.test";
 
 vi.mock("@livekit/components-core");
 
@@ -199,12 +195,11 @@ function withCallViewModel(
     } as Partial<MatrixClient> as MatrixClient,
     getMember: (userId) => roomMembers.get(userId) ?? null,
   });
-  const rtcSession = new MockRTCSession(room as unknown as MockRoom);
-  rtcMembers.subscribe((m) => {
-    // always prepend the local participant
-    rtcSession.memberships = [localRtcMember, ...m];
-    rtcSession.emit(MatrixRTCSessionEvent.MembershipsChanged);
-  });
+  const rtcSession = new MockRTCSession(
+    room,
+    localRtcMember,
+    [],
+  ).withMemberships(rtcMembers);
   const participantsSpy = vi
     .spyOn(ComponentsCore, "connectedParticipantsObserver")
     .mockReturnValue(remoteParticipants);

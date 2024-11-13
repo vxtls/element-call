@@ -11,10 +11,14 @@ import {
   RoomMember,
   Room as MatrixRoom,
   MatrixEvent,
+  Room,
+  TypedEventEmitter,
 } from "matrix-js-sdk/src/matrix";
 import {
   CallMembership,
   Focus,
+  MatrixRTCSessionEvent,
+  MatrixRTCSessionEventHandlerMap,
   SessionMembershipData,
 } from "matrix-js-sdk/src/matrixrtc";
 import {
@@ -227,5 +231,32 @@ export async function withRemoteMedia(
     await continuation(vm);
   } finally {
     vm.destroy();
+  }
+}
+
+export class MockRTCSession extends TypedEventEmitter<
+  MatrixRTCSessionEvent,
+  MatrixRTCSessionEventHandlerMap
+> {
+  public constructor(
+    public readonly room: Room,
+    private localMembership: CallMembership,
+    public memberships: CallMembership[] = [],
+  ) {
+    super();
+  }
+
+  public withMemberships(
+    rtcMembers: Observable<Partial<CallMembership>[]>,
+  ): MockRTCSession {
+    rtcMembers.subscribe((m) => {
+      const old = this.memberships;
+      // always prepend the local participant
+      const updated = [this.localMembership, ...(m as CallMembership[])];
+      this.memberships = updated;
+      this.emit(MatrixRTCSessionEvent.MembershipsChanged, old, updated);
+    });
+
+    return this;
   }
 }
