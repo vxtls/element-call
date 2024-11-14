@@ -8,6 +8,7 @@ Please see LICENSE in the repository root for full details.
 import { RefObject, useCallback, useMemo, useRef } from "react";
 
 import { useEventTarget } from "./useEvents";
+import { ReactionOption, ReactionSet } from "./reactions";
 
 /**
  * Determines whether focus is in the same part of the tree as the given
@@ -18,11 +19,22 @@ const mayReceiveKeyEvents = (e: HTMLElement): boolean => {
   return focusedElement !== null && focusedElement.contains(e);
 };
 
+const KeyToReactionMap: Record<string, ReactionOption> = {
+  ["1"]: ReactionSet[0],
+  ["2"]: ReactionSet[1],
+  ["3"]: ReactionSet[2],
+  ["4"]: ReactionSet[3],
+  ["5"]: ReactionSet[4],
+  ["6"]: ReactionSet[5],
+};
+
 export function useCallViewKeyboardShortcuts(
   focusElement: RefObject<HTMLElement | null>,
   toggleMicrophoneMuted: () => void,
   toggleLocalVideoMuted: () => void,
   setMicrophoneMuted: (muted: boolean) => void,
+  sendReaction: (reaction: ReactionOption) => void,
+  toggleHandRaised: () => void,
 ): void {
   const spacebarHeld = useRef(false);
 
@@ -49,6 +61,12 @@ export function useCallViewKeyboardShortcuts(
             spacebarHeld.current = true;
             setMicrophoneMuted(false);
           }
+        } else if (event.key === "h") {
+          event.preventDefault();
+          toggleHandRaised();
+        } else if (KeyToReactionMap[event.key]) {
+          event.preventDefault();
+          sendReaction(KeyToReactionMap[event.key]);
         }
       },
       [
@@ -56,6 +74,8 @@ export function useCallViewKeyboardShortcuts(
         toggleLocalVideoMuted,
         toggleMicrophoneMuted,
         setMicrophoneMuted,
+        sendReaction,
+        toggleHandRaised,
       ],
     ),
     // Because this is set on the window, to prevent shortcuts from activating

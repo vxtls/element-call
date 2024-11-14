@@ -8,7 +8,6 @@ Please see LICENSE in the repository root for full details.
 import { fireEvent, render } from "@testing-library/react";
 import { act } from "react";
 import { expect, test } from "vitest";
-import { MatrixRTCSession } from "matrix-js-sdk/src/matrixrtc";
 import { TooltipProvider } from "@vector-im/compound-web";
 import { userEvent } from "@testing-library/user-event";
 import { ReactNode } from "react";
@@ -30,18 +29,13 @@ const membership: Record<string, string> = {
 
 function TestComponent({
   rtcSession,
-  room,
 }: {
   rtcSession: MockRTCSession;
-  room: MockRoom;
 }): ReactNode {
   return (
     <TooltipProvider>
       <TestReactionsWrapper rtcSession={rtcSession}>
-        <ReactionToggleButton
-          rtcSession={rtcSession as unknown as MatrixRTCSession}
-          client={room.client}
-        />
+        <ReactionToggleButton userId={memberUserIdAlice} />
       </TestReactionsWrapper>
     </TooltipProvider>
   );
@@ -52,7 +46,7 @@ test("Can open menu", async () => {
   const room = new MockRoom(memberUserIdAlice);
   const rtcSession = new MockRTCSession(room, membership);
   const { getByLabelText, container } = render(
-    <TestComponent rtcSession={rtcSession} room={room} />,
+    <TestComponent rtcSession={rtcSession} />,
   );
   await user.click(getByLabelText("action.raise_hand_or_send_reaction"));
   expect(container).toMatchSnapshot();
@@ -63,7 +57,7 @@ test("Can raise hand", async () => {
   const room = new MockRoom(memberUserIdAlice);
   const rtcSession = new MockRTCSession(room, membership);
   const { getByLabelText, container } = render(
-    <TestComponent rtcSession={rtcSession} room={room} />,
+    <TestComponent rtcSession={rtcSession} />,
   );
   await user.click(getByLabelText("action.raise_hand_or_send_reaction"));
   await user.click(getByLabelText("action.raise_hand"));
@@ -88,7 +82,7 @@ test("Can lower hand", async () => {
   const room = new MockRoom(memberUserIdAlice);
   const rtcSession = new MockRTCSession(room, membership);
   const { getByLabelText, container } = render(
-    <TestComponent rtcSession={rtcSession} room={room} />,
+    <TestComponent rtcSession={rtcSession} />,
   );
   const reactionEvent = room.testSendHandRaise(memberEventAlice, membership);
   await user.click(getByLabelText("action.raise_hand_or_send_reaction"));
@@ -102,7 +96,7 @@ test("Can react with emoji", async () => {
   const room = new MockRoom(memberUserIdAlice);
   const rtcSession = new MockRTCSession(room, membership);
   const { getByLabelText, getByText } = render(
-    <TestComponent rtcSession={rtcSession} room={room} />,
+    <TestComponent rtcSession={rtcSession} />,
   );
   await user.click(getByLabelText("action.raise_hand_or_send_reaction"));
   await user.click(getByText("🐶"));
@@ -127,7 +121,7 @@ test("Can search for and send emoji", async () => {
   const room = new MockRoom(memberUserIdAlice);
   const rtcSession = new MockRTCSession(room, membership);
   const { getByText, container, getByLabelText } = render(
-    <TestComponent rtcSession={rtcSession} room={room} />,
+    <TestComponent rtcSession={rtcSession} />,
   );
   await user.click(getByLabelText("action.raise_hand_or_send_reaction"));
   await user.click(getByLabelText("action.open_search"));
@@ -157,7 +151,7 @@ test("Can search for and send emoji with the keyboard", async () => {
   const room = new MockRoom(memberUserIdAlice);
   const rtcSession = new MockRTCSession(room, membership);
   const { getByLabelText, getByPlaceholderText, container } = render(
-    <TestComponent rtcSession={rtcSession} room={room} />,
+    <TestComponent rtcSession={rtcSession} />,
   );
   await user.click(getByLabelText("action.raise_hand_or_send_reaction"));
   await user.click(getByLabelText("action.open_search"));
@@ -189,7 +183,7 @@ test("Can close search", async () => {
   const room = new MockRoom(memberUserIdAlice);
   const rtcSession = new MockRTCSession(room, membership);
   const { getByLabelText, container } = render(
-    <TestComponent rtcSession={rtcSession} room={room} />,
+    <TestComponent rtcSession={rtcSession} />,
   );
   await user.click(getByLabelText("action.raise_hand_or_send_reaction"));
   await user.click(getByLabelText("action.open_search"));
@@ -202,7 +196,7 @@ test("Can close search with the escape key", async () => {
   const room = new MockRoom(memberUserIdAlice);
   const rtcSession = new MockRTCSession(room, membership);
   const { getByLabelText, container, getByPlaceholderText } = render(
-    <TestComponent rtcSession={rtcSession} room={room} />,
+    <TestComponent rtcSession={rtcSession} />,
   );
   await user.click(getByLabelText("action.raise_hand_or_send_reaction"));
   await user.click(getByLabelText("action.open_search"));

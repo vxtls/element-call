@@ -31,19 +31,11 @@ import {
 } from "react";
 import { useTranslation } from "react-i18next";
 import { logger } from "matrix-js-sdk/src/logger";
-import { EventType, RelationType } from "matrix-js-sdk/src/matrix";
-import { MatrixClient } from "matrix-js-sdk/src/client";
-import { MatrixRTCSession } from "matrix-js-sdk/src/matrixrtc/MatrixRTCSession";
 import classNames from "classnames";
 
 import { useReactions } from "../useReactions";
-import { useMatrixRTCSessionMemberships } from "../useMatrixRTCSessionMemberships";
 import styles from "./ReactionToggleButton.module.css";
-import {
-  ReactionOption,
-  ReactionSet,
-  ElementCallReactionEventType,
-} from "../reactions";
+import { ReactionOption, ReactionSet, ReactionsRowSize } from "../reactions";
 import { Modal } from "../Modal";
 
 interface InnerButtonProps extends ComponentPropsWithoutRef<"button"> {
@@ -55,12 +47,17 @@ const InnerButton: FC<InnerButtonProps> = ({ raised, open, ...props }) => {
   const { t } = useTranslation();
 
   return (
-    <Tooltip label={t("action.raise_hand_or_send_reaction")}>
+    <Tooltip
+      label={t("action.raise_hand_or_send_reaction", { keyboardShortcut: "H" })}
+    >
       <CpdButton
         className={classNames(raised && styles.raisedButton)}
         aria-expanded={open}
         aria-haspopup
-        aria-label={t("action.raise_hand_or_send_reaction")}
+        aria-keyshortcuts="H"
+        aria-label={t("action.raise_hand_or_send_reaction", {
+          keyboardShortcut: "H",
+        })}
         kind={raised || open ? "primary" : "secondary"}
         iconOnly
         Icon={raised ? RaisedHandSolidIcon : ReactionIcon}
@@ -99,7 +96,7 @@ export function ReactionPopupMenu({
           (!!searchText &&
             (reaction.name.startsWith(searchText) ||
               reaction.alias?.some((a) => a.startsWith(searchText)))),
-      ).slice(0, 6),
+      ).slice(0, ReactionsRowSize),
     [searchText, isSearching],
   );
 
@@ -175,9 +172,21 @@ export function ReactionPopupMenu({
             </>
           ) : null}
           <menu className={styles.reactionsMenu}>
-            {filteredReactionSet.map((reaction) => (
+            {filteredReactionSet.map((reaction, index) => (
               <li className={styles.reactionPopupMenuItem} key={reaction.name}>
-                <Tooltip label={reaction.name}>
+                {/* Show the keyboard key assigned to the reaction */}
+                <Tooltip
+                  label={
+                    index < ReactionsRowSize
+                      ? reaction.name
+                      : `${reaction.name} (${index + 1})`
+                  }
+                  aria-keyshortcuts={
+                    index < ReactionsRowSize
+                      ? (index + 1).toString()
+                      : undefined
+                  }
+                >
                   <CpdButton
                     kind="secondary"
                     className={styles.reactionButton}
@@ -212,52 +221,33 @@ export function ReactionPopupMenu({
 }
 
 interface ReactionToggleButtonProps extends ComponentPropsWithoutRef<"button"> {
-  rtcSession: MatrixRTCSession;
-  client: MatrixClient;
+  userId: string;
 }
 
 export function ReactionToggleButton({
-  client,
-  rtcSession,
+  userId,
   ...props
 }: ReactionToggleButtonProps): ReactNode {
   const { t } = useTranslation();
-  const { raisedHands, lowerHand, reactions } = useReactions();
+  const { raisedHands, toggleRaisedHand, sendReaction, reactions } =
+    useReactions();
   const [busy, setBusy] = useState(false);
-  const userId = client.getUserId()!;
-  const isHandRaised = !!raisedHands[userId];
-  const memberships = useMatrixRTCSessionMemberships(rtcSession);
   const [showReactionsMenu, setShowReactionsMenu] = useState(false);
   const [errorText, setErrorText] = useState<string>();
+
+  const isHandRaised = !!raisedHands[userId];
+  const canReact = !reactions[userId];
 
   useEffect(() => {
     // Clear whenever the reactions menu state changes.
     setErrorText(undefined);
   }, [showReactionsMenu]);
 
-  const canReact = !reactions[userId];
-
   const sendRelation = useCallback(
     async (reaction: ReactionOption) => {
       try {
-        const myMembership = memberships.find((m) => m.sender === userId);
-        if (!myMembership?.eventId) {
-          throw new Error("Cannot find own membership event");
-        }
-        const parentEventId = myMembership.eventId;
         setBusy(true);
-        await client.sendEvent(
-          rtcSession.room.roomId,
-          ElementCallReactionEventType,
-          {
-            "m.relates_to": {
-              rel_type: RelationType.Reference,
-              event_id: parentEventId,
-            },
-            emoji: reaction.emoji,
-            name: reaction.name,
-          },
-        );
+        await sendReaction(reaction);
         setErrorText(undefined);
         setShowReactionsMenu(false);
       } catch (ex) {
@@ -267,59 +257,25 @@ export function ReactionToggleButton({
         setBusy(false);
       }
     },
-    [memberships, client, userId, rtcSession],
+    [sendReaction],
   );
 
-  const toggleRaisedHand = useCallback(() => {
-    const raiseHand = async (): Promise<void> => {
-      if (isHandRaised) {
-        try {
-          setBusy(true);
-          await lowerHand();
-          setShowReactionsMenu(false);
-        } finally {
-          setBusy(false);
-        }
-      } else {
-        try {
-          const myMembership = memberships.find((m) => m.sender === userId);
-          if (!myMembership?.eventId) {
-            throw new Error("Cannot find own membership event");
-          }
-          const parentEventId = myMembership.eventId;
-          setBusy(true);
-          const reaction = await client.sendEvent(
-            rtcSession.room.roomId,
-            EventType.Reaction,
-            {
-              "m.relates_to": {
-                rel_type: RelationType.Annotation,
-                event_id: parentEventId,
-                key: "🖐️",
-              },
-            },
-          );
-          logger.debug("Sent raise hand event", reaction.event_id);
-          setErrorText(undefined);
-          setShowReactionsMenu(false);
-        } catch (ex) {
-          setErrorText(ex instanceof Error ? ex.message : "Unknown error");
-          logger.error("Failed to raise hand", ex);
-        } finally {
-          setBusy(false);
-        }
+  const wrappedToggleRaisedHand = useCallback(() => {
+    const toggleHand = async (): Promise<void> => {
+      try {
+        setBusy(true);
+        await toggleRaisedHand();
+        setShowReactionsMenu(false);
+      } catch (ex) {
+        setErrorText(ex instanceof Error ? ex.message : "Unknown error");
+        logger.error("Failed to raise/lower hand", ex);
+      } finally {
+        setBusy(false);
       }
     };
 
-    void raiseHand();
-  }, [
-    client,
-    isHandRaised,
-    memberships,
-    lowerHand,
-    rtcSession.room.roomId,
-    userId,
-  ]);
+    void toggleHand();
+  }, [toggleRaisedHand]);
 
   return (
     <>
@@ -342,7 +298,7 @@ export function ReactionToggleButton({
           isHandRaised={isHandRaised}
           canReact={canReact}
           sendReaction={(reaction) => void sendRelation(reaction)}
-          toggleRaisedHand={toggleRaisedHand}
+          toggleRaisedHand={wrappedToggleRaisedHand}
         />
       </Modal>
     </>
