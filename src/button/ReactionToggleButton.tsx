@@ -47,17 +47,12 @@ const InnerButton: FC<InnerButtonProps> = ({ raised, open, ...props }) => {
   const { t } = useTranslation();
 
   return (
-    <Tooltip
-      label={t("action.raise_hand_or_send_reaction", { keyboardShortcut: "H" })}
-    >
+    <Tooltip label={t("action.raise_hand_or_send_reaction")}>
       <CpdButton
         className={classNames(raised && styles.raisedButton)}
         aria-expanded={open}
         aria-haspopup
-        aria-keyshortcuts="H"
-        aria-label={t("action.raise_hand_or_send_reaction", {
-          keyboardShortcut: "H",
-        })}
+        aria-label={t("action.raise_hand_or_send_reaction")}
         kind={raised || open ? "primary" : "secondary"}
         iconOnly
         Icon={raised ? RaisedHandSolidIcon : ReactionIcon}
@@ -119,7 +114,9 @@ export function ReactionPopupMenu({
     },
     [sendReaction, filteredReactionSet, canReact, setIsSearching],
   );
-  const label = isHandRaised ? t("action.lower_hand") : t("action.raise_hand");
+  const label = isHandRaised
+    ? t("action.lower_hand", { keyboardShortcut: "H" })
+    : t("action.raise_hand", { keyboardShortcut: "H" });
   return (
     <>
       {errorText && (
@@ -136,6 +133,7 @@ export function ReactionPopupMenu({
           <Tooltip label={label}>
             <CpdButton
               kind={isHandRaised ? "primary" : "secondary"}
+              aria-keyshortcuts="H"
               aria-pressed={isHandRaised}
               aria-label={label}
               onClick={() => toggleRaisedHand()}
