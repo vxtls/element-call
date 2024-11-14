@@ -18,7 +18,10 @@ export function pipLayout(
   prevTiles: TileStore,
 ): [PipLayout, TileStore] {
   const update = prevTiles.from(visibleTiles);
-  update.registerSpotlight(media.spotlight, true);
+  update.registerSpotlight(
+    media.spotlight.map((m) => m.vm),
+    true,
+  );
   const tiles = update.build();
   return [
     {

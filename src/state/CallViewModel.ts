@@ -91,37 +91,37 @@ const showFooterMs = 4000;
 
 export interface GridLayoutMedia {
   type: "grid";
-  spotlight?: MediaViewModel[];
-  grid: UserMediaViewModel[];
+  spotlight?: MediaItem[];
+  grid: UserMedia[];
 }
 
 export interface SpotlightLandscapeLayoutMedia {
   type: "spotlight-landscape";
-  spotlight: MediaViewModel[];
-  grid: UserMediaViewModel[];
+  spotlight: MediaItem[];
+  grid: UserMedia[];
 }
 
 export interface SpotlightPortraitLayoutMedia {
   type: "spotlight-portrait";
-  spotlight: MediaViewModel[];
-  grid: UserMediaViewModel[];
+  spotlight: MediaItem[];
+  grid: UserMedia[];
 }
 
 export interface SpotlightExpandedLayoutMedia {
   type: "spotlight-expanded";
-  spotlight: MediaViewModel[];
-  pip?: UserMediaViewModel;
+  spotlight: MediaItem[];
+  pip?: UserMedia;
 }
 
 export interface OneOnOneLayoutMedia {
   type: "one-on-one";
-  local: UserMediaViewModel;
-  remote: UserMediaViewModel;
+  local: UserMedia;
+  remote: UserMedia;
 }
 
 export interface PipLayoutMedia {
   type: "pip";
-  spotlight: MediaViewModel[];
+  spotlight: MediaItem[];
 }
 
 export type LayoutMedia =
@@ -478,10 +478,9 @@ export class CallViewModel extends ViewModel {
     ),
   );
 
-  private readonly localUserMedia: Observable<LocalUserMediaViewModel> =
-    this.mediaItems.pipe(
-      map((ms) => ms.find((m) => m.vm.local)!.vm as LocalUserMediaViewModel),
-    );
+  private readonly localUserMedia: Observable<UserMedia> = this.userMedia.pipe(
+    map((ms) => ms.find((m) => m.vm.local) as UserMedia),
+  );
 
   private readonly screenShares: Observable<ScreenShare[]> =
     this.mediaItems.pipe(
@@ -491,7 +490,7 @@ export class CallViewModel extends ViewModel {
       this.scope.state(),
     );
 
-  private readonly spotlightSpeaker: Observable<UserMediaViewModel> =
+  private readonly spotlightSpeaker: Observable<UserMedia> =
     this.userMedia.pipe(
       switchMap((mediaItems) =>
         mediaItems.length === 0
@@ -523,11 +522,10 @@ export class CallViewModel extends ViewModel {
         },
         null,
       ),
-      map((speaker) => speaker.vm),
       this.scope.state(),
     );
 
-  private readonly grid: Observable<UserMediaViewModel[]> = this.userMedia.pipe(
+  private readonly grid: Observable<UserMedia[]> = this.userMedia.pipe(
     switchMap((mediaItems) => {
       const bins = mediaItems.map((m) =>
         combineLatest(
@@ -558,27 +556,27 @@ export class CallViewModel extends ViewModel {
       return bins.length === 0
         ? of([])
         : combineLatest(bins, (...bins) =>
-            bins.sort(([, bin1], [, bin2]) => bin1 - bin2).map(([m]) => m.vm),
+            bins.sort(([, bin1], [, bin2]) => bin1 - bin2).map(([m]) => m),
           );
     }),
   );
 
   private readonly spotlightAndPip: Observable<
-    [Observable<MediaViewModel[]>, Observable<UserMediaViewModel | null>]
+    [Observable<MediaItem[]>, Observable<UserMedia | null>]
   > = this.screenShares.pipe(
     map((screenShares) =>
       screenShares.length > 0
-        ? ([of(screenShares.map((m) => m.vm)), this.spotlightSpeaker] as const)
+        ? ([of(screenShares.map((m) => m)), this.spotlightSpeaker] as const)
         : ([
             this.spotlightSpeaker.pipe(map((speaker) => [speaker!])),
             this.spotlightSpeaker.pipe(
               switchMap((speaker) =>
-                speaker.local
+                speaker.vm.local
                   ? of(null)
                   : this.localUserMedia.pipe(
-                      switchMap((vm) =>
-                        vm.alwaysShow.pipe(
-                          map((alwaysShow) => (alwaysShow ? vm : null)),
+                      switchMap((lm) =>
+                        (lm.vm as LocalUserMediaViewModel).alwaysShow.pipe(
+                          map((alwaysShow) => (alwaysShow ? lm : null)),
                         ),
                       ),
                     ),
@@ -588,7 +586,7 @@ export class CallViewModel extends ViewModel {
     ),
   );
 
-  private readonly spotlight: Observable<MediaViewModel[]> =
+  private readonly spotlight: Observable<MediaItem[]> =
     this.spotlightAndPip.pipe(
       switchMap(([spotlight]) => spotlight),
       this.scope.state(),
@@ -597,12 +595,14 @@ export class CallViewModel extends ViewModel {
   private readonly hasRemoteScreenShares: Observable<boolean> =
     this.spotlight.pipe(
       map((spotlight) =>
-        spotlight.some((vm) => !vm.local && vm instanceof ScreenShareViewModel),
+        spotlight.some(
+          (m) => !m.vm.local && m.vm instanceof ScreenShareViewModel,
+        ),
       ),
       distinctUntilChanged(),
     );
 
-  private readonly pip: Observable<UserMediaViewModel | null> =
+  private readonly pip: Observable<UserMedia | null> =
     this.spotlightAndPip.pipe(switchMap(([, pip]) => pip));
 
   private readonly pipEnabled: Observable<boolean> = setPipEnabled.pipe(
@@ -676,7 +676,7 @@ export class CallViewModel extends ViewModel {
     [this.grid, this.spotlight],
     (grid, spotlight) => ({
       type: "grid",
-      spotlight: spotlight.some((vm) => vm instanceof ScreenShareViewModel)
+      spotlight: spotlight.some((m) => m.vm instanceof ScreenShareViewModel)
         ? spotlight
         : undefined,
       grid,
@@ -708,15 +708,16 @@ export class CallViewModel extends ViewModel {
     this.mediaItems.pipe(
       map((mediaItems) => {
         if (mediaItems.length !== 2) return null;
-        const local = mediaItems.find((vm) => vm.vm.local)!
-          .vm as LocalUserMediaViewModel;
-        const remote = mediaItems.find((vm) => !vm.vm.local)?.vm as
-          | RemoteUserMediaViewModel
-          | undefined;
+        const local = mediaItems.find(
+          (m) => m instanceof UserMedia && m.vm.local,
+        ) as UserMedia | undefined;
+        const remote = mediaItems.find(
+          (m) => m instanceof UserMedia && !m.vm.local,
+        ) as UserMedia | undefined;
         // There might not be a remote tile if there are screen shares, or if
         // only the local user is in the call and they're using the duplicate
         // tiles option
-        if (remote === undefined) return null;
+        if (!local || !remote) return null;
 
         return { type: "one-on-one", local, remote };
       }),

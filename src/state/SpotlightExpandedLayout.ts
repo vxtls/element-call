@@ -21,8 +21,11 @@ export function spotlightExpandedLayout(
   prevTiles: TileStore,
 ): [SpotlightExpandedLayout, TileStore] {
   const update = prevTiles.from(visibleTiles);
-  update.registerSpotlight(media.spotlight, true);
-  if (media.pip !== undefined) update.registerGridTile(media.pip);
+  update.registerSpotlight(
+    media.spotlight.map((m) => m.vm),
+    true,
+  );
+  if (media.pip !== undefined) update.registerGridTile(media.pip.vm);
   const tiles = update.build();
 
   return [
