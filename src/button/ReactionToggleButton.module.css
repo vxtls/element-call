@@ -18,6 +18,7 @@
 }
 .reactionPopupMenu section {
   height: fit-content;
+  flex: auto;
 }
 
 .reactionPopupMenuItem {
@@ -42,6 +43,8 @@
   max-height: 10em;
   max-width: 22.5em;
   overflow-y: auto;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .reactionButton {
@@ -59,6 +62,10 @@
   :root {
     --reaction-button-size: 1em;
     --reaction-button-fontsize: 1em;
+  }
+
+  .reactionsMenu {
+    max-width: none;
   }
 }
 
