@@ -112,7 +112,7 @@ export function ReactionPopupMenu({
         <section>
           <menu className={styles.reactionsMenu}>
             {filteredReactionSet.map((reaction) => (
-              <li className={styles.reactionPopupMenuItem} key={reaction.name}>
+              <li key={reaction.name}>
                 <Tooltip label={reaction.name}>
                   <CpdButton
                     kind="secondary"

@@ -21,10 +21,6 @@
   flex: auto;
 }
 
-.reactionPopupMenuItem {
-  list-style: none;
-}
-
 :root {
   --reaction-button-padding: 1em;
   --reaction-button-size: 1.4em;
@@ -49,6 +45,7 @@
   );
   max-width: 22.5em;
   overflow-y: auto;
+  list-style: none;
 }
 
 .reactionButton {
