@@ -40,11 +40,15 @@
   display: flex;
   flex-wrap: wrap;
   gap: var(--cpd-separator-spacing);
-  max-height: 10em;
+  /* Height of 3 rows plus padding. */
+  max-height: calc(
+    (
+        var(--reaction-button-size) + var(--reaction-button-padding) +
+          var(--cpd-separator-spacing)
+      ) * 4
+  );
   max-width: 22.5em;
   overflow-y: auto;
-  margin-left: auto;
-  margin-right: auto;
 }
 
 .reactionButton {
