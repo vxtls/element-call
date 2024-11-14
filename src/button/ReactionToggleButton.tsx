@@ -109,7 +109,7 @@ export function ReactionPopupMenu({
           </Tooltip>
         </section>
         <div className={styles.verticalSeperator} />
-        <section>
+        <section className={styles.reactionsMenuSection}>
           <menu className={styles.reactionsMenu}>
             {filteredReactionSet.map((reaction) => (
               <li key={reaction.name}>

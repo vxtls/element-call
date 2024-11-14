@@ -7,9 +7,7 @@
 }
 
 .reactionPopupMenuModal {
-  width: fit-content !important;
   top: 82vh !important;
-  overflow-y: none;
 }
 
 .reactionPopupMenuModal > div > div {
@@ -19,6 +17,10 @@
 .reactionPopupMenu section {
   height: fit-content;
   flex: auto;
+}
+
+.reactionsMenuSection {
+  margin: auto 0;
 }
 
 :root {
@@ -59,17 +61,12 @@
   border: none;
 }
 
-@media (max-width: 800px) {
+@media (max-width: 660px) {
   :root {
     --reaction-button-size: 1em;
     --reaction-button-fontsize: 1em;
   }
-
-  .reactionsMenu {
-    max-width: none;
-  }
 }
-
 .verticalSeperator {
   background-color: var(--cpd-color-gray-800);
   width: 1px;
