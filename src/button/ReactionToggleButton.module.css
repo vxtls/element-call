@@ -9,14 +9,31 @@
 .reactionPopupMenuModal {
   width: fit-content !important;
   top: 82vh !important;
+  overflow-y: none;
 }
 
 .reactionPopupMenuModal > div > div {
   padding-inline: var(--cpd-space-6x) !important;
   padding-block: var(--cpd-space-6x) var(--cpd-space-8x) !important;
 }
+.reactionPopupMenu section {
+  height: fit-content;
+}
 
-.reactionPopupMenu menu {
+.reactionPopupMenuItem {
+  list-style: none;
+}
+
+:root {
+  --reaction-button-padding: 1em;
+  --reaction-button-size: 1.4em;
+  --reaction-button-fontsize: 1.6em;
+}
+
+.reactionsMenu {
+  min-height: calc(
+    var(--reaction-button-size) + var(--reaction-button-padding)
+  );
   margin: 0;
   padding: 0;
   display: flex;
@@ -24,38 +41,24 @@
   gap: var(--cpd-separator-spacing);
   max-height: 10em;
   max-width: 22.5em;
-}
-
-.reactionPopupMenu section {
-  height: fit-content;
-  margin-top: auto;
-  margin-bottom: auto;
-}
-
-.reactionPopupMenuItem {
-  list-style: none;
-}
-
-.reactionsMenu {
-  min-height: 3em;
+  overflow-y: auto;
 }
 
 .reactionButton {
-  padding: 1em;
+  padding: var(--reaction-button-padding);
   font-size: 1.6em;
-  width: 1.4em;
-  height: 1.4em;
+  width: var(--reaction-button-size);
+  height: var(--reaction-button-size);
   border-radius: var(--cpd-radius-pill-effect);
+  font-size: var(--reaction-button-fontsize);
+  min-block-size: unset;
   border: none;
 }
 
 @media (max-width: 800px) {
-  .reactionPopupMenuModal .reactionButton {
-    padding: 1em;
-    font-size: 1em;
-    width: 1em;
-    height: 1em;
-    min-block-size: unset;
+  :root {
+    --reaction-button-size: 1em;
+    --reaction-button-fontsize: 1em;
   }
 }
 
@@ -66,6 +69,7 @@
   margin-left: var(--cpd-separator-spacing);
   margin-right: var(--cpd-separator-spacing);
 }
+
 .alert {
   margin-bottom: var(--cpd-space-3x);
   animation: grow-in 200ms;
