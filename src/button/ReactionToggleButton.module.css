@@ -46,6 +46,7 @@
   width: 1.4em;
   height: 1.4em;
   border-radius: var(--cpd-radius-pill-effect);
+  border: none;
 }
 
 @media (max-width: 800px) {
