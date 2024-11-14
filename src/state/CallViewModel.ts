@@ -379,7 +379,6 @@ export class CallViewModel extends ViewModel {
   /**
    * The raw list of RemoteParticipants as reported by LiveKit
    */
-
   private readonly rawRemoteParticipants: Observable<RemoteParticipant[]> =
     connectedParticipantsObserver(this.livekitRoom).pipe(this.scope.state());
 
@@ -573,42 +572,41 @@ export class CallViewModel extends ViewModel {
       this.scope.state(),
     );
 
-  private readonly spotlightSpeaker: Observable<
-    UserMediaViewModel | undefined
-  > = this.userMedia.pipe(
-    switchMap((mediaItems) =>
-      mediaItems.length === 0
-        ? of([])
-        : combineLatest(
-            mediaItems.map((m) =>
-              m.vm.speaking.pipe(map((s) => [m, s] as const)),
+  private readonly spotlightSpeaker: Observable<UserMediaViewModel | null> =
+    this.userMedia.pipe(
+      switchMap((mediaItems) =>
+        mediaItems.length === 0
+          ? of([])
+          : combineLatest(
+              mediaItems.map((m) =>
+                m.vm.speaking.pipe(map((s) => [m, s] as const)),
+              ),
             ),
-          ),
-    ),
-    scan<(readonly [UserMedia, boolean])[], UserMedia | undefined, null>(
-      (prev, mediaItems) => {
-        // Only remote users that are still in the call should be sticky
-        const [stickyMedia, stickySpeaking] =
-          (!prev?.vm.local && mediaItems.find(([m]) => m === prev)) || [];
-        // Decide who to spotlight:
-        // If the previous speaker is still speaking, stick with them rather
-        // than switching eagerly to someone else
-        return stickySpeaking
-          ? stickyMedia!
-          : // Otherwise, select any remote user who is speaking
-            (mediaItems.find(([m, s]) => !m.vm.local && s)?.[0] ??
-              // Otherwise, stick with the person who was last speaking
-              stickyMedia ??
-              // Otherwise, spotlight an arbitrary remote user
-              mediaItems.find(([m]) => !m.vm.local)?.[0] ??
-              // Otherwise, spotlight the local user
-              mediaItems.find(([m]) => m.vm.local)?.[0]);
-      },
-      null,
-    ),
-    map((speaker) => speaker?.vm),
-    this.scope.state(),
-  );
+      ),
+      scan<(readonly [UserMedia, boolean])[], UserMedia | undefined, null>(
+        (prev, mediaItems) => {
+          // Only remote users that are still in the call should be sticky
+          const [stickyMedia, stickySpeaking] =
+            (!prev?.vm.local && mediaItems.find(([m]) => m === prev)) || [];
+          // Decide who to spotlight:
+          // If the previous speaker is still speaking, stick with them rather
+          // than switching eagerly to someone else
+          return stickySpeaking
+            ? stickyMedia!
+            : // Otherwise, select any remote user who is speaking
+              (mediaItems.find(([m, s]) => !m.vm.local && s)?.[0] ??
+                // Otherwise, stick with the person who was last speaking
+                stickyMedia ??
+                // Otherwise, spotlight an arbitrary remote user
+                mediaItems.find(([m]) => !m.vm.local)?.[0] ??
+                // Otherwise, spotlight the local user
+                mediaItems.find(([m]) => m.vm.local)?.[0]);
+        },
+        null,
+      ),
+      map((speaker) => speaker?.vm ?? null),
+      this.scope.state(),
+    );
 
   private readonly grid: Observable<UserMediaViewModel[]> = this.userMedia.pipe(
     switchMap((mediaItems) => {
@@ -647,7 +645,7 @@ export class CallViewModel extends ViewModel {
   );
 
   private readonly spotlightAndPip: Observable<
-    [Observable<MediaViewModel[]>, Observable<UserMediaViewModel | undefined>]
+    [Observable<MediaViewModel[]>, Observable<UserMediaViewModel | null>]
   > = this.screenShares.pipe(
     map((screenShares) =>
       screenShares.length > 0
@@ -660,7 +658,7 @@ export class CallViewModel extends ViewModel {
               switchMap((speaker) =>
                 speaker
                   ? speaker.local
-                    ? of(undefined)
+                    ? of(null)
                     : this.mediaItems.pipe(
                         switchMap((mediaItems) => {
                           const localUserMedia = mediaItems.find(
@@ -671,11 +669,11 @@ export class CallViewModel extends ViewModel {
                               map((alwaysShow) =>
                                 alwaysShow ? localUserMedia : undefined,
                               ),
-                            ) ?? of(undefined)
+                            ) ?? of(null)
                           );
                         }),
                       )
-                  : of(undefined),
+                  : of(null),
               ),
             ),
           ] as const),
@@ -689,12 +687,14 @@ export class CallViewModel extends ViewModel {
     );
 
   private readonly hasRemoteScreenShares: Observable<boolean> =
-    this.screenShares.pipe(
-      map((ms) => ms.some((m) => !m.vm.local)),
+    this.spotlight.pipe(
+      map((spotlight) =>
+        spotlight.some((vm) => !vm.local && vm instanceof ScreenShareViewModel),
+      ),
       distinctUntilChanged(),
     );
 
-  private readonly pip: Observable<UserMediaViewModel | undefined> =
+  private readonly pip: Observable<UserMediaViewModel | null> =
     this.spotlightAndPip.pipe(switchMap(([, pip]) => pip));
 
   private readonly pipEnabled: Observable<boolean> = setPipEnabled.pipe(
@@ -780,8 +780,7 @@ export class CallViewModel extends ViewModel {
       type: "spotlight-landscape",
       spotlight,
       grid,
-    }),
-  );
+    }));
 
   private readonly spotlightPortraitLayoutMedia: Observable<SpotlightPortraitLayoutMedia> =
     combineLatest([this.grid, this.spotlight], (grid, spotlight) => ({
