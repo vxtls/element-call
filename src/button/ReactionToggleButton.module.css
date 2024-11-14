@@ -7,21 +7,24 @@
   width: fit-content;
 }
 
-.reactionPopupMenuModal {
-  top: 82vh !important;
+div.reactionPopupMenuRoot.reactionPopupMenuModal {
+  --overlay-top: 82vh;
 }
 
-.reactionPopupMenuRoot {
-  width: fit-content !important;
+div.reactionPopupMenuRoot {
+  /* Center the drawer */
+  --inset-inline: 30em;
+  width: fit-content;
 }
 
 .reactionPopupMenuRoot > div {
   width: fit-content;
+  max-width: 100%;
 }
 
-.reactionPopupMenuModal > div > div {
-  padding-inline: var(--cpd-space-6x) !important;
-  padding-block: var(--cpd-space-6x) !important;
+div.reactionPopupMenuRoot.reactionPopupMenuModal > div > div {
+  padding-inline: var(--cpd-space-6x);
+  padding-block: var(--cpd-space-6x);
 }
 
 .reactionPopupMenu section {
@@ -89,12 +92,6 @@
   border: none;
 }
 
-@media (max-width: 660px) {
-  :root {
-    --reaction-button-size: 1em;
-    --reaction-button-fontsize: 1em;
-  }
-}
 .verticalSeperator {
   background-color: var(--cpd-color-gray-800);
   width: 1px;
