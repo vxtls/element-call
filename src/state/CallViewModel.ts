@@ -223,7 +223,7 @@ interface LayoutScanState {
 class UserMedia {
   private readonly scope = new ObservableScope();
   public readonly vm: UserMediaViewModel;
-  public readonly participant: BehaviorSubject<
+  private readonly participant: BehaviorSubject<
     LocalParticipant | RemoteParticipant | undefined
   >;
 
@@ -292,6 +292,15 @@ class UserMedia {
       ),
       this.scope.state(),
     );
+  }
+
+  public updateParticipant(
+    newParticipant: LocalParticipant | RemoteParticipant | undefined,
+  ): void {
+    if (this.participant.value !== newParticipant) {
+      // Update the BehaviourSubject in the UserMedia.
+      this.participant.next(newParticipant);
+    }
   }
 
   public destroy(): void {
@@ -367,12 +376,17 @@ export class CallViewModel extends ViewModel {
       }),
     );
 
-  private readonly rawRemoteParticipants = connectedParticipantsObserver(
-    this.livekitRoom,
-  ).pipe(this.scope.state());
+  /**
+   * The raw list of RemoteParticipants as reported by LiveKit
+   */
 
-  // Lists of participants to "hold" on display, even if LiveKit claims that
-  // they've left
+  private readonly rawRemoteParticipants: Observable<RemoteParticipant[]> =
+    connectedParticipantsObserver(this.livekitRoom).pipe(this.scope.state());
+
+  /**
+   * Lists of RemoteParticipants to "hold" on display, even if LiveKit claims that
+   * they've left
+   */
   private readonly remoteParticipantHolds: Observable<RemoteParticipant[][]> =
     this.connectionState.pipe(
       withLatestFrom(this.rawRemoteParticipants),
@@ -407,6 +421,9 @@ export class CallViewModel extends ViewModel {
       ),
     );
 
+  /**
+   * The RemoteParticipants including those that are being "held" on the screen
+   */
   private readonly remoteParticipants: Observable<RemoteParticipant[]> =
     combineLatest(
       [this.rawRemoteParticipants, this.remoteParticipantHolds],
@@ -428,8 +445,9 @@ export class CallViewModel extends ViewModel {
       },
     );
 
-  public readonly nonMemberItemCount = new BehaviorSubject<number>(0);
-
+  /**
+   * List of MediaItems that we want to display
+   */
   private readonly mediaItems: Observable<MediaItem[]> = combineLatest([
     this.remoteParticipants,
     observeParticipantMedia(this.livekitRoom.localParticipant),
@@ -452,36 +470,42 @@ export class CallViewModel extends ViewModel {
       ) => {
         const newItems = new Map(
           function* (this: CallViewModel): Iterable<[string, MediaItem]> {
+            // m.rtc.members are the basis for calculating what is visible in the call
             for (const rtcMember of this.matrixRTCSession.memberships) {
               const room = this.matrixRTCSession.room;
               // WARN! This is not exactly the sender but the user defined in the state key.
               // This will be available once we change to the new "member as object" format in the MatrixRTC object.
-              let mediaId = rtcMember.sender + ":" + rtcMember.deviceId;
-              let participant = undefined;
+              let livekitParticipantId =
+                rtcMember.sender + ":" + rtcMember.deviceId;
+
+              let participant:
+                | LocalParticipant
+                | RemoteParticipant
+                | undefined = undefined;
               if (
                 rtcMember.sender === room.client.getUserId()! &&
                 rtcMember.deviceId === room.client.getDeviceId()
               ) {
-                mediaId = "local";
+                livekitParticipantId = "local";
                 participant = localParticipant;
               } else {
                 participant = remoteParticipants.find(
-                  (p) => p.identity === mediaId,
+                  (p) => p.identity === livekitParticipantId,
                 );
               }
 
-              const member = findMatrixRoomMember(room, mediaId);
+              const member = findMatrixRoomMember(room, livekitParticipantId);
               if (!member) {
-                logger.error("Could not find member for media id: ", mediaId);
+                logger.error(
+                  "Could not find member for media id: ",
+                  livekitParticipantId,
+                );
               }
               for (let i = 0; i < 1 + duplicateTiles; i++) {
-                const indexedMediaId = `${mediaId}:${i}`;
+                const indexedMediaId = `${livekitParticipantId}:${i}`;
                 const prevMedia = prevItems.get(indexedMediaId);
                 if (prevMedia && prevMedia instanceof UserMedia) {
-                  if (prevMedia.participant.value !== participant) {
-                    // Update the BahviourSubject in the UserMedia.
-                    prevMedia.participant.next(participant);
-                  }
+                  prevMedia.updateParticipant(participant);
                 }
                 yield [
                   indexedMediaId,
@@ -495,7 +519,7 @@ export class CallViewModel extends ViewModel {
                       participant,
                       this.encryptionSystem,
                       this.livekitRoom,
-                      mediaId === "local",
+                      livekitParticipantId === "local",
                     ),
                 ];
 
@@ -529,12 +553,18 @@ export class CallViewModel extends ViewModel {
     this.scope.state(),
   );
 
+  /**
+   * List of MediaItems that we want to display, that are of type UserMedia
+   */
   private readonly userMedia: Observable<UserMedia[]> = this.mediaItems.pipe(
     map((mediaItems) =>
       mediaItems.filter((m): m is UserMedia => m instanceof UserMedia),
     ),
   );
 
+  /**
+   * List of MediaItems that we want to display, that are of type ScreenShare
+   */
   private readonly screenShares: Observable<ScreenShare[]> =
     this.mediaItems.pipe(
       map((mediaItems) =>
@@ -853,7 +883,6 @@ export class CallViewModel extends ViewModel {
     }),
     this.scope.state(),
   );
-
   /**
    * The layout of tiles in the call interface.
    */
@@ -1006,7 +1035,7 @@ export class CallViewModel extends ViewModel {
     this.scope.state(),
   );
 
-  public readonly showFooter = this.windowMode.pipe(
+  public readonly showFooter: Observable<boolean> = this.windowMode.pipe(
     switchMap((mode) => {
       switch (mode) {
         case "pip":
