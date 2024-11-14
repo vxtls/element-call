@@ -79,10 +79,9 @@ export function ReactionPopupMenu({
   const [isFullyExpanded, setExpanded] = useState(false);
 
   const filteredReactionSet = useMemo(
-    () => (isFullyExpanded ? ReactionSet : ReactionSet.slice(0, 6)),
+    () => (isFullyExpanded ? ReactionSet : ReactionSet.slice(0, 5)),
     [isFullyExpanded],
   );
-
   const label = isHandRaised ? t("action.lower_hand") : t("action.raise_hand");
   return (
     <>
@@ -110,7 +109,12 @@ export function ReactionPopupMenu({
         </section>
         <div className={styles.verticalSeperator} />
         <section className={styles.reactionsMenuSection}>
-          <menu className={styles.reactionsMenu}>
+          <menu
+            className={classNames(
+              isFullyExpanded && styles.reactionsMenuExpanded,
+              styles.reactionsMenu,
+            )}
+          >
             {filteredReactionSet.map((reaction) => (
               <li key={reaction.name}>
                 <Tooltip label={reaction.name}>
@@ -172,6 +176,10 @@ export function ReactionToggleButton({
     // Clear whenever the reactions menu state changes.
     setErrorText(undefined);
   }, [showReactionsMenu]);
+
+  useEffect(() => {
+    return () => setShowReactionsMenu(false);
+  }, [setShowReactionsMenu]);
 
   const canReact = !reactions[userId];
 
@@ -273,6 +281,7 @@ export function ReactionToggleButton({
         title={t("action.pick_reaction")}
         hideHeader
         classNameModal={styles.reactionPopupMenuModal}
+        className={styles.reactionPopupMenuRoot}
         onDismiss={() => setShowReactionsMenu(false)}
       >
         <ReactionPopupMenu

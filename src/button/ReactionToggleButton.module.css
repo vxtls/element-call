@@ -4,19 +4,35 @@
 
 .reactionPopupMenu {
   display: flex;
+  width: fit-content;
 }
 
 .reactionPopupMenuModal {
   top: 82vh !important;
 }
 
-.reactionPopupMenu section {
-  height: fit-content;
-  flex: auto;
+.reactionPopupMenuRoot {
+  width: fit-content !important;
 }
 
-.reactionsMenuSection {
+.reactionPopupMenuRoot > div {
+  width: fit-content;
+}
+
+.reactionPopupMenuModal > div > div {
+  padding-inline: var(--cpd-space-6x) !important;
+  padding-block: var(--cpd-space-6x) !important;
+}
+
+.reactionPopupMenu section {
+  height: fit-content;
+  flex: 1;
+  max-width: fit-content;
+}
+
+.reactionPopupMenu section.reactionsMenuSection {
   margin: auto 0;
+  flex: auto;
 }
 
 :root {
@@ -31,8 +47,7 @@
   );
   margin: 0;
   padding: 0;
-  display: flex;
-  flex-wrap: wrap;
+  flex-grow: 1;
   gap: var(--cpd-separator-spacing);
   /* Height of 3 rows plus padding. */
   max-height: calc(
@@ -41,9 +56,26 @@
           var(--cpd-separator-spacing)
       ) * 4
   );
-  max-width: 22.5em;
+  width: calc(
+    (
+        var(--reaction-button-size) + var(--reaction-button-padding) +
+          var(--cpd-separator-spacing)
+      ) * 6.5
+  );
+  overflow-x: hidden;
   overflow-y: auto;
   list-style: none;
+  flex-wrap: wrap;
+  display: flex;
+  flex-wrap: wrap;
+  flex-direction: row;
+  justify-content: start;
+  align-items: auto;
+  align-content: start;
+}
+
+.reactionsMenu > * {
+  flex: 0 0 auto;
 }
 
 .reactionButton {
