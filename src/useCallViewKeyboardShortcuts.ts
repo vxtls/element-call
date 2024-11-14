@@ -8,7 +8,7 @@ Please see LICENSE in the repository root for full details.
 import { RefObject, useCallback, useMemo, useRef } from "react";
 
 import { useEventTarget } from "./useEvents";
-import { ReactionOption, ReactionSet } from "./reactions";
+import { ReactionOption, ReactionSet, ReactionsRowSize } from "./reactions";
 
 /**
  * Determines whether focus is in the same part of the tree as the given
@@ -19,14 +19,9 @@ const mayReceiveKeyEvents = (e: HTMLElement): boolean => {
   return focusedElement !== null && focusedElement.contains(e);
 };
 
-const KeyToReactionMap: Record<string, ReactionOption> = {
-  ["1"]: ReactionSet[0],
-  ["2"]: ReactionSet[1],
-  ["3"]: ReactionSet[2],
-  ["4"]: ReactionSet[3],
-  ["5"]: ReactionSet[4],
-  ["6"]: ReactionSet[5],
-};
+const KeyToReactionMap: Record<string, ReactionOption> = Object.fromEntries(
+  ReactionSet.slice(0, ReactionsRowSize).map((r, i) => [(i + 1).toString(), r]),
+);
 
 export function useCallViewKeyboardShortcuts(
   focusElement: RefObject<HTMLElement | null>,
