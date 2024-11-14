@@ -10,10 +10,6 @@
   top: 82vh !important;
 }
 
-.reactionPopupMenuModal > div > div {
-  padding-inline: var(--cpd-space-6x) !important;
-  padding-block: var(--cpd-space-6x) var(--cpd-space-8x) !important;
-}
 .reactionPopupMenu section {
   height: fit-content;
   flex: auto;
