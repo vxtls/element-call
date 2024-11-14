@@ -81,8 +81,8 @@
     "call_ended_heading": "Anruf beendet",
     "failed_heading": "Beitreten fehlgeschlagen",
     "failed_text": "Anruf nicht gefunden oder Beitritt nicht erlaubt",
-    "knock_reject_body": "Die Mitglieder des Raums haben Deine Beitrittsanfrage abgelehnt.",
-    "knock_reject_heading": "Beitritt nicht erlaubt",
+    "knock_reject_body": "Die Teilnahmeanfrage wurde abgelehnt.",
+    "knock_reject_heading": "Zugriff verweigert",
     "reason": "Grund"
   },
   "hangup_button_label": "Anruf beenden",
@@ -100,11 +100,11 @@
   "layout_grid_label": "Raster",
   "layout_spotlight_label": "Fokus",
   "lobby": {
-    "ask_to_join": "Beitritt anfragen",
+    "ask_to_join": "Teilnahmeanfrage senden",
     "join_as_guest": "Als Gast beitreten",
     "join_button": "Anruf beitreten",
     "leave_button": "Zurück zu kürzlichen Anrufen",
-    "waiting_for_invite": "Anfrage gesendet"
+    "waiting_for_invite": "Anfrage gesendet! Warten auf Teilnahmefreigabe …"
   },
   "log_in": "Anmelden",
   "logging_in": "Anmelden …",
@@ -115,7 +115,7 @@
   "matrix_id": "Matrix-ID: {{id}}",
   "microphone_off": "Mikrofon aus",
   "microphone_on": "Mikrofon an",
-  "mute_microphone_button_label": "Mikrofon deaktivieren",
+  "mute_microphone_button_label": "Mikrofon stumm schalten",
   "participant_count_one": "{{count, number}}",
   "participant_count_other": "{{count, number}}",
   "qr_code": "QR-Code",
@@ -184,14 +184,15 @@
   "unauthenticated_view_body": "Noch nicht registriert? <2>Konto erstellen</2>",
   "unauthenticated_view_eula_caption": "Mit einem Klick auf „Los geht’s“ akzeptierst du unseren <2>Endbenutzer-Lizenzvertrag (EULA)</2>",
   "unauthenticated_view_login_button": "Melde dich mit deinem Konto an",
-  "unmute_microphone_button_label": "Mikrofon aktivieren",
+  "unmute_microphone_button_label": "Mikrofon einschalten",
   "version": "{{productName}} Version: {{version}}",
   "video_tile": {
     "always_show": "Immer anzeigen",
     "change_fit_contain": "An Fenster anpassen",
     "collapse": "Minimieren",
     "expand": "Erweitern",
-    "mute_for_me": "Für mich stummschalten",
+    "mute_for_me": "Für mich stumm schalten",
+    "muted_for_me": "Für mich stumm geschaltet",
     "volume": "Lautstärke"
   }
 }
