@@ -3,23 +3,25 @@
 }
 
 .reactionPopupMenu {
+  --reaction-button-padding: 10px;
+  --reaction-button-fontsize: 20px;
   display: flex;
   width: fit-content;
 }
 
 div.reactionPopupMenuRoot.reactionPopupMenuModal {
   --overlay-top: 82vh;
+  width: fit-content;
 }
 
 div.reactionPopupMenuRoot {
   /* Center the drawer */
   --inset-inline: 30em;
-  width: fit-content;
 }
 
 .reactionPopupMenuRoot > div {
   width: fit-content;
-  max-width: 100%;
+  max-width: 100vw;
 }
 
 div.reactionPopupMenuRoot.reactionPopupMenuModal > div > div {
@@ -38,15 +40,9 @@ div.reactionPopupMenuRoot.reactionPopupMenuModal > div > div {
   flex: auto;
 }
 
-:root {
-  --reaction-button-padding: 1em;
-  --reaction-button-size: 1.4em;
-  --reaction-button-fontsize: 1.6em;
-}
-
 .reactionsMenu {
   min-height: calc(
-    var(--reaction-button-size) + var(--reaction-button-padding)
+    (var(--reaction-button-fontsize) + var(--cpd-separator-spacing)) * 2
   );
   margin: 0;
   padding: 0;
@@ -54,16 +50,10 @@ div.reactionPopupMenuRoot.reactionPopupMenuModal > div > div {
   gap: var(--cpd-separator-spacing);
   /* Height of 3 rows plus padding. */
   max-height: calc(
-    (
-        var(--reaction-button-size) + var(--reaction-button-padding) +
-          var(--cpd-separator-spacing)
-      ) * 4
+    ((var(--reaction-button-fontsize) + var(--cpd-separator-spacing)) * 2) * 3
   );
-  width: calc(
-    (
-        var(--reaction-button-size) + var(--reaction-button-padding) +
-          var(--cpd-separator-spacing)
-      ) * 6.5
+  max-width: calc(
+    ((var(--reaction-button-fontsize) + var(--cpd-separator-spacing)) * 2) * 5
   );
   overflow-x: hidden;
   overflow-y: auto;
@@ -75,6 +65,7 @@ div.reactionPopupMenuRoot.reactionPopupMenuModal > div > div {
   justify-content: start;
   align-items: auto;
   align-content: start;
+  width: fit-content;
 }
 
 .reactionsMenu > * {
@@ -83,13 +74,12 @@ div.reactionPopupMenuRoot.reactionPopupMenuModal > div > div {
 
 .reactionButton {
   padding: var(--reaction-button-padding);
-  font-size: 1.6em;
-  width: var(--reaction-button-size);
-  height: var(--reaction-button-size);
   border-radius: var(--cpd-radius-pill-effect);
   font-size: var(--reaction-button-fontsize);
   min-block-size: unset;
   border: none;
+  aspect-ratio: 1 / 1;
+  height: 100%;
 }
 
 .verticalSeperator {
