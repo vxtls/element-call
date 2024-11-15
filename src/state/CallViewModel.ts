@@ -478,6 +478,10 @@ export class CallViewModel extends ViewModel {
     ),
   );
 
+  public readonly userMediaIds: Observable<string[]> = this.userMedia.pipe(
+    map((mediaItems) => mediaItems.map((m) => m.id)),
+  );
+
   private readonly localUserMedia: Observable<LocalUserMediaViewModel> =
     this.mediaItems.pipe(
       map((ms) => ms.find((m) => m.vm.local)!.vm as LocalUserMediaViewModel),
