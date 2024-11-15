@@ -177,10 +177,6 @@ export function ReactionToggleButton({
     setErrorText(undefined);
   }, [showReactionsMenu]);
 
-  useEffect(() => {
-    return () => setShowReactionsMenu(false);
-  }, [setShowReactionsMenu]);
-
   const canReact = !reactions[userId];
 
   const sendRelation = useCallback(
