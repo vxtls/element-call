@@ -114,7 +114,7 @@ export function ReactionPopupMenu({
               <li key={reaction.name}>
                 <Tooltip
                   label={
-                    index < ReactionsRowSize
+                    index >= ReactionsRowSize
                       ? reaction.name
                       : `${reaction.name} (${index + 1})`
                   }

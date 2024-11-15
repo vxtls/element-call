@@ -73,7 +73,7 @@ export const GenericReaction: ReactionOption = {
   },
 };
 
-export const ReactionsRowSize = 6;
+export const ReactionsRowSize = 5;
 
 // The first {ReactionsRowSize} reactions are always visible.
 export const ReactionSet: ReactionOption[] = [
