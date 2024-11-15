@@ -179,17 +179,17 @@ export function ReactionPopupMenu({
                       ? reaction.name
                       : `${reaction.name} (${index + 1})`
                   }
-                  aria-keyshortcuts={
-                    index < ReactionsRowSize
-                      ? (index + 1).toString()
-                      : undefined
-                  }
                 >
                   <CpdButton
                     kind="secondary"
                     className={styles.reactionButton}
                     disabled={!canReact}
                     onClick={() => sendReaction(reaction)}
+                    aria-keyshortcuts={
+                      index < ReactionsRowSize
+                        ? (index + 1).toString()
+                        : undefined
+                    }
                   >
                     {reaction.emoji}
                   </CpdButton>
