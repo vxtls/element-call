@@ -287,7 +287,7 @@ export function ReactionToggleButton({
         <ReactionPopupMenu
           errorText={errorText}
           isHandRaised={isHandRaised}
-          canReact={canReact}
+          canReact={!busy && canReact}
           sendReaction={(reaction) => void sendRelation(reaction)}
           toggleRaisedHand={toggleRaisedHand}
         />
