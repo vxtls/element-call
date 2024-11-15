@@ -5,8 +5,17 @@
 .reactionPopupMenu {
   --reaction-button-padding: 10px;
   --reaction-button-fontsize: 20px;
+  --reaction-button-gap: var(--cpd-separator-spacing);
   display: flex;
   width: fit-content;
+}
+
+@media (max-width: 420px) {
+  .reactionPopupMenu {
+    --reaction-button-padding: 8px;
+    --reaction-button-fontsize: 16px;
+    --reaction-button-gap: 6px;
+  }
 }
 
 div.reactionPopupMenuRoot.reactionPopupMenuModal {
@@ -44,7 +53,7 @@ div.reactionPopupMenuRoot.reactionPopupMenuModal > div > div {
   margin: 0;
   padding: 0;
   flex-grow: 1;
-  gap: var(--cpd-separator-spacing);
+  gap: var(--reaction-button-gap);
   /* Height of 3 rows plus padding. */
   max-height: calc(
     ((var(--reaction-button-fontsize) + var(--cpd-separator-spacing)) * 2) * 3
