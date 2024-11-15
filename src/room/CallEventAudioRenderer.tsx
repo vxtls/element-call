@@ -6,6 +6,7 @@ Please see LICENSE in the repository root for full details.
 */
 
 import { ReactNode, useDeferredValue, useEffect, useRef } from "react";
+import { useObservableEagerState } from "observable-hooks";
 
 import {
   playReactionsSound,
@@ -13,8 +14,6 @@ import {
   useSetting,
 } from "../settings/settings";
 import { CallViewModel } from "../state/CallViewModel";
-import { useObservableEagerState } from "observable-hooks";
-
 // TODO: These need replacing with something more pleasant.
 import enterCallSoundMp3 from "../sound/start_talk_local.mp3";
 import enterCallSoundOgg from "../sound/start_talk_local.ogg";
@@ -48,7 +47,7 @@ export function CallEventAudioRenderer({
       callLeft.current.volume = effectSoundVolume;
       void callLeft.current.play();
     }
-  }, [callEntered, callLeft, memberIds, previousMembers]);
+  }, [callEntered, callLeft, memberIds, previousMembers, effectSoundVolume]);
 
   // Do not render any audio elements if playback is disabled. Will save
   // audio file fetches.
