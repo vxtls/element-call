@@ -14,7 +14,6 @@ import {
   useSetting,
 } from "../settings/settings";
 import { CallViewModel } from "../state/CallViewModel";
-
 import enterCallSoundMp3 from "../sound/join_call.mp3";
 import enterCallSoundOgg from "../sound/join_call.ogg";
 import leftCallSoundMp3 from "../sound/left_call.mp3";
