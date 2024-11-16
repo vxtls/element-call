@@ -14,11 +14,15 @@ import {
   useSetting,
 } from "../settings/settings";
 import { CallViewModel } from "../state/CallViewModel";
-// TODO: These need replacing with something more pleasant.
-import enterCallSoundMp3 from "../sound/start_talk_local.mp3";
-import enterCallSoundOgg from "../sound/start_talk_local.ogg";
-import leftCallSoundMp3 from "../sound/start_talk_remote.mp3";
-import leftCallSoundOgg from "../sound/start_talk_remote.ogg";
+
+import enterCallSoundMp3 from "../sound/join_call.mp3";
+import enterCallSoundOgg from "../sound/join_call.ogg";
+import leftCallSoundMp3 from "../sound/left_call.mp3";
+import leftCallSoundOgg from "../sound/left_call.ogg";
+
+// Do not play any sounds if the participant count has exceeded this
+// number.
+export const MAX_PARTICIPANT_COUNT_FOR_SOUND = 8;
 
 export function CallEventAudioRenderer({
   vm,
@@ -33,6 +37,10 @@ export function CallEventAudioRenderer({
   const callLeft = useRef<HTMLAudioElement>(null);
 
   useEffect(() => {
+    if (memberIds.length > MAX_PARTICIPANT_COUNT_FOR_SOUND) {
+      return;
+    }
+
     const memberLeft = !!previousMembers.filter((m) => !memberIds.includes(m))
       .length;
     const memberJoined = !!memberIds.filter((m) => !previousMembers.includes(m))
@@ -56,8 +64,10 @@ export function CallEventAudioRenderer({
   }
 
   return (
+    // Will play as soon as it's mounted, which is what we want as this will
+    // play when the call is entered.
     <>
-      <audio ref={callEntered} preload="auto" hidden>
+      <audio autoPlay ref={callEntered} preload="auto" hidden>
         <source src={enterCallSoundOgg} type="audio/ogg; codecs=vorbis" />
         <source src={enterCallSoundMp3} type="audio/mpeg" />
       </audio>
