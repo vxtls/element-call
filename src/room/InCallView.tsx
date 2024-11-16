@@ -668,8 +668,8 @@ export const InCallView: FC<InCallViewProps> = ({
           </Header>
         ))}
       <RoomAudioRenderer />
-      <CallEventAudioRenderer vm={vm} />
       {renderContent()}
+      <CallEventAudioRenderer vm={vm} />
       <audio ref={handRaisePlayer} preload="auto" hidden>
         <source src={handSoundOgg} type="audio/ogg; codecs=vorbis" />
         <source src={handSoundMp3} type="audio/mpeg" />
