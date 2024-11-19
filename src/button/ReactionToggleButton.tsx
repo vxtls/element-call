@@ -90,7 +90,7 @@ export function ReactionPopupMenu({
       )}
       <div className={styles.reactionPopupMenu}>
         <section className={styles.handRaiseSection}>
-          <Tooltip label={label}>
+          <Tooltip label={label} caption={"H"}>
             <CpdButton
               kind={isHandRaised ? "primary" : "secondary"}
               aria-keyshortcuts="H"
@@ -113,10 +113,11 @@ export function ReactionPopupMenu({
             {filteredReactionSet.map((reaction, index) => (
               <li key={reaction.name}>
                 <Tooltip
-                  label={
-                    index >= ReactionsRowSize
-                      ? reaction.name
-                      : `${reaction.name} (${index + 1})`
+                  label={reaction.name}
+                  caption={
+                    index < ReactionsRowSize
+                      ? (index + 1).toString()
+                      : undefined
                   }
                 >
                   <CpdButton
