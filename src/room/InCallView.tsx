@@ -87,7 +87,6 @@ import { ReactionsAudioRenderer } from "./ReactionAudioRenderer";
 import { useSwitchCamera } from "./useSwitchCamera";
 import { soundEffectVolumeSetting, useSetting } from "../settings/settings";
 import { ReactionsOverlay } from "./ReactionsOverlay";
-import { CallEventAudioRenderer } from "./CallEventAudioRenderer";
 
 const canScreenshare = "getDisplayMedia" in (navigator.mediaDevices ?? {});
 
@@ -670,7 +669,6 @@ export const InCallView: FC<InCallViewProps> = ({
           </Header>
         ))}
       <RoomAudioRenderer />
-      <CallEventAudioRenderer vm={vm} />
       {renderContent()}
       <audio ref={handRaisePlayer} preload="auto" hidden>
         <source src={handSoundOgg} type="audio/ogg; codecs=vorbis" />
