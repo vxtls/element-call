@@ -74,9 +74,7 @@ export function ReactionPopupMenu({
     () => (isFullyExpanded ? ReactionSet : ReactionSet.slice(0, 5)),
     [isFullyExpanded],
   );
-  const label = isHandRaised
-    ? t("action.lower_hand", { keyboardShortcut: "H" })
-    : t("action.raise_hand", { keyboardShortcut: "H" });
+  const label = isHandRaised ? t("action.lower_hand") : t("action.raise_hand");
   return (
     <>
       {errorText && (
@@ -90,7 +88,7 @@ export function ReactionPopupMenu({
       )}
       <div className={styles.reactionPopupMenu}>
         <section className={styles.handRaiseSection}>
-          <Tooltip label={label} caption={"H"}>
+          <Tooltip label={label} caption="H">
             <CpdButton
               kind={isHandRaised ? "primary" : "secondary"}
               aria-keyshortcuts="H"
